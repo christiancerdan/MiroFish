@@ -22,6 +22,7 @@ from ..config import Config
 from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, t
+from ..utils.storage import atomic_write_json, contained_path, storage_path, validate_storage_id
 from .zep_tools import (
     ZepToolsService, 
     SearchResult, 
@@ -49,8 +50,8 @@ class ReportLogger:
             report_id: 报告ID，用于确定日志文件路径
         """
         self.report_id = report_id
-        self.log_file_path = os.path.join(
-            Config.UPLOAD_FOLDER, 'reports', report_id, 'agent_log.jsonl'
+        self.log_file_path = storage_path(
+            os.path.join(Config.UPLOAD_FOLDER, 'reports'), report_id, 'agent_log.jsonl'
         )
         self.start_time = datetime.now()
         self._ensure_log_file()
@@ -94,7 +95,10 @@ class ReportLogger:
         }
         
         # 追加写入 JSONL 文件
-        with open(self.log_file_path, 'a', encoding='utf-8') as f:
+        log_path = storage_path(
+            os.path.join(Config.UPLOAD_FOLDER, 'reports'), self.report_id, 'agent_log.jsonl'
+        )
+        with open(log_path, 'a', encoding='utf-8') as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
     
     def log_start(self, simulation_id: str, graph_id: str, simulation_requirement: str):
@@ -319,12 +323,12 @@ class ReportConsoleLogger:
         Args:
             report_id: 报告ID，用于确定日志文件路径
         """
+        self._file_handler = None
         self.report_id = report_id
-        self.log_file_path = os.path.join(
-            Config.UPLOAD_FOLDER, 'reports', report_id, 'console_log.txt'
+        self.log_file_path = storage_path(
+            os.path.join(Config.UPLOAD_FOLDER, 'reports'), report_id, 'console_log.txt'
         )
         self._ensure_log_file()
-        self._file_handler = None
         self._setup_file_handler()
     
     def _ensure_log_file(self):
@@ -906,7 +910,7 @@ class ReportAgent:
             zep_tools: Zep工具服务（可选）
         """
         self.graph_id = graph_id
-        self.simulation_id = simulation_id
+        self.simulation_id = validate_storage_id(simulation_id, "simulation_id")
         self.simulation_requirement = simulation_requirement
         
         self.llm = llm_client or LLMClient()
@@ -1602,8 +1606,9 @@ class ReportAgent:
         import uuid
         
         # 如果没有传入 report_id，则自动生成
-        if not report_id:
+        if report_id is None:
             report_id = f"report_{uuid.uuid4().hex[:12]}"
+        validate_storage_id(report_id, "report_id")
         start_time = datetime.now()
         
         report = Report(
@@ -1957,7 +1962,7 @@ class ReportManager:
     @classmethod
     def _get_report_folder(cls, report_id: str) -> str:
         """获取报告文件夹路径"""
-        return os.path.join(cls.REPORTS_DIR, report_id)
+        return storage_path(cls.REPORTS_DIR, report_id)
     
     @classmethod
     def _ensure_report_folder(cls, report_id: str) -> str:
@@ -1969,37 +1974,37 @@ class ReportManager:
     @classmethod
     def _get_report_path(cls, report_id: str) -> str:
         """获取报告元信息文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "meta.json")
+        return storage_path(cls.REPORTS_DIR, report_id, "meta.json")
     
     @classmethod
     def _get_report_markdown_path(cls, report_id: str) -> str:
         """获取完整报告Markdown文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "full_report.md")
+        return storage_path(cls.REPORTS_DIR, report_id, "full_report.md")
     
     @classmethod
     def _get_outline_path(cls, report_id: str) -> str:
         """获取大纲文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "outline.json")
+        return storage_path(cls.REPORTS_DIR, report_id, "outline.json")
     
     @classmethod
     def _get_progress_path(cls, report_id: str) -> str:
         """获取进度文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "progress.json")
+        return storage_path(cls.REPORTS_DIR, report_id, "progress.json")
     
     @classmethod
     def _get_section_path(cls, report_id: str, section_index: int) -> str:
         """获取章节Markdown文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), f"section_{section_index:02d}.md")
+        return storage_path(cls.REPORTS_DIR, report_id, f"section_{section_index:02d}.md")
     
     @classmethod
     def _get_agent_log_path(cls, report_id: str) -> str:
         """获取 Agent 日志文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "agent_log.jsonl")
+        return storage_path(cls.REPORTS_DIR, report_id, "agent_log.jsonl")
     
     @classmethod
     def _get_console_log_path(cls, report_id: str) -> str:
         """获取控制台日志文件路径"""
-        return os.path.join(cls._get_report_folder(report_id), "console_log.txt")
+        return storage_path(cls.REPORTS_DIR, report_id, "console_log.txt")
     
     @classmethod
     def get_console_log(cls, report_id: str, from_line: int = 0) -> Dict[str, Any]:
@@ -2133,8 +2138,7 @@ class ReportManager:
         """
         cls._ensure_report_folder(report_id)
         
-        with open(cls._get_outline_path(report_id), 'w', encoding='utf-8') as f:
-            json.dump(outline.to_dict(), f, ensure_ascii=False, indent=2)
+        atomic_write_json(cls._get_outline_path(report_id), outline.to_dict())
         
         logger.info(t('report.outlineSaved', reportId=report_id))
     
@@ -2168,7 +2172,7 @@ class ReportManager:
 
         # 保存文件
         file_suffix = f"section_{section_index:02d}.md"
-        file_path = os.path.join(cls._get_report_folder(report_id), file_suffix)
+        file_path = storage_path(cls.REPORTS_DIR, report_id, file_suffix)
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(md_content)
 
@@ -2269,8 +2273,7 @@ class ReportManager:
             "updated_at": datetime.now().isoformat()
         }
         
-        with open(cls._get_progress_path(report_id), 'w', encoding='utf-8') as f:
-            json.dump(progress_data, f, ensure_ascii=False, indent=2)
+        atomic_write_json(cls._get_progress_path(report_id), progress_data)
     
     @classmethod
     def get_progress(cls, report_id: str) -> Optional[Dict[str, Any]]:
@@ -2298,7 +2301,7 @@ class ReportManager:
         sections = []
         for filename in sorted(os.listdir(folder)):
             if filename.startswith('section_') and filename.endswith('.md'):
-                file_path = os.path.join(folder, filename)
+                file_path = storage_path(cls.REPORTS_DIR, report_id, filename)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
@@ -2321,8 +2324,6 @@ class ReportManager:
         
         从已保存的章节文件组装完整报告，并进行标题清理
         """
-        folder = cls._get_report_folder(report_id)
-        
         # 构建报告头部
         md_content = f"# {outline.title}\n\n"
         md_content += f"> {outline.summary}\n\n"
@@ -2476,8 +2477,7 @@ class ReportManager:
         cls._ensure_report_folder(report.report_id)
         
         # 保存元信息JSON
-        with open(cls._get_report_path(report.report_id), 'w', encoding='utf-8') as f:
-            json.dump(report.to_dict(), f, ensure_ascii=False, indent=2)
+        atomic_write_json(cls._get_report_path(report.report_id), report.to_dict())
         
         # 保存大纲
         if report.outline:
@@ -2497,7 +2497,7 @@ class ReportManager:
         
         if not os.path.exists(path):
             # 兼容旧格式：检查直接存储在reports目录下的文件
-            old_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.json")
+            old_path = contained_path(cls.REPORTS_DIR, f"{validate_storage_id(report_id)}.json")
             if os.path.exists(old_path):
                 path = old_path
             else:
@@ -2546,10 +2546,16 @@ class ReportManager:
     @classmethod
     def get_report_by_simulation(cls, simulation_id: str) -> Optional[Report]:
         """根据模拟ID获取报告"""
-        cls._ensure_reports_dir()
+        validate_storage_id(simulation_id, "simulation_id")
+        if not os.path.isdir(cls.REPORTS_DIR):
+            return None
         
         for item in os.listdir(cls.REPORTS_DIR):
-            item_path = os.path.join(cls.REPORTS_DIR, item)
+            try:
+                item_path = contained_path(cls.REPORTS_DIR, item)
+                validate_storage_id(item[:-5] if item.endswith(".json") else item, "report_id")
+            except ValueError:
+                continue
             # 新格式：文件夹
             if os.path.isdir(item_path):
                 report = cls.get_report(item)
@@ -2567,11 +2573,18 @@ class ReportManager:
     @classmethod
     def list_reports(cls, simulation_id: Optional[str] = None, limit: int = 50) -> List[Report]:
         """列出报告"""
-        cls._ensure_reports_dir()
+        if simulation_id is not None:
+            validate_storage_id(simulation_id, "simulation_id")
+        if not os.path.isdir(cls.REPORTS_DIR):
+            return []
         
         reports = []
         for item in os.listdir(cls.REPORTS_DIR):
-            item_path = os.path.join(cls.REPORTS_DIR, item)
+            try:
+                item_path = contained_path(cls.REPORTS_DIR, item)
+                validate_storage_id(item[:-5] if item.endswith(".json") else item, "report_id")
+            except ValueError:
+                continue
             # 新格式：文件夹
             if os.path.isdir(item_path):
                 report = cls.get_report(item)
@@ -2606,8 +2619,8 @@ class ReportManager:
         
         # 兼容旧格式：删除单独的文件
         deleted = False
-        old_json_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.json")
-        old_md_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.md")
+        old_json_path = contained_path(cls.REPORTS_DIR, f"{validate_storage_id(report_id)}.json")
+        old_md_path = contained_path(cls.REPORTS_DIR, f"{validate_storage_id(report_id)}.md")
         
         if os.path.exists(old_json_path):
             os.remove(old_json_path)

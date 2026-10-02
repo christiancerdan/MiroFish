@@ -18,6 +18,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..utils.logger import get_logger
+from ..utils.storage import atomic_write_json, contained_path, validate_storage_id
 
 logger = get_logger('mirofish.simulation_ipc')
 
@@ -56,7 +57,7 @@ class IPCCommand:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'IPCCommand':
         return cls(
-            command_id=data["command_id"],
+            command_id=validate_storage_id(data["command_id"], "command_id"),
             command_type=CommandType(data["command_type"]),
             args=data.get("args", {}),
             timestamp=data.get("timestamp", datetime.now().isoformat())
@@ -84,7 +85,7 @@ class IPCResponse:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'IPCResponse':
         return cls(
-            command_id=data["command_id"],
+            command_id=validate_storage_id(data["command_id"], "command_id"),
             status=CommandStatus(data["status"]),
             result=data.get("result"),
             error=data.get("error"),
@@ -106,13 +107,9 @@ class SimulationIPCClient:
         Args:
             simulation_dir: 模拟数据目录
         """
-        self.simulation_dir = simulation_dir
-        self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
-        self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
-        
-        # 确保目录存在
-        os.makedirs(self.commands_dir, exist_ok=True)
-        os.makedirs(self.responses_dir, exist_ok=True)
+        self.simulation_dir = os.path.realpath(simulation_dir)
+        self.commands_dir = contained_path(self.simulation_dir, "ipc_commands")
+        self.responses_dir = contained_path(self.simulation_dir, "ipc_responses")
     
     def send_command(
         self,
@@ -143,23 +140,26 @@ class SimulationIPCClient:
             args=args
         )
         
-        # 写入命令文件
-        command_file = os.path.join(self.commands_dir, f"{command_id}.json")
-        with open(command_file, 'w', encoding='utf-8') as f:
-            json.dump(command.to_dict(), f, ensure_ascii=False, indent=2)
+        # Create IPC directories only when sending a command.
+        os.makedirs(contained_path(self.simulation_dir, "ipc_commands"), exist_ok=True)
+        os.makedirs(contained_path(self.simulation_dir, "ipc_responses"), exist_ok=True)
+        command_file = contained_path(self.simulation_dir, "ipc_commands", f"{command_id}.json")
+        atomic_write_json(command_file, command.to_dict())
         
         logger.info(f"发送IPC命令: {command_type.value}, command_id={command_id}")
         
         # 等待响应
-        response_file = os.path.join(self.responses_dir, f"{command_id}.json")
         start_time = time.time()
         
         while time.time() - start_time < timeout:
+            response_file = contained_path(self.simulation_dir, "ipc_responses", f"{command_id}.json")
             if os.path.exists(response_file):
                 try:
                     with open(response_file, 'r', encoding='utf-8') as f:
                         response_data = json.load(f)
                     response = IPCResponse.from_dict(response_data)
+                    if response.command_id != command_id:
+                        raise ValueError("IPC response identifier does not match command")
                     
                     # 清理命令和响应文件
                     try:
@@ -273,7 +273,7 @@ class SimulationIPCClient:
         
         通过检查 env_status.json 文件来判断
         """
-        status_file = os.path.join(self.simulation_dir, "env_status.json")
+        status_file = contained_path(self.simulation_dir, "env_status.json")
         if not os.path.exists(status_file):
             return False
         
@@ -299,9 +299,9 @@ class SimulationIPCServer:
         Args:
             simulation_dir: 模拟数据目录
         """
-        self.simulation_dir = simulation_dir
-        self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
-        self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
+        self.simulation_dir = os.path.realpath(simulation_dir)
+        self.commands_dir = contained_path(self.simulation_dir, "ipc_commands")
+        self.responses_dir = contained_path(self.simulation_dir, "ipc_responses")
         
         # 确保目录存在
         os.makedirs(self.commands_dir, exist_ok=True)
@@ -322,12 +322,11 @@ class SimulationIPCServer:
     
     def _update_env_status(self, status: str):
         """更新环境状态文件"""
-        status_file = os.path.join(self.simulation_dir, "env_status.json")
-        with open(status_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                "status": status,
-                "timestamp": datetime.now().isoformat()
-            }, f, ensure_ascii=False, indent=2)
+        status_file = contained_path(self.simulation_dir, "env_status.json")
+        atomic_write_json(status_file, {
+            "status": status,
+            "timestamp": datetime.now().isoformat()
+        })
     
     def poll_commands(self) -> Optional[IPCCommand]:
         """
@@ -336,14 +335,16 @@ class SimulationIPCServer:
         Returns:
             IPCCommand 或 None
         """
-        if not os.path.exists(self.commands_dir):
+        commands_dir = contained_path(self.simulation_dir, "ipc_commands")
+        if not os.path.exists(commands_dir):
             return None
         
         # 按时间排序获取命令文件
         command_files = []
-        for filename in os.listdir(self.commands_dir):
+        for filename in os.listdir(commands_dir):
             if filename.endswith('.json'):
-                filepath = os.path.join(self.commands_dir, filename)
+                validate_storage_id(filename[:-5], "command_id")
+                filepath = contained_path(self.simulation_dir, "ipc_commands", filename)
                 command_files.append((filepath, os.path.getmtime(filepath)))
         
         command_files.sort(key=lambda x: x[1])
@@ -352,7 +353,10 @@ class SimulationIPCServer:
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                return IPCCommand.from_dict(data)
+                command = IPCCommand.from_dict(data)
+                if f"{command.command_id}.json" != os.path.basename(filepath):
+                    raise ValueError("IPC command identifier does not match its file")
+                return command
             except (json.JSONDecodeError, KeyError, OSError) as e:
                 logger.warning(f"读取命令文件失败: {filepath}, {e}")
                 continue
@@ -366,12 +370,12 @@ class SimulationIPCServer:
         Args:
             response: IPC响应
         """
-        response_file = os.path.join(self.responses_dir, f"{response.command_id}.json")
-        with open(response_file, 'w', encoding='utf-8') as f:
-            json.dump(response.to_dict(), f, ensure_ascii=False, indent=2)
+        command_id = validate_storage_id(response.command_id, "command_id")
+        response_file = contained_path(self.simulation_dir, "ipc_responses", f"{command_id}.json")
+        command_file = contained_path(self.simulation_dir, "ipc_commands", f"{command_id}.json")
+        atomic_write_json(response_file, response.to_dict())
         
         # 删除命令文件
-        command_file = os.path.join(self.commands_dir, f"{response.command_id}.json")
         try:
             os.remove(command_file)
         except OSError:

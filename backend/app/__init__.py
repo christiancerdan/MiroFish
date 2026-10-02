@@ -9,16 +9,16 @@ import warnings
 # 需要在所有其他导入之前设置
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
-from flask import Flask, request
-from flask_cors import CORS
+from flask import Flask, request, send_from_directory, abort, g
 
 from .config import Config
 from .utils.logger import setup_logger, get_logger
+from .security import install_security
 
 
 def create_app(config_class=Config):
     """Flask应用工厂函数"""
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=None)
     app.config.from_object(config_class)
     
     # 设置JSON编码：确保中文直接显示（而不是 \uXXXX 格式）
@@ -39,8 +39,7 @@ def create_app(config_class=Config):
         logger.info("MiroFish Backend 启动中...")
         logger.info("=" * 50)
     
-    # 启用CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    install_security(app)
     
     # 注册模拟进程清理函数（确保服务器关闭时终止所有模拟进程）
     from .services.simulation_runner import SimulationRunner
@@ -52,14 +51,12 @@ def create_app(config_class=Config):
     @app.before_request
     def log_request():
         logger = get_logger('mirofish.request')
-        logger.debug(f"请求: {request.method} {request.path}")
-        if request.content_type and 'json' in request.content_type:
-            logger.debug(f"请求体: {request.get_json(silent=True)}")
+        logger.debug("Request %s: %s %s", g.request_id, request.method, request.path)
     
     @app.after_request
     def log_response(response):
         logger = get_logger('mirofish.request')
-        logger.debug(f"响应: {response.status_code}")
+        logger.debug("Request %s: response %s", g.request_id, response.status_code)
         return response
     
     # 注册蓝图
@@ -72,9 +69,23 @@ def create_app(config_class=Config):
     @app.route('/health')
     def health():
         return {'status': 'ok', 'service': 'MiroFish Backend'}
+
+    # Serve the compiled UI from the same origin in production. send_from_directory
+    # performs path containment; API misses must never fall back to index.html.
+    frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../frontend/dist'))
+
+    @app.get('/')
+    @app.get('/<path:path>')
+    def frontend(path=''):
+        if path.startswith('api/') or not os.path.isfile(os.path.join(frontend_dist, 'index.html')):
+            abort(404)
+        if path and os.path.isfile(os.path.join(frontend_dist, path)):
+            return send_from_directory(frontend_dist, path)
+        if path.startswith('assets/'):
+            abort(404)
+        return send_from_directory(frontend_dist, 'index.html')
     
     if should_log_startup:
         logger.info("MiroFish Backend 启动完成")
     
     return app
-

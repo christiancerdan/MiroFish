@@ -1,6 +1,7 @@
 import io
 
 from app import create_app
+from app.config import Config
 from app.api import graph as graph_api
 from app.models.project import ProjectManager, ProjectStatus
 from app.utils.llm_client import LLMResponseError
@@ -14,6 +15,7 @@ def _post_ontology(client):
             "files": (io.BytesIO(b"A short source document."), "source.md"),
         },
         content_type="multipart/form-data",
+        headers={"Authorization": "Bearer " + Config.MIROFISH_ACCESS_KEY},
     )
 
 
@@ -29,6 +31,7 @@ def test_ontology_api_returns_safe_truncation_error_and_failed_project(
             )
 
     monkeypatch.setattr(ProjectManager, "PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setattr(Config, "MIROFISH_ACCESS_KEY", "test-access-" + "x" * 40)
     monkeypatch.setattr(graph_api, "OntologyGenerator", FailingGenerator)
 
     app = create_app()
@@ -57,6 +60,7 @@ def test_ontology_api_does_not_expose_provider_error_body(tmp_path, monkeypatch)
             raise ProviderError("SECRET-PROVIDER-BODY")
 
     monkeypatch.setattr(ProjectManager, "PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setattr(Config, "MIROFISH_ACCESS_KEY", "test-access-" + "x" * 40)
     monkeypatch.setattr(graph_api, "OntologyGenerator", FailingGenerator)
 
     app = create_app()

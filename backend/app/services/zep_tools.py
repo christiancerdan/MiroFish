@@ -18,6 +18,7 @@ from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.llm_client import LLMClient
 from ..utils.locale import get_locale, t
+from ..utils.storage import storage_path
 from ..utils.zep_paging import fetch_all_nodes, fetch_all_edges
 from ..utils.zep import (
     call_zep_read_with_retry,
@@ -1506,15 +1507,12 @@ class ZepToolsService:
         import csv
         
         # 构建人设文件路径
-        sim_dir = os.path.join(
-            os.path.dirname(__file__), 
-            f'../../uploads/simulations/{simulation_id}'
-        )
+        simulations_dir = os.path.join(os.path.dirname(__file__), "../../uploads/simulations")
         
         profiles = []
         
         # 优先尝试读取Reddit JSON格式
-        reddit_profile_path = os.path.join(sim_dir, "reddit_profiles.json")
+        reddit_profile_path = storage_path(simulations_dir, simulation_id, "reddit_profiles.json")
         if os.path.exists(reddit_profile_path):
             try:
                 with open(reddit_profile_path, 'r', encoding='utf-8') as f:
@@ -1525,7 +1523,7 @@ class ZepToolsService:
                 logger.warning(t("console.readRedditProfilesFailed", error=e))
         
         # 尝试读取Twitter CSV格式
-        twitter_profile_path = os.path.join(sim_dir, "twitter_profiles.csv")
+        twitter_profile_path = storage_path(simulations_dir, simulation_id, "twitter_profiles.csv")
         if os.path.exists(twitter_profile_path):
             try:
                 with open(twitter_profile_path, 'r', encoding='utf-8') as f:
