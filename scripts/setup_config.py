@@ -28,7 +28,7 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / ".env")
     args = parser.parse_args()
     if create_config(args.output):
-        print("Created private .env with a random workspace access key. Add ZEP_API_KEY and review the LLM settings before starting.")
+        print("Created private .env with a random workspace access key. Local memory is ready; review the model settings before starting.")
     else:
         print("Configuration already exists; kept it unchanged. Check that MIROFISH_ACCESS_KEY has at least 32 characters.")
 

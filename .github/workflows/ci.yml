@@ -35,24 +35,12 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.11.16'
-      - name: Verify lock and resolve the locked core test dependencies
+      - name: Verify lock and install the API runtime
         run: |
           uv lock --check --directory backend
-          uv export --directory backend --locked --no-dev --no-emit-project --no-hashes --output-file "$RUNNER_TEMP/full-requirements.txt" > /dev/null
-          python - <<'PY'
-          import os
-          from pathlib import Path
-          import tomllib
-
-          project = tomllib.loads(Path('backend/pyproject.toml').read_text())
-          # Tests mock provider/simulation boundaries. The heavy simulation tree
-          # is audited separately; see docs/dependency-security.md for coverage.
-          excluded = ('camel-ai', 'camel-oasis', 'mcp')
-          core = [item for item in project['project']['dependencies'] if not item.startswith(excluded)]
-          Path(os.environ['RUNNER_TEMP'], 'core.in').write_text('\n'.join(core) + '\n')
-          PY
-          uv pip compile "$RUNNER_TEMP/core.in" --constraint "$RUNNER_TEMP/full-requirements.txt" --python "$(command -v python)" --output-file "$RUNNER_TEMP/core-requirements.txt"
+          uv export --directory backend --locked --no-dev --no-emit-project --no-hashes --output-file "$RUNNER_TEMP/core-requirements.txt" > /dev/null
           uv pip install --system -r "$RUNNER_TEMP/core-requirements.txt" 'pytest==9.1.1'
+          python -c "import importlib.util; assert importlib.util.find_spec('camel') is None; assert importlib.util.find_spec('oasis') is None"
       - name: Backend regression and security tests
         working-directory: backend
         run: python -m pytest tests -q
@@ -60,6 +48,15 @@ jobs:
         run: python -m unittest discover -s tests -q
       - name: Audit the locked core runtime
         run: uvx pip-audit==2.10.1 --disable-pip --no-deps -r "$RUNNER_TEMP/core-requirements.txt" --format json --output "$RUNNER_TEMP/core-audit.json"
+      - name: Reject incomplete core audit coverage
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          report = json.loads(Path(os.environ['RUNNER_TEMP'], 'core-audit.json').read_text())
+          assert not [item for item in report['dependencies'] if item.get('skip_reason')], report
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -91,27 +88,58 @@ jobs:
       - run: npm audit --audit-level=high
         working-directory: frontend
 
-  simulation-dependency-report:
-    name: Full simulation dependency inventory
+  simulation:
+    name: Full backend with simulation / Python ${{ matrix.python }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
+    env:
+      LLM_PROVIDER: openai_compatible
+      LLM_API_KEY: ci-dummy-key
+      LLM_BASE_URL: http://127.0.0.1:9/v1
+      ZEP_API_KEY: ci-dummy-key
+      TOKENIZERS_PARALLELISM: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.11.16'
-      - name: Export the complete locked runtime without installing simulation libraries
-        run: uv export --directory backend --locked --no-dev --no-emit-project --no-hashes --output-file "$RUNNER_TEMP/full-requirements.txt" > /dev/null
-      - name: Report upstream-constrained findings
-        id: audit
-        # The documented OASIS pins still have advisories. This report is visible
-        # but not a false claim that the complete simulation tree passes a gate.
-        continue-on-error: true
-        run: uvx pip-audit==2.10.1 --disable-pip --no-deps -r "$RUNNER_TEMP/full-requirements.txt" --format json --output "$RUNNER_TEMP/full-audit.json"
-      - name: Summarize inventory and require a valid scanner result
+      - name: Install the complete isolated simulation environment
+        working-directory: backend
+        run: uv sync --locked --extra simulation --python "$(command -v python)"
+      - name: Run all backend tests with the complete simulation runtime
+        working-directory: backend
+        # Tiny local safetensors checkpoints exercise actual model APIs without
+        # downloading model weights. Provider HTTP responses are mocked.
+        run: .venv/bin/python -m pytest tests -q
+      - name: Prepare the full dependency audit inventory
+        run: |
+          uv export --directory backend --locked --extra simulation --no-dev --no-emit-project --no-emit-package camel-oasis --no-hashes --output-file "$RUNNER_TEMP/full-requirements.txt" > /dev/null
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import re
+          import tomllib
+
+          lock = tomllib.loads(Path('backend/uv.lock').read_text())
+          for package in lock['package']:
+              if package['name'] == 'torch' and package['version'].endswith('+cpu'):
+                  assert package['source']['registry'] == 'https://download.pytorch.org/whl/cpu'
+          original = Path(os.environ['RUNNER_TEMP'], 'full-requirements.txt').read_text()
+          # PyPI's advisory API cannot look up the official +cpu build suffix.
+          # Query its upstream release version; preserve the original inventory.
+          normalized = re.sub(r'^(torch==[^\s;+]+)\+cpu(?=\s|$)', r'\1', original, flags=re.MULTILINE)
+          Path(os.environ['RUNNER_TEMP'], 'full-audit-requirements.txt').write_text(normalized)
+          PY
+      - name: Audit every public simulation dependency
+        run: uvx pip-audit==2.10.1 --disable-pip --no-deps -r "$RUNNER_TEMP/full-audit-requirements.txt" --format json --output "$RUNNER_TEMP/full-audit.json"
+      - name: Summarize inventory and reject incomplete coverage
         if: always()
         run: |
           python - <<'PY'
@@ -120,19 +148,22 @@ jobs:
           from pathlib import Path
 
           report = json.loads(Path(os.environ['RUNNER_TEMP'], 'full-audit.json').read_text())
+          skipped = [item for item in report['dependencies'] if item.get('skip_reason')]
+          assert not skipped, skipped
           affected = [item for item in report['dependencies'] if item.get('vulns')]
           findings = {(item['name'], vuln['id']) for item in affected for vuln in item['vulns']}
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
               summary.write(f'Full simulation inventory: {len(findings)} distinct package/advisory matches in {len(affected)} packages.\n\n')
-              summary.write('Advisory report only: see docs/dependency-security.md for upstream constraints and reachability limits.\n\n')
+              summary.write('Blocking scan; local OASIS fork is source-reviewed and contract-tested separately. See docs/dependency-security.md.\n\n')
               for item in affected:
                   summary.write(f"- {item['name']} {item['version']}: {len({v['id'] for v in item['vulns']})} distinct IDs\n")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: full-simulation-dependency-audit
+          name: simulation-audit-python-${{ matrix.python }}
           path: |
             ${{ runner.temp }}/full-audit.json
             ${{ runner.temp }}/full-requirements.txt
+            ${{ runner.temp }}/full-audit-requirements.txt
           if-no-files-found: error

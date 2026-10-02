@@ -1,24 +1,23 @@
-# Maintained fork: improvement plan
+# Maintained fork: progress and next work
 
-This fork keeps the upstream AGPL-3.0 license and attribution. Its initial target is a private workspace for one owner. The 2026-10-02 hardening pass addresses demonstrated application vulnerabilities; it is not a claim that the full dependency stack is free of vulnerabilities.
+This fork keeps upstream AGPL-3.0 attribution and targets a private, single-owner workspace. Completed controls reduce demonstrated risks; they do not establish forecast accuracy or guarantee absence of vulnerabilities.
 
-## Next: finish the security baseline
+## Implemented
 
-1. **Modernize or replace the pinned OASIS/CAMEL dependency tree.** Six packages retain advisories after compatible updates. Upgrade in a separate branch with real Twitter and Reddit action tests, safe model loading, and a fresh Linux container inventory. Avoid suppressing scanner results to make CI appear clean. See [dependency analysis](dependency-security.md).
-2. **Isolate simulations from the API.** Run each simulation in a restricted worker with its own working directory, bounded CPU/memory/time, limited provider credentials, and network access limited to required services. Keep storage directories writable only by the application owner.
-3. **Persist jobs.** Add a durable queue and transactional SQLite/Postgres job records. Atomically claim jobs in the database, recover interrupted work on restart, and support cancellation. Current duplicate prevention coordinates one process only.
+- **Owned memory:** SQLite document/entity/relationship/evidence storage, transactional batches, replay deduplication and bounded lexical search. Zep Cloud remains an explicit option. Cloud model prompts still leave the server. See [local memory](local-memory.md).
+- **Modern dependencies:** separate API and simulation environments, reviewed OASIS packaging/source fork, safe pinned recommendation loaders and blocking vulnerability scans. See [dependency analysis](dependency-security.md).
+- **Bounded simulation processes:** minimal credential environment, per-run working directories, CPU/wall limits, Linux address-space limits and a restricted non-root container. This is not a network sandbox or a separate security identity for each run. See [deployment](deployment.md).
+- **Durable jobs:** SQLite claims, leases, saved handler parameters, automatic queued recovery and explicit interrupted retries. Provider effects are not exactly-once. See [recovery](durable-jobs.md).
+- **Usage budgets:** shared project ledgers across preparation, simulations and reports; pre-request call/token/output/time reservations; optional explicitly priced cost caps. Unknown subscription costs remain unknown. See [budgets](run-budgets.md).
+- **Auditable reports:** immutable source snapshots, citation target checks, uncertainty labels and run manifests. Reference integrity does not prove semantic support or truth.
+- **Evaluation harness:** dated binary forecasts, leakage checks, proper scores, explicit baselines, calibration bins and repeated-run variability. Synthetic fixtures verify the harness, not prediction performance. See [evaluation](forecast-evaluation.md).
+- **Workspace controls:** provider/storage disclosure, budget usage and limits, job recovery, and evidence inspection in reports.
 
-## Make simulations useful and measurable
+## Next priorities
 
-4. **Evaluate predictive claims before relying on them.** Build a dated holdout dataset, prohibit future information in inputs, compare against simple baselines, and measure calibration and outcome error. Repeat across models and random seeds; report uncertainty and failures. Generated scenarios are hypotheses until validated.
-5. **Preserve evidence provenance.** Link report statements to source passages and observed simulation events. Separate source facts, modeled assumptions, and generated behavior. Save input hashes, model IDs, prompts, simulation parameters, and timestamps with every run.
-6. **Add cost and resource budgets.** Show an estimate before starting, meter token calls and elapsed time, and stop at an explicit per-run cap. Cache reusable extraction/profile work, use smaller models for routine tasks, and reserve a stronger model for synthesis. The current round/concurrency bounds are safety limits, not spend guarantees.
-
-## Improve ownership and everyday use
-
-7. **Replace mandatory Zep Cloud with a graph adapter.** Preserve the existing integration and add a local graph/vector implementation. This enables private or offline deployments and gives users a clear retention/export/delete policy. Ollama support alone does not make document processing local.
-8. **Expose provider checks in onboarding.** Add a guided configuration screen with model discovery, text/JSON/tool checks, clear cloud-versus-local labels, and actionable missing-key messages. Start with an end-to-end synthetic example before uploading real documents.
-9. **Improve report trust and workflow.** Show progress based on durable job state, make failures recoverable, add comparison views across runs, and export source-linked reports. Label outputs as simulation results rather than measured future probabilities.
-10. **Add accounts only when collaboration is needed.** Replace the shared owner key with OIDC/passkeys, per-project authorization, per-user budgets, and audit history before supporting separate users or a public service.
-
-Suggested first milestone: one reproducible, low-cost Ollama Cloud example that survives a server restart and produces an evidence-linked report, with the full simulation dependency inventory reviewed and the Zep/local-storage choice explicit.
+1. **Measure usefulness on real historical holdouts.** Curate independent dated cases with auditable evidence cutoffs and outcomes; compare models, seeds and simple baselines. Publish uncertainty and failed runs before making predictive claims.
+2. **Strengthen worker isolation.** Separate worker containers/users and outbound network policy, durable process supervision, and a platform-tested cancellation story. Multi-server deployment also needs transactional project/simulation lifecycle coordination.
+3. **Improve retrieval and migration.** Evaluate local embeddings and temporal contradiction handling against lexical search; add explicit Zep export/import, complete project export and tested restore tooling. Keep data ownership and privacy visible.
+4. **Improve model onboarding.** Add model discovery and text/JSON/tool capability checks to the UI, actionable configuration errors and a small synthetic guided run. Cache reusable work and expose estimates based on measured workloads.
+5. **Compare runs and claims.** Add scenario comparison, source-linked exports and claim-to-passage support evaluation beyond ID/hash validation.
+6. **Add accounts when needed.** OIDC/passkeys, per-project authorization, per-user budgets and audit history are prerequisites for multiple independent users or a public service.

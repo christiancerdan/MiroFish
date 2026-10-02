@@ -35,6 +35,7 @@
       </div>
     </header>
 
+    <p v-if="error" class="workflow-error" role="alert">{{ error }}</p>
     <!-- Main Content Area -->
     <main class="content-area">
       <!-- Left Panel: Graph -->
@@ -357,10 +358,11 @@ const pollTaskStatus = async (taskId) => {
             projectData.value = projRes.data
             await loadGraph(projRes.data.graph_id)
         }
-      } else if (task.status === 'failed') {
+      } else if (['failed', 'interrupted', 'budget_exceeded', 'cancelled'].includes(task.status)) {
         stopPolling()
-        error.value = task.error
-        addLog(`Graph build task failed: ${task.error}`)
+        stopGraphPolling()
+        error.value = `Graph build ${task.status.replaceAll('_', ' ')}. ${task.error || 'Open Workspace to review this job and its budget.'}`
+        addLog(error.value)
       }
     }
   } catch (e) {
@@ -419,6 +421,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.workflow-error { padding: 14px 24px; color: #8b342b; background: #fff3ef; font-size: 13px; }
 .main-view {
   height: 100vh;
   display: flex;

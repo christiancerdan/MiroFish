@@ -17,6 +17,7 @@
           </div>
 
           <!-- Sections List -->
+          <ReportEvidence v-if="reportData" :report="reportData" />
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -416,6 +417,7 @@ import { useI18n } from 'vue-i18n'
 import { renderMarkdown } from '../utils/markdown'
 import { chatWithReport, getReport, getAgentLog } from '../api/report'
 import { interviewAgents, getSimulationProfilesRealtime } from '../api/simulation'
+import ReportEvidence from './ReportEvidence.vue'
 
 const { t } = useI18n()
 
@@ -451,6 +453,7 @@ const isSurveying = ref(false)
 
 // Report Data
 const reportOutline = ref(null)
+const reportData = ref(null)
 const generatedSections = ref({})
 const collapsedSections = ref(new Set())
 const currentSectionIndex = ref(null)
@@ -795,6 +798,13 @@ const loadReportData = async () => {
     // Get report info
     const reportRes = await getReport(props.reportId)
     if (reportRes.success && reportRes.data) {
+      reportData.value = reportRes.data
+      if (reportRes.data.outline) {
+        reportOutline.value = reportRes.data.outline
+        reportRes.data.outline.sections?.forEach((section, index) => {
+          if (section.content) generatedSections.value[index + 1] = section.content
+        })
+      }
       // Load agent logs to get report outline and sections
       await loadAgentLogs()
     }
@@ -864,6 +874,9 @@ onUnmounted(() => {
 
 watch(() => props.reportId, (newId) => {
   if (newId) {
+    reportData.value = null
+    reportOutline.value = null
+    generatedSections.value = {}
     loadReportData()
   }
 }, { immediate: true })

@@ -11,6 +11,7 @@ from datetime import datetime
 from queue import Queue, Empty
 
 from ..config import Config
+from ..utils.budget import copy_budget_context
 from ..utils.logger import get_logger
 from ..utils.locale import get_locale, set_locale
 from ..utils.zep import (
@@ -257,10 +258,11 @@ class ZepGraphMemoryUpdater:
         self.simulation_id = simulation_id or "unknown"
         self.api_key = api_key or Config.ZEP_API_KEY
         
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY未配置")
         
         self.client = get_zep_client(self.api_key)
+        # Both background ingestion and stop-time draining keep the project
+        # ledger captured when the runner creates this updater.
+        self._add_episode = copy_budget_context(self.client.graph.add)
         
         # 活动队列
         self._activity_queue: Queue = Queue()
@@ -491,7 +493,7 @@ class ZepGraphMemoryUpdater:
             if deadline is not None and time.time() >= deadline:
                 raise _DrainDeadlineExceeded(processed_count)
             try:
-                episode = self.client.graph.add(
+                episode = self._add_episode(
                     graph_id=self.graph_id,
                     type="text",
                     data=combined_text,

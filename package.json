@@ -4,7 +4,8 @@
   "description": "MiroFish - 简洁通用的群体智能引擎，预测万物",
   "scripts": {
     "setup": "npm ci && npm ci --prefix frontend",
-    "setup:backend": "cd backend && uv sync --frozen",
+    "setup:backend": "python3 scripts/setup_backend.py",
+    "setup:simulation": "python3 scripts/setup_backend.py --simulation-only",
     "setup:all": "npm run setup && npm run setup:backend",
     "dev": "concurrently --kill-others -n \"backend,frontend\" -c \"green,cyan\" \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && uv run python run.py",

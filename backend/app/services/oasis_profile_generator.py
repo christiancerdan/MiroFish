@@ -14,10 +14,13 @@ import time
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
+from contextvars import ContextVar, copy_context
 
 from openai import OpenAI
 from ..config import Config
+from ..models.task import JobCancelled, JobLeaseLost, TaskManager, copy_task_context
 from ..utils.llm_provider import settings_from_config
+from ..utils.budget import bind_budget_client, BudgetExceeded
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, get_locale, set_locale, t
 from ..utils.openai_chat_compat import create_chat_completion, extract_chat_completion_text
@@ -30,6 +33,17 @@ from ..utils.zep import (
 from .zep_entity_reader import EntityNode, ZepEntityReader
 
 logger = get_logger('mirofish.oasis_profile')
+
+# Each batch carries its own stop signal into workers and model retry loops.
+# Concurrent batches on the same generator never overwrite each other's signal.
+_profile_stop = ContextVar('profile_generation_stop', default=None)
+
+
+def _check_profile_stop():
+    stop = _profile_stop.get()
+    if stop is not None and stop.is_set():
+        raise JobCancelled('Profile generation stopped before the next model request')
+    TaskManager().assert_current_execution()
 
 
 def _coerce_to_str(value: Any) -> str:
@@ -258,15 +272,18 @@ class OasisProfileGenerator:
             api_key=self.api_key,
             base_url=self.base_url
         )
+        bind_budget_client(self.client)
         
         # Zep客户端用于检索丰富上下文
         self.zep_api_key = zep_api_key or Config.ZEP_API_KEY
         self.zep_client = None
         self.graph_id = graph_id
         
-        if self.zep_api_key:
+        if self.zep_api_key or getattr(Config, "GRAPH_BACKEND", "local") == "local":
             try:
                 self.zep_client = get_zep_client(self.zep_api_key)
+            except (BudgetExceeded, JobCancelled, JobLeaseLost):
+                raise
             except Exception as e:
                 logger.warning(f"Zep客户端初始化失败: {e}")
     
@@ -446,6 +463,8 @@ class OasisProfileGenerator:
             
             logger.info(f"Zep混合检索完成: {entity_name}, 获取 {len(results['facts'])} 条事实, {len(results['node_summaries'])} 个相关节点")
             
+        except (BudgetExceeded, JobCancelled, JobLeaseLost):
+            raise
         except Exception as e:
             logger.warning(f"Zep检索失败 ({entity_name}): {e}")
             if not is_retryable_zep_error(e):
@@ -568,6 +587,7 @@ class OasisProfileGenerator:
         last_error = None
         
         for attempt in range(max_attempts):
+            _check_profile_stop()
             try:
                 response = create_chat_completion(
                     self.client,
@@ -612,11 +632,17 @@ class OasisProfileGenerator:
                     
                     last_error = je
                     
+            except (BudgetExceeded, JobCancelled, JobLeaseLost):
+                raise
             except Exception as e:
                 logger.warning(f"LLM调用失败 (attempt {attempt+1}): {str(e)[:80]}")
                 last_error = e
-                import time
-                time.sleep(1 * (attempt + 1))  # 指数退避
+                stop = _profile_stop.get()
+                if stop is None:
+                    time.sleep(attempt + 1)
+                else:
+                    stop.wait(attempt + 1)
+                    _check_profile_stop()
         
         logger.warning(f"LLM生成人设失败（{max_attempts}次尝试）: {last_error}, 使用规则生成")
         return self._generate_profile_rule_based(
@@ -917,7 +943,7 @@ class OasisProfileGenerator:
             Agent Profile列表
         """
         import concurrent.futures
-        from threading import Lock
+        from threading import Event, Lock
         
         # 设置graph_id用于Zep检索
         if graph_id:
@@ -934,7 +960,7 @@ class OasisProfileGenerator:
             if not realtime_output_path:
                 return
             
-            with lock:
+            with lock, TaskManager().publication_guard():
                 # 过滤出已生成的 profiles
                 existing_profiles = [p for p in profiles if p is not None]
                 if not existing_profiles:
@@ -956,6 +982,8 @@ class OasisProfileGenerator:
                                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                                 writer.writeheader()
                                 writer.writerows(profiles_data)
+                except (BudgetExceeded, JobCancelled, JobLeaseLost):
+                    raise
                 except Exception as e:
                     logger.warning(f"实时保存 profiles 失败: {e}")
         
@@ -965,6 +993,7 @@ class OasisProfileGenerator:
         def generate_single_profile(idx: int, entity: EntityNode) -> tuple:
             """生成单个profile的工作函数"""
             set_locale(current_locale)
+            _check_profile_stop()
             entity_type = entity.get_entity_type() or "Entity"
             
             try:
@@ -974,11 +1003,14 @@ class OasisProfileGenerator:
                     use_llm=use_llm
                 )
                 
+                _check_profile_stop()
                 # 实时输出生成的人设到控制台和日志
                 self._print_generated_profile(entity.name, entity_type, profile)
                 
                 return idx, profile, None
                 
+            except (BudgetExceeded, JobCancelled, JobLeaseLost):
+                raise
             except Exception as e:
                 logger.error(f"生成实体 {entity.name} 的人设失败: {str(e)}")
                 # 创建一个基础profile
@@ -998,58 +1030,67 @@ class OasisProfileGenerator:
         print(f"开始生成Agent人设 - 共 {total} 个实体，并行数: {parallel_count}")
         print(f"{'='*60}\n")
         
-        # 使用线程池并行执行
-        with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_count) as executor:
-            # 提交所有任务
-            future_to_entity = {
-                executor.submit(generate_single_profile, idx, entity): (idx, entity)
-                for idx, entity in enumerate(entities)
-            }
-            
-            # 收集结果
-            for future in concurrent.futures.as_completed(future_to_entity):
-                idx, entity = future_to_entity[future]
-                entity_type = entity.get_entity_type() or "Entity"
-                
-                try:
+        # Check cancellation before any paid work is scheduled. Progress hooks
+        # are job ownership/cancellation checkpoints, not profile fallbacks.
+        TaskManager().assert_current_execution()
+        if progress_callback:
+            progress_callback(0, total, t('progress.startGenerating'))
+
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=parallel_count)
+        stop = Event()
+        stop_token = _profile_stop.set(stop)
+        pending = {}
+        remaining = iter(enumerate(entities))
+
+        def fill_workers():
+            while len(pending) < parallel_count:
+                item = next(remaining, None)
+                if item is None:
+                    break
+                idx, entity = item
+                context = copy_context()
+                future = executor.submit(context.run, copy_task_context(generate_single_profile), idx, entity)
+                pending[future] = (idx, entity)
+
+        try:
+            # Keep at most one task per worker admitted. The remaining entities
+            # stay unscheduled until completed work passes its checkpoint.
+            fill_workers()
+            while pending:
+                done, _ = concurrent.futures.wait(
+                    pending, return_when=concurrent.futures.FIRST_COMPLETED
+                )
+                for future in done:
+                    idx, entity = pending.pop(future)
+                    entity_type = entity.get_entity_type() or "Entity"
                     result_idx, profile, error = future.result()
-                    profiles[result_idx] = profile
-                    
-                    with lock:
-                        completed_count[0] += 1
-                        current = completed_count[0]
-                    
-                    # 实时写入文件
-                    save_profiles_realtime()
-                    
+                    current = completed_count[0] + 1
+                    TaskManager().assert_current_execution()
                     if progress_callback:
                         progress_callback(
-                            current, 
-                            total, 
+                            current, total,
                             f"已完成 {current}/{total}: {entity.name}（{entity_type}）"
                         )
-                    
+                    # No result or file is published after a failed checkpoint.
+                    profiles[result_idx] = profile
+                    completed_count[0] = current
+                    save_profiles_realtime()
                     if error:
                         logger.warning(f"[{current}/{total}] {entity.name} 使用备用人设: {error}")
                     else:
                         logger.info(f"[{current}/{total}] 成功生成人设: {entity.name} ({entity_type})")
-                        
-                except Exception as e:
-                    logger.error(f"处理实体 {entity.name} 时发生异常: {str(e)}")
-                    with lock:
-                        completed_count[0] += 1
-                    profiles[idx] = OasisAgentProfile(
-                        user_id=idx,
-                        user_name=self._generate_username(entity.name),
-                        name=entity.name,
-                        bio=f"{entity_type}: {entity.name}",
-                        persona=entity.summary or "A participant in social discussions.",
-                        source_entity_uuid=entity.uuid,
-                        source_entity_type=entity_type,
-                    )
-                    # 实时写入文件（即使是备用人设）
-                    save_profiles_realtime()
-        
+                fill_workers()
+        finally:
+            stop.set()
+            for future in pending:
+                future.cancel()
+            try:
+                # Requests already in flight may finish and incur charges.
+                # Join them; their retry checkpoint sees the stop signal.
+                executor.shutdown(wait=True, cancel_futures=True)
+            finally:
+                _profile_stop.reset(stop_token)
+
         print(f"\n{'='*60}")
         print(f"人设生成完成！共生成 {len([p for p in profiles if p])} 个Agent")
         print(f"{'='*60}\n")
@@ -1105,10 +1146,11 @@ class OasisProfileGenerator:
             file_path: 文件路径
             platform: 平台类型 ("reddit" 或 "twitter")
         """
-        if platform == "twitter":
-            self._save_twitter_csv(profiles, file_path)
-        else:
-            self._save_reddit_json(profiles, file_path)
+        with TaskManager().publication_guard():
+            if platform == "twitter":
+                self._save_twitter_csv(profiles, file_path)
+            else:
+                self._save_reddit_json(profiles, file_path)
     
     def _save_twitter_csv(self, profiles: List[OasisAgentProfile], file_path: str):
         """

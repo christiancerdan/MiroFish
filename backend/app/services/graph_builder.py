@@ -6,14 +6,14 @@
 import hashlib
 import uuid
 import time
-import threading
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
 
 from zep_cloud import BatchAddItem, EntityEdgeSourceTarget, NotFoundError
 
 from ..config import Config
-from ..models.task import TaskManager, TaskStatus
+from ..utils.budget import BudgetExceeded
+from ..models.task import TaskManager
 from ..utils.zep_paging import fetch_all_nodes, fetch_all_edges
 from ..utils.ontology import (
     MAX_ONTOLOGY_TYPES,
@@ -28,7 +28,7 @@ from ..utils.zep import (
     is_retryable_zep_error,
 )
 from .text_processor import TextProcessor
-from ..utils.locale import t, get_locale, set_locale
+from ..utils.locale import t
 
 
 @dataclass
@@ -66,8 +66,6 @@ class GraphBuilderService:
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or Config.ZEP_API_KEY
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY 未配置")
         
         self.client = get_zep_client(self.api_key)
         self.task_manager = TaskManager()
@@ -81,140 +79,12 @@ class GraphBuilderService:
         chunk_overlap: int = 50,
         batch_size: int = 350
     ) -> str:
-        """
-        异步构建图谱
-        
-        Args:
-            text: 输入文本
-            ontology: 本体定义（来自接口1的输出）
-            graph_name: 图谱名称
-            chunk_size: 文本块大小
-            chunk_overlap: 块重叠大小
-            batch_size: 每批发送的块数量
-            
-        Returns:
-            任务ID
-        """
-        # 创建任务
-        task_id = self.task_manager.create_task(
-            task_type="graph_build",
-            metadata={
-                "graph_name": graph_name,
-                "chunk_size": chunk_size,
-                "text_length": len(text),
-            }
+        """Deprecated: graph builds must be owned by a persisted project job."""
+        raise RuntimeError(
+            "build_graph_async is retired; submit a project graph build through "
+            "/api/graph/build so its durable job can be tracked and recovered"
         )
-        
-        # Capture locale before spawning background thread
-        current_locale = get_locale()
 
-        # 在后台线程中执行构建
-        thread = threading.Thread(
-            target=self._build_graph_worker,
-            args=(task_id, text, ontology, graph_name, chunk_size, chunk_overlap, batch_size, current_locale)
-        )
-        thread.daemon = True
-        thread.start()
-        
-        return task_id
-    
-    def _build_graph_worker(
-        self,
-        task_id: str,
-        text: str,
-        ontology: Dict[str, Any],
-        graph_name: str,
-        chunk_size: int,
-        chunk_overlap: int,
-        batch_size: int,
-        locale: str = 'zh'
-    ):
-        """图谱构建工作线程"""
-        set_locale(locale)
-        try:
-            self.task_manager.update_task(
-                task_id,
-                status=TaskStatus.PROCESSING,
-                progress=5,
-                message=t('progress.startBuildingGraph')
-            )
-            
-            # Validate the complete ingestion payload before the first Cloud
-            # mutation, including this legacy service entry point.
-            chunks = TextProcessor.split_text(text, chunk_size, chunk_overlap)
-            self.validate_batch_chunks(chunks, batch_size=batch_size)
-            total_chunks = len(chunks)
-
-            # 1. 创建图谱
-            graph_id = self.create_graph(graph_name)
-            self.task_manager.update_task(
-                task_id,
-                progress=10,
-                message=t('progress.graphCreated', graphId=graph_id)
-            )
-            
-            # 2. 设置本体
-            self.set_ontology(graph_id, ontology)
-            self.task_manager.update_task(
-                task_id,
-                progress=15,
-                message=t('progress.ontologySet')
-            )
-            
-            # 3. 文本分块已在 Cloud mutation 前完成并验证
-            self.task_manager.update_task(
-                task_id,
-                progress=20,
-                message=t('progress.textSplit', count=total_chunks)
-            )
-            
-            # 4. 分批发送数据
-            submission = self.add_text_batches(
-                graph_id, chunks, batch_size,
-                lambda msg, prog: self.task_manager.update_task(
-                    task_id,
-                    progress=20 + int(prog * 0.4),  # 20-60%
-                    message=msg
-                )
-            )
-            
-            # 5. 等待Zep处理完成
-            self.task_manager.update_task(
-                task_id,
-                progress=60,
-                message=t('progress.waitingZepProcess')
-            )
-            
-            self._wait_for_batch(
-                submission,
-                lambda msg, prog: self.task_manager.update_task(
-                    task_id,
-                    progress=60 + int(prog * 0.3),  # 60-90%
-                    message=msg
-                )
-            )
-            
-            # 6. 获取图谱信息
-            self.task_manager.update_task(
-                task_id,
-                progress=90,
-                message=t('progress.fetchingGraphInfo')
-            )
-            
-            graph_info = self._get_graph_info(graph_id)
-            
-            # 完成
-            self.task_manager.complete_task(task_id, {
-                "graph_id": graph_id,
-                "graph_info": graph_info.to_dict(),
-                "chunks_processed": total_chunks,
-            })
-            
-        except Exception as e:
-            import traceback
-            error_msg = f"{str(e)}\n{traceback.format_exc()}"
-            self.task_manager.fail_task(task_id, error_msg)
-    
     def create_graph(
         self,
         name: str,
@@ -312,6 +182,9 @@ class GraphBuilderService:
     
     def set_ontology(self, graph_id: str, ontology: Dict[str, Any]):
         """设置图谱本体（公开方法）"""
+        if getattr(self.client, "backend", None) == "local":
+            self.client.graph.set_ontology_definition(graph_id, ontology)
+            return
         import warnings
         from typing import Optional
         from pydantic import Field
@@ -544,6 +417,8 @@ class GraphBuilderService:
 
         try:
             self.client.batch.process(batch_id=batch_id)
+        except BudgetExceeded:
+            raise
         except Exception as error:
             # A process response can be lost after the server accepted it.
             # Reconcile with a safe GET instead of issuing a second POST.
@@ -829,6 +704,7 @@ class GraphBuilderService:
                 "summary": node.summary or "",
                 "attributes": node.attributes or {},
                 "created_at": created_at,
+                "source_episode_ids": list(getattr(node, "source_episode_ids", None) or []),
             })
         
         edges_data = []
@@ -864,6 +740,7 @@ class GraphBuilderService:
                 "invalid_at": str(invalid_at) if invalid_at else None,
                 "expired_at": str(expired_at) if expired_at else None,
                 "episodes": episodes or [],
+                "source_episode_ids": episodes or [],
             })
         
         return {

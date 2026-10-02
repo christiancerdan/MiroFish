@@ -30,6 +30,7 @@ class EntityNode:
     related_edges: List[Dict[str, Any]] = field(default_factory=list)
     # 相关的其他节点信息
     related_nodes: List[Dict[str, Any]] = field(default_factory=list)
+    source_episode_ids: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -40,6 +41,7 @@ class EntityNode:
             "attributes": self.attributes,
             "related_edges": self.related_edges,
             "related_nodes": self.related_nodes,
+            "source_episode_ids": self.source_episode_ids,
         }
     
     def get_entity_type(self) -> Optional[str]:
@@ -79,8 +81,6 @@ class ZepEntityReader:
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or Config.ZEP_API_KEY
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY 未配置")
         
         self.client = get_zep_client(self.api_key)
     
@@ -132,6 +132,7 @@ class ZepEntityReader:
                 "labels": node.labels or [],
                 "summary": node.summary or "",
                 "attributes": node.attributes or {},
+                "source_episode_ids": list(getattr(node, "source_episode_ids", None) or []),
             })
 
         logger.info(f"共获取 {len(nodes_data)} 个节点")
@@ -160,6 +161,8 @@ class ZepEntityReader:
                 "source_node_uuid": edge.source_node_uuid,
                 "target_node_uuid": edge.target_node_uuid,
                 "attributes": edge.attributes or {},
+                **({"source_episode_ids": list(getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None))}
+                   if getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None) else {}),
             })
 
         logger.info(f"共获取 {len(edges_data)} 条边")
@@ -209,6 +212,8 @@ class ZepEntityReader:
                     "source_node_uuid": edge.source_node_uuid,
                     "target_node_uuid": edge.target_node_uuid,
                     "attributes": edge.attributes or {},
+                    **({"source_episode_ids": list(getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None))}
+                       if getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None) else {}),
                 })
             
             return edges_data
@@ -283,6 +288,7 @@ class ZepEntityReader:
                 labels=labels,
                 summary=node["summary"],
                 attributes=node["attributes"],
+                source_episode_ids=node.get("source_episode_ids", []),
             )
             
             # 获取相关边和节点
@@ -360,6 +366,8 @@ class ZepEntityReader:
             
             if not node:
                 return None
+            if getattr(node, "graph_id", graph_id) != graph_id:
+                return None
             
             # 获取节点的边
             edges = self.get_node_edges(entity_uuid, graph_id=graph_id)
@@ -408,6 +416,7 @@ class ZepEntityReader:
                 labels=node.labels or [],
                 summary=node.summary or "",
                 attributes=node.attributes or {},
+                source_episode_ids=list(getattr(node, "source_episode_ids", None) or []),
                 related_edges=related_edges,
                 related_nodes=related_nodes,
             )

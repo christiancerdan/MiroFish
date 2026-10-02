@@ -1,154 +1,185 @@
-# Dependency security and validation
+# Dependency security and simulation runtime
 
-Reviewed 2026-10-02. The backend web/API runtime subset passes the current
-`pip-audit` scan. The complete simulation dependency tree still has unresolved
-advisories. A successful test run or green CI does not mean the full simulation
-installation has no known vulnerable packages.
+Reviewed 2026-10-02. The locked API environment and the public packages in the
+modernized simulation environment pass the current vulnerability scan. This is
+an inventory result, not a guarantee that every dependency or application path
+is free of vulnerabilities. The locally maintained OASIS source is reviewed and
+tested separately because it is not a PyPI release.
 
-## Installation contract
+## Separate installations
 
-Use `cd backend && uv sync --locked` for the reviewed resolution. Both
-`pyproject.toml` and `requirements.txt` retain CAMEL AI **0.2.78**, OASIS
-**0.2.5**, and Zep Cloud **3.25.0**. Zep's version is deliberate because the
-application and mocked contract tests use that SDK's graph APIs. The OpenAI SDK
-remains **1.109.1**, compatible with CAMEL's `<2` requirement.
-
-MCP is explicitly constrained to `>=1.30.0,<2` in both manifests. CAMEL 0.2.78
-imports `FastMCP` from `mcp.server`; MCP 2 removes that import path. Resolving an
-unbounded current MCP version breaks the OASIS import. This is a compatibility
-constraint, not an advisory suppression.
-
-`requirements.txt` is a compatibility manifest, not the transitive lock. An
-unconstrained pip installation can select versions different from those tested.
-Do not override OASIS's exact dependencies merely to obtain a clean scanner
-result: changing those contracts needs simulation integration validation.
-
-Primary metadata:
-[CAMEL AI 0.2.78](https://pypi.org/pypi/camel-ai/0.2.78/json),
-[OASIS 0.2.5](https://pypi.org/pypi/camel-oasis/0.2.5/json), and
-[Zep Cloud 3.25.0](https://pypi.org/pypi/zep-cloud/3.25.0/json).
-
-## Changes in this refresh
-
-Flask moved from **3.1.2 to 3.1.3**, Werkzeug from **3.1.4 to 3.1.9**, and
-python-dotenv from **1.2.1 to 1.2.4**. Their manifest minimums are now 3.1.3,
-3.1.6, and 1.2.2 respectively. Waitress **3.0.2** was added for the production
-WSGI entry point. Flask's release is published on
-[PyPI](https://pypi.org/project/Flask/3.1.3/).
-
-The lock also refreshes the following packages within their parents' declared
-requirements:
-
-| Package | Previous | Reviewed lock |
-| --- | --- | --- |
-| anyio | 4.12.0 | 4.14.2 |
-| click | 8.3.1 | 8.5.0 |
-| cryptography | 46.0.3 | 50.0.2 |
-| filelock | 3.20.1 | 3.32.7 |
-| idna | 3.11 | 3.20 |
-| lxml | 6.0.2 | 6.1.3 |
-| marshmallow | 3.26.1 | 3.26.2 |
-| mcp | 1.24.0 | 1.30.0 |
-| nltk | 3.10.0 | 3.10.3 |
-| oauthlib | 3.3.1 | 4.0.0 |
-| pydantic-settings | 2.12.0 | 2.15.0 |
-| pyjwt | 2.10.1 | 2.15.1 |
-| pypdf | 6.4.2 | 6.19.0 |
-| python-multipart | 0.0.21 | 0.0.32 |
-| requests | 2.32.5 | 2.34.2 |
-| setuptools | 80.9.0 | 83.0.0 |
-| soupsieve | 2.8 | 2.10 |
-| starlette | 0.50.0 | 1.7.0 |
-| torch | 2.9.1 | 2.14.1 |
-| transformers | 4.57.3 | 4.57.6 |
-| urllib3 | 2.6.2 | 2.8.0 |
-| virtualenv | 20.35.4 | 21.14.3 |
-
-Torch's platform-specific CUDA dependencies also change with its version.
-The resolver accepts the complete graph; that alone does not validate GPU
-execution or an end-to-end OASIS simulation. Local OAuth 1 signing and OAuth 2
-authorization URL generation passed with requests-oauthlib 2.0.0/OAuthlib 4.0.0.
-Pre-commit 3.7.1 starts and virtualenv 21.14.3 creates a local environment.
-
-## Audit inventory and remaining constraints
-
-The original audit recorded **274 raw findings**, or **162 distinct
-package/advisory-ID pairs**, across **28 packages**. A fresh `pip-audit 2.10.1`
-scan of the refreshed runtime lock on macOS ARM64/Python 3.12 examined **134
-marker-applicable packages** and reported **50 raw findings**, or **29 distinct
-package/advisory-ID pairs**, across **6 packages**. The core runtime subset
-examined **32 packages** and reported **zero findings**. Linux and other Python
-versions can include different packages; CI publishes its own current inventory.
-The database can also change independently of the lockfile.
-
-Raw counts include repeated advisory records. Deduplication here uses
-`(package name, advisory ID)` and does not claim to merge every possible alias.
-A package/version match is evidence to investigate, not proof that an attacker
-can exploit this application's exposed routes. No advisories are globally
-ignored by the scanners.
-
-| Remaining package | Distinct IDs | Constraint and application exposure |
-| --- | ---: | --- |
-| Pillow 10.3.0 | 17 | OASIS pins exactly 10.3.0 and CAMEL requires `<11`; the scan's fixes are in 12.x. The web upload parser handles PDF through PyMuPDF and text through decoders; it does not pass uploads to Pillow. Image decoding/rendering in simulation dependencies still needs separate review before accepting untrusted images. |
-| pytest 8.2.0 | 1 | OASIS includes this exact test-tool version as a runtime dependency. Its temporary-directory advisory concerns local test execution. CI's isolated core environment uses pytest 9.1.1, which is outside that advisory range, but a full OASIS installation still contains 8.2.0. |
-| sentence-transformers 3.0.0 | 1 | OASIS pins this exact version. The advisory concerns loading attacker-controlled model/module configuration; its listed fix is 5.6.0. OASIS imports it eagerly, and its alternate Twitter recommendation path loads `paraphrase-MiniLM-L6-v2`. Model artifacts and the local model cache are a relevant trust boundary. |
-| transformers 4.57.6 | 6 | Sentence Transformers 3.0.0 requires `transformers<5`, preventing the listed 5.x fixes. Default Twitter simulation loads `Twitter/twhin-bert-base` through `AutoTokenizer/AutoModel.from_pretrained` when recommendation refresh has posts to process, so model loading is reachable. That model identifier is fixed upstream; this is not proof of an arbitrary user-controlled checkpoint route. Some advisories concern different model/conversion/training helpers or narrower versions than the broad scanner match; they remain unresolved rather than being declared exploitable or dismissed. |
-| unstructured 0.13.7 | 3 | OASIS pins it exactly. Listed fixes span 0.14.3–0.24.0 for XML parsing, URL fetching, and MSG attachment handling. The application's upload path does not call Unstructured; enabling those dependency features would create a different trust boundary. |
-| nltk 3.10.3 | 1 | The refreshed version fixes the earlier reports but the current database also lists PYSEC-2026-3740, with no fixed version. It concerns caller-controlled model-artifact paths. No direct application route invokes those artifact APIs; transitive model/data loading remains a review requirement. |
-
-Representative advisory records are
-[NLTK artifact paths](https://github.com/advisories/GHSA-8mgp-746c-j5xp),
-[Sentence Transformers model loading](https://github.com/advisories/GHSA-jhr6-gm9c-rqjv),
-[Transformers model configuration](https://github.com/advisories/GHSA-29pf-2h5f-8g72),
-and [Unstructured attachment traversal](https://github.com/advisories/GHSA-gm8q-m8mv-jj5m).
-These residuals require an upstream OASIS/CAMEL update or a separately tested
-maintained dependency fork. The current refresh makes neither change.
-
-Reachability was checked against OASIS 0.2.5/CAMEL 0.2.78 source: Twitter's
-default recommendation selection is in `oasis/environment/env.py`;
-`Platform.update_rec_table()` reaches the lazy model loader in
-`oasis/social_platform/recsys.py` once posts exist. An empty first round can
-return before loading a checkpoint. Reddit/random recommendation
-selection does not initialize those embedding checkpoints. CAMEL imports Pillow
-in `camel/messages/base.py`; image decoding requires an image input. Its
-Unstructured loaders are lazy/type-checking imports, and no NLTK or Unstructured
-calls were found in the current text-only OASIS paths. These observations limit
-the demonstrated exposure; they do not erase the installed-package advisories.
-
-## CI coverage and limits
-
-`.github/workflows/ci.yml` runs on pull requests, pushes to `main`/`master`, and
-manual dispatch. It performs:
-
-- Lock freshness validation, backend regression/security tests, and root tests
-  on Python 3.11 and 3.12, using dummy provider keys. The LLM endpoint points to
-  an unused loopback port; provider interactions in the tests are mocked.
-- A lightweight test installation derived from the current manifest and
-  constrained to `uv.lock`. CAMEL, OASIS, and MCP are excluded from this test
-  environment to avoid downloading the simulation/ML tree. The test runner is
-  pytest 9.1.1. This validates API and mocked provider contracts, not actual
-  simulation execution, GPU compatibility, or live Zep/Ollama service behavior.
-- A blocking `pip-audit` scan of that locked core runtime, with a JSON artifact.
-- Root/frontend `npm ci`, frontend security tests and production build on
-  Node 22, and blocking `npm audit --audit-level=high` for both npm lockfiles.
-- A complete runtime-lock audit without installing the heavy packages. Its
-  findings are advisory-only while the constraints above remain; each run
-  writes package counts to the job summary and uploads the raw report and
-  exported requirements. A missing or invalid scanner report fails the job,
-  so a network/scanner failure is not reported as a clean audit.
-
-For a reproducible full-inventory scan from the repository root:
+The default backend dependencies contain the API, file parser, OpenAI-compatible
+client, and Zep SDK. CAMEL, OASIS, model frameworks, and their tool integrations
+are in the optional `simulation` extra. Install them in separate environments:
 
 ```sh
-uv lock --check --directory backend
-uv export --directory backend --locked --no-dev --no-emit-project --no-hashes \
-  --output-file /tmp/mirofish-requirements.txt
-uvx pip-audit==2.10.1 --disable-pip --no-deps \
-  -r /tmp/mirofish-requirements.txt --format json \
-  --output /tmp/mirofish-audit.json
+cd backend
+uv sync --locked --no-dev
+UV_PROJECT_ENVIRONMENT=.venv-simulation uv sync --locked --extra simulation --no-dev
 ```
 
-`--no-deps` is safe for this inventory operation because `uv export` already
-lists the resolved transitive packages; it must not be used with the direct-only
-compatibility manifest to claim a complete audit. The scanner returns nonzero
-when it finds advisories. Keep its JSON result when reviewing that exit status.
+The simulation environment includes the application dependencies as well as the
+simulation extra. It can import the same backend modules; the API environment
+cannot import CAMEL/OASIS. The worker launcher chooses the simulation Python
+explicitly. See [deployment.md](deployment.md) for process bounds, credentials,
+and container setup.
+
+`requirements.txt` describes the API-only pip installation.
+`requirements-simulation.txt` adds the local OASIS package and simulation
+requirements; run pip from `backend/` when using that file. These are compatibility
+manifests, not transitive locks. `uv sync --locked` is the reviewed reproducible
+installation, including Linux's CPU-only Torch source selection. A plain pip
+installation can select different transitives and the default CUDA Torch build.
+
+## Why there is a maintained OASIS package
+
+The latest published [OASIS release, 0.2.5](https://pypi.org/pypi/camel-oasis/0.2.5/json),
+pins Pillow 10.3.0, Sentence Transformers 3.0.0, Unstructured 0.13.7 and pytest
+8.2.0 as mandatory runtime dependencies. Those constraints prevented resolving
+several reported vulnerabilities. The
+[upstream main manifest](https://github.com/camel-ai/oasis/blob/main/pyproject.toml)
+has moved CAMEL to 0.2.90 but retains the older dependency pins. CAMEL 0.2.90
+supports current Pillow versions, unlike 0.2.78's `<11` constraint.
+
+`backend/vendor/camel-oasis` is a small maintained fork of the official 0.2.5
+wheel, published locally as **0.2.5+mirofish.1**. It retains the OASIS social-agent,
+tool-action, SQLite, graph, and recommendation implementation. Its changes are:
+
+- A runtime manifest using CAMEL 0.2.90 and patched model libraries, with actual
+  OASIS imports declared explicitly. Cairo remains available for graph plotting.
+- Removal of unused Unstructured, pytest, pre-commit, Slack, OAuth and OpenAPI
+  tools from OASIS runtime requirements. Tests have their own current dev
+  dependencies. NLTK disappears with the unused Unstructured dependency.
+- Explicitly safe loading of the two existing recommendation models: fixed
+  upstream revisions, `trust_remote_code=False`, and safetensors weights.
+- A tested Python 3.11/3.12 support range instead of upstream's `<3.12` metadata.
+
+This is ordinary package resolution against a reviewed local manifest. There
+are no `--no-deps` installs or dependency-metadata overrides. The package's
+`UPSTREAM.json` records the official wheel URL, SHA-256 and original module
+hashes; `LICENSE`, upstream copyright headers and `PATCHES.md` retain provenance
+and enumerate changes. Only `oasis/social_platform/recsys.py` differs from the
+upstream Python source. Review any future source changes against those hashes.
+
+## Reviewed versions
+
+| Package | Previous maintained lock | Current simulation lock |
+| --- | --- | --- |
+| CAMEL AI | 0.2.78 | 0.2.90 |
+| OASIS | 0.2.5 | 0.2.5+mirofish.1, local maintained source |
+| Pillow | 10.3.0 | 12.3.0 |
+| Sentence Transformers | 3.0.0 | 6.1.0 |
+| Transformers | 4.57.6 | 5.18.0 |
+| Torch | 2.14.1 | 2.14.1; official 2.14.1+cpu on Linux |
+| Pydantic | 2.12.5 | 2.12.0, required by CAMEL 0.2.90's declared upper bound |
+| Pygments | 2.19.2 | 2.21.0 |
+| pytest | 8.2.0, required by OASIS at runtime | 9.1.1, development/tests only |
+| Unstructured / NLTK | 0.13.7 / 3.10.3 | Removed from the runtime dependency graph |
+
+OpenAI **1.109.1**, MCP **1.30.0**, and Zep Cloud **3.25.0** retain their tested
+contracts. MCP remains explicitly `<2` because CAMEL imports `FastMCP` from
+`mcp.server`; resolving MCP 2 breaks that path. Zep 3.25.0 is deliberate because
+its graph API contracts have dedicated tests. The earlier framework fixes remain:
+Flask **3.1.3**, Werkzeug **3.1.9**, python-dotenv **1.2.4**, and Waitress **3.0.2**.
+
+Linux Torch comes only from the explicitly scoped
+[official CPU wheel index](https://download.pytorch.org/whl/cpu/torch/), with
+wheel hashes in `uv.lock`. Other packages stay on PyPI. This avoids unnecessary
+CUDA packages in the default worker image and supports Linux x86_64/aarch64 on
+Python 3.11/3.12. GPU workers require a separately reviewed dependency source
+and resource configuration.
+
+## Recommendation model boundary
+
+Twitter's default OASIS recommendation path loads the TwHIN model lazily when
+recommendations process posts. An empty initial round may return before this
+happens. The alternate Twitter path uses Sentence Transformers; Reddit/random
+selection does not initialize those embedding checkpoints.
+
+The maintained loaders permit only the existing named models and use these
+fixed revisions:
+
+| Model | Revision |
+| --- | --- |
+| `Twitter/twhin-bert-base` | `82ac392ce81f94560c391311ee2ddd024c5ac1fc` |
+| `sentence-transformers/paraphrase-MiniLM-L6-v2` | `c9a2bfebc254878aee8c3aca9e6844d5bbb102d1` |
+
+Public repository metadata confirmed both snapshots contain `model.safetensors`.
+The loaders require safetensors and disable remote Python execution. They reject
+arbitrary model names/paths. Model weights still enter a worker process and its
+cache remains application-owned; these controls do not replace worker resource
+limits or justify loading unknown artifacts. Actual production model weights
+were not downloaded as part of the offline regression tests.
+
+## Audit results and coverage
+
+The original audit had **274 raw findings / 162 distinct package-advisory pairs
+across 28 packages**. The first compatible refresh left **50 raw / 29 distinct
+matches across six packages**. Modernization removes those six constraints.
+
+With `pip-audit 2.10.1`, the final local Python 3.12 audit records:
+
+| Inventory | Public packages examined | Findings | Skipped packages |
+| --- | ---: | ---: | ---: |
+| API runtime | 32 | 0 | 0 |
+| Simulation runtime, macOS markers | 94 | 0 | 0 |
+| Simulation runtime, Linux 3.12 markers | 94 | 0 | 0 |
+
+The Linux inventory is selected from the lock's environment markers; actual
+Linux execution is covered separately by CI/container validation. Counts can
+vary by platform and the advisory database can change without a lockfile change.
+The local OASIS fork is explicitly omitted from the PyPI lookup, while all its
+resolved public transitive dependencies remain included. Source provenance and
+real runtime tests cover that local package; omitting it is not an advisory
+suppression for a public package.
+
+PyPI's advisory endpoint does not recognize the official Torch `+cpu` build
+suffix and otherwise returns a skipped-package result. CI verifies the lock
+points to the official CPU index, queries the corresponding upstream version
+(e.g. `2.14.1`) for advisories, retains the original inventory as an artifact,
+and fails if the scanner skips any public package. No advisory IDs are ignored.
+
+## Validation and CI
+
+The current full Python 3.12 simulation environment passed **476 backend tests**
+at the dependency validation checkpoint. Tests include real CAMEL/OASIS imports,
+the three simulation entry points, and actual tool execution: a mocked provider
+response calls OASIS `create_post`, which must create the correct SQLite post
+and action trace. This catches silent OASIS failures that a completed round alone
+would miss.
+
+Recommendation tests create tiny local safetensors BERT and Sentence Transformer
+checkpoints. They exercise real tokenization, Torch forward passes, vector
+output, and both OASIS recommendation calculations with the upgraded libraries.
+They verify the fixed revision and safe-loader arguments; they do not stand in
+for assessing the quality or memory use of the full production models.
+
+`.github/workflows/ci.yml` now gates pull requests on:
+
+- API tests and root regressions on Python 3.11/3.12 with simulation packages
+  absent from the API environment.
+- The complete backend suite with a separately installed simulation extra on
+  both Python versions, including real agent/action/recommendation contracts
+  and integration tests. Provider transport is mocked and model checkpoints
+  are generated locally.
+- Blocking API and full public simulation dependency scans, including a failure
+  for any skipped audit package. Raw inventories and audit JSON are uploaded.
+- Frontend security tests, production build, and root/frontend npm high-severity
+  vulnerability checks on Node 22.
+
+For a local API inventory scan from the repository root:
+
+```sh
+uv export --directory backend --locked --no-dev --no-emit-project --no-hashes \
+  --output-file /tmp/mirofish-api-requirements.txt
+uvx pip-audit==2.10.1 --disable-pip --no-deps \
+  -r /tmp/mirofish-api-requirements.txt --format json \
+  --output /tmp/mirofish-api-audit.json
+```
+
+For the simulation inventory, add `--extra simulation --no-emit-package
+camel-oasis` to `uv export`, then apply the CPU-version normalization shown in
+the workflow before scanning on Linux. Inspect `skip_reason` in every JSON
+result as well as the exit code. `--no-deps` is used only for an already complete,
+locked scanner input; it must not be used to claim a full audit of a direct-only
+requirements manifest.

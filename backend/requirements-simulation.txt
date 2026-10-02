@@ -1,0 +1,11 @@
+# Run from backend/: pip install -r requirements-simulation.txt
+# Reviewed reproducible install (preferred):
+# UV_PROJECT_ENVIRONMENT=.venv-simulation uv sync --locked --extra simulation --no-dev
+-r requirements.txt
+./vendor/camel-oasis
+camel-ai==0.2.90
+mcp>=1.30.0,<2
+pillow>=12.3.0,<13
+sentence-transformers>=6.1.0,<7
+transformers>=5.18.0,<6
+torch>=2.14.1,<3

@@ -40,6 +40,8 @@ def create_app(config_class=Config):
         logger.info("=" * 50)
     
     install_security(app)
+    from .utils.budget_requests import install_request_budget
+    install_request_budget(app)
     
     # 注册模拟进程清理函数（确保服务器关闭时终止所有模拟进程）
     from .services.simulation_runner import SimulationRunner
@@ -64,6 +66,15 @@ def create_app(config_class=Config):
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
+    from .api.system import system_bp
+    from .api.budget import budget_bp
+    from .api.evidence import evidence_bp
+    app.register_blueprint(system_bp, url_prefix='/api/system')
+    app.register_blueprint(budget_bp, url_prefix='/api/budget')
+    app.register_blueprint(evidence_bp, url_prefix='/api/evidence')
+    if app.config.get('JOBS_AUTOSTART') and not app.testing:
+        from .services.job_dispatcher import start_job_dispatcher
+        start_job_dispatcher(app)
     
     # 健康检查
     @app.route('/health')

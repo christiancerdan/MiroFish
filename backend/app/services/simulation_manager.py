@@ -13,6 +13,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..config import Config
+from ..models.task import JobCancelled, JobLeaseLost, TaskManager
 from ..utils.logger import get_logger
 from .zep_entity_reader import ZepEntityReader, FilteredEntities
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
@@ -138,10 +139,7 @@ class SimulationManager:
     """
     
     # 模拟数据存储目录
-    SIMULATION_DATA_DIR = os.path.join(
-        os.path.dirname(__file__), 
-        '../../uploads/simulations'
-    )
+    SIMULATION_DATA_DIR = Config.OASIS_SIMULATION_DATA_DIR
     
     def __init__(self):
         # 内存中的模拟状态缓存
@@ -156,12 +154,11 @@ class SimulationManager:
         sim_dir = self._get_simulation_dir(state.simulation_id)
         state_file = storage_path(self.SIMULATION_DATA_DIR, state.simulation_id, "state.json")
         
-        state.updated_at = datetime.now().isoformat()
-        
-        os.makedirs(sim_dir, exist_ok=True)
-        atomic_write_json(state_file, state.to_dict())
-        
-        self._simulations[state.simulation_id] = state
+        with TaskManager().publication_guard():
+            state.updated_at = datetime.now().isoformat()
+            os.makedirs(sim_dir, exist_ok=True)
+            atomic_write_json(state_file, state.to_dict())
+            self._simulations[state.simulation_id] = state
     
     def _load_simulation_state(self, simulation_id: str) -> Optional[SimulationState]:
         """从文件加载模拟状态"""
@@ -417,6 +414,14 @@ class SimulationManager:
                     total=3
                 )
             
+            def config_progress(current, total, message):
+                TaskManager().assert_current_execution()
+                if progress_callback:
+                    progress_callback(
+                        "generating_config", 30 + int(40 * current / max(total, 1)),
+                        message, current=current, total=total
+                    )
+
             sim_params = config_generator.generate_config(
                 simulation_id=simulation_id,
                 project_id=state.project_id,
@@ -425,7 +430,8 @@ class SimulationManager:
                 document_text=document_text,
                 entities=filtered.entities,
                 enable_twitter=state.enable_twitter,
-                enable_reddit=state.enable_reddit
+                enable_reddit=state.enable_reddit,
+                progress_callback=config_progress
             )
             
             if progress_callback:
@@ -438,8 +444,9 @@ class SimulationManager:
             
             # 保存配置文件
             config_path = storage_path(self.SIMULATION_DATA_DIR, simulation_id, "simulation_config.json")
-            with open(config_path, 'w', encoding='utf-8') as f:
-                f.write(sim_params.to_json())
+            config_data = json.loads(sim_params.to_json())
+            with TaskManager().publication_guard():
+                atomic_write_json(config_path, config_data)
             
             state.config_generated = True
             state.config_reasoning = sim_params.generation_reasoning
@@ -464,6 +471,8 @@ class SimulationManager:
             
             return state
             
+        except (JobCancelled, JobLeaseLost):
+            raise
         except Exception as e:
             logger.error(f"模拟准备失败: {simulation_id}, error={str(e)}")
             import traceback

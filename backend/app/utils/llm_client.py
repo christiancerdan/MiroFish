@@ -11,6 +11,7 @@ from openai import OpenAI
 
 from ..config import Config
 from .llm_provider import settings_from_config
+from .budget import bind_budget_client
 from .openai_chat_compat import create_chat_completion, extract_chat_completion_text
 
 
@@ -105,8 +106,10 @@ class LLMClient:
         
         self.client = OpenAI(
             api_key=self.api_key,
-            base_url=self.base_url
+            base_url=self.base_url,
+            max_retries=0,
         )
+        bind_budget_client(self.client)
 
     def _create_completion(
         self,
