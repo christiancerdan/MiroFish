@@ -34,18 +34,20 @@ def _write_failed_state(root, simulation_id="sim_failed"):
 def test_realtime_endpoints_expose_terminal_failure(tmp_path, monkeypatch):
     simulation_id = _write_failed_state(tmp_path)
     monkeypatch.setattr(Config, "OASIS_SIMULATION_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(Config, "MIROFISH_ACCESS_KEY", "test-access-" + "x" * 40)
 
     app = create_app()
     app.config.update(TESTING=True)
     client = app.test_client()
 
-    config_response = client.get(f"/api/simulation/{simulation_id}/config/realtime")
-    profile_response = client.get(f"/api/simulation/{simulation_id}/profiles/realtime")
+    headers = {"Authorization": "Bearer " + Config.MIROFISH_ACCESS_KEY}
+    config_response = client.get(f"/api/simulation/{simulation_id}/config/realtime", headers=headers)
+    profile_response = client.get(f"/api/simulation/{simulation_id}/profiles/realtime", headers=headers)
 
     assert config_response.status_code == 200
     expected_config_state = {
         "status": "failed",
-        "error": "no usable entities",
+        "error": "Operation failed; consult server logs",
         "generation_stage": "failed",
         "profiles_generated": False,
         "config_generated": False,
@@ -55,7 +57,7 @@ def test_realtime_endpoints_expose_terminal_failure(tmp_path, monkeypatch):
         assert config_response.json["data"][key] == expected
     assert profile_response.status_code == 200
     assert profile_response.json["data"]["status"] == "failed"
-    assert profile_response.json["data"]["error"] == "no usable entities"
+    assert profile_response.json["data"]["error"] == "Operation failed; consult server logs"
     assert profile_response.json["data"]["is_generating"] is False
 
 

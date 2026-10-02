@@ -8,26 +8,40 @@ from dotenv import load_dotenv
 project_root_env = os.path.join(os.path.dirname(__file__), '../../.env')
 
 if os.path.exists(project_root_env):
-    load_dotenv(project_root_env, override=True)
+    load_dotenv(project_root_env, override=False)
 else:
     # 如果根目录没有 .env，尝试加载环境变量（用于生产环境）
-    load_dotenv(override=True)
+    load_dotenv(override=False)
 
 
 class Config:
     """Flask配置类"""
     
     # Flask配置
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'mirofish-secret-key')
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    MIROFISH_ACCESS_KEY = os.environ.get('MIROFISH_ACCESS_KEY', '')
+    MIROFISH_ALLOWED_ORIGINS = os.environ.get(
+        'MIROFISH_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5001,http://127.0.0.1:5001',
+    ).split(',')
+    MIROFISH_COOKIE_SECURE = os.environ.get('MIROFISH_COOKIE_SECURE', 'false').lower() == 'true'
     
     # JSON配置 - 禁用ASCII转义，让中文直接显示
     JSON_AS_ASCII = False
     
     # LLM配置（统一使用OpenAI格式）
+    LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'openai')
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
-    LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
-    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'gpt-4o-mini')
+    OLLAMA_API_KEY = os.environ.get('OLLAMA_API_KEY')
+    LLM_BASE_URL = os.environ.get('LLM_BASE_URL')
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME')
+    LLM_TOKEN_LIMIT = os.environ.get('LLM_TOKEN_LIMIT', '32768')
+    LLM_BOOST_PROVIDER = os.environ.get('LLM_BOOST_PROVIDER')
+    LLM_BOOST_API_KEY = os.environ.get('LLM_BOOST_API_KEY')
+    LLM_BOOST_BASE_URL = os.environ.get('LLM_BOOST_BASE_URL')
+    LLM_BOOST_MODEL_NAME = os.environ.get('LLM_BOOST_MODEL_NAME')
+    LLM_BOOST_TOKEN_LIMIT = os.environ.get('LLM_BOOST_TOKEN_LIMIT')
     
     # Zep配置
     ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
@@ -64,8 +78,15 @@ class Config:
     def validate(cls) -> list[str]:
         """验证必要配置"""
         errors: list[str] = []
-        if not cls.LLM_API_KEY:
-            errors.append("LLM_API_KEY 未配置")
+        from .utils.llm_provider import resolve_llm_settings
+        values = {key: getattr(cls, key) for key in dir(cls) if key.startswith(('LLM_', 'OLLAMA_'))}
+        try:
+            resolve_llm_settings(values)
+            resolve_llm_settings(values, use_boost=True)
+        except ValueError as exc:
+            errors.append(str(exc))
+        if not cls.MIROFISH_ACCESS_KEY or len(cls.MIROFISH_ACCESS_KEY) < 32:
+            errors.append('MIROFISH_ACCESS_KEY must contain at least 32 characters; run python3 scripts/setup_config.py')
         if not cls.ZEP_API_KEY:
             errors.append("ZEP_API_KEY 未配置")
         if os.environ.get("ZEP_API_URL"):

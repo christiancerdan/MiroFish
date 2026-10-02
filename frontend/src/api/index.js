@@ -1,60 +1,41 @@
 import axios from 'axios'
 import i18n from '../i18n'
+import { clearSession, getCsrfToken } from '../auth/session'
 
-// 创建axios实例
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
-  timeout: 300000, // 5分钟超时（本体生成可能需要较长时间）
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  // Same-origin cookies are sent by the browser; cross-origin credentials
+  // are deliberately disabled. Vite proxies /api during local development.
+  withCredentials: false,
+  timeout: 300000,
+  headers: { 'Content-Type': 'application/json' }
 })
 
-// 请求拦截器
-service.interceptors.request.use(
-  config => {
-    config.headers['Accept-Language'] = i18n.global.locale.value
-    return config
-  },
-  error => {
-    console.error('Request error:', error)
-    return Promise.reject(error)
+service.interceptors.request.use(config => {
+  config.headers['Accept-Language'] = i18n.global.locale.value
+  const method = (config.method || 'get').toUpperCase()
+  const sameOrigin = new URL(axios.getUri(config), window.location.origin).origin === window.location.origin
+  const csrfToken = getCsrfToken()
+  if (sameOrigin && csrfToken && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    config.headers['X-CSRF-Token'] = csrfToken
   }
-)
+  return config
+})
 
-// 响应拦截器（容错重试机制）
 service.interceptors.response.use(
   response => {
     const res = response.data
-    
-    // 如果返回的状态码不是success，则抛出错误
     if (!res.success && res.success !== undefined) {
-      console.error('API Error:', res.error || res.message || 'Unknown error')
-      return Promise.reject(new Error(res.error || res.message || 'Error'))
+      return Promise.reject(new Error(res.error || res.message || 'Request failed'))
     }
-    
     return res
   },
   error => {
-    console.error('Response error:', error)
+    if (error.response?.status === 401) clearSession()
     const apiError = error.response?.data?.error || error.response?.data?.message
-    
-    // 处理超时
-    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-      console.error('Request timeout')
-    }
-    
-    // 处理网络错误
-    if (error.message === 'Network Error') {
-      console.error('Network error - please check your connection')
-    }
-
-    // Axios rejects non-2xx responses before the success interceptor can
-    // surface the backend's safe, actionable error message.
-    if (typeof apiError === 'string' && apiError) {
-      error.message = apiError
-    }
-    
+    if (typeof apiError === 'string' && apiError) error.message = apiError
+    // Axios errors include the request body and headers. Never log them:
+    // a failed login contains the owner's access key.
     return Promise.reject(error)
   }
 )

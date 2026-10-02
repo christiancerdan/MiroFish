@@ -440,7 +440,8 @@ def generate_ontology():
         }
         if response_data is not None:
             payload["data"] = response_data
-        return jsonify(payload), response_status
+        from ..security import public_error
+        return public_error(payload, response_status)
 
 
 # ============== 接口2：构建图谱 ==============

@@ -21,3 +21,8 @@ frontend/dist
 frontend/.vite
 
 backend/uploads
+
+# Keep runtime data and alternate local credentials out of image layers.
+.env.*
+!.env.example
+backend/logs

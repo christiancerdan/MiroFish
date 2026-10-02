@@ -5,6 +5,7 @@ Step2: Zep实体读取与过滤、OASIS模拟准备与运行（全程自动化�
 
 import os
 import traceback
+import threading
 from contextlib import nullcontext
 from flask import request, jsonify, send_file
 
@@ -21,10 +22,21 @@ from ..services.simulation_runner import (
 from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
+from ..utils.storage import atomic_write_json, storage_path, validate_storage_id
 from ..utils.zep_lifecycle import get_graph_readers, graph_lifecycle_lock
 from ..models.project import ProjectManager
 
 logger = get_logger('mirofish.api.simulation')
+
+# One prepare owner per simulation in the supported single-process server.
+_prepare_lock = threading.Lock()
+_prepare_claims = {}
+
+
+def _release_prepare_claim(simulation_id, claim):
+    with _prepare_lock:
+        if _prepare_claims.get(simulation_id) is claim:
+            _prepare_claims.pop(simulation_id, None)
 
 
 def _get_default_platform(simulation_id: str) -> str:
@@ -286,7 +298,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     import os
     from ..config import Config
     
-    simulation_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
+    simulation_dir = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
     
     # 检查目录是否存在
     if not os.path.exists(simulation_dir):
@@ -304,7 +316,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     existing_files = []
     missing_files = []
     for f in required_files:
-        file_path = os.path.join(simulation_dir, f)
+        file_path = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, f)
         if os.path.exists(file_path):
             existing_files.append(f)
         else:
@@ -318,7 +330,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         }
     
     # 检查state.json中的状态
-    state_file = os.path.join(simulation_dir, "state.json")
+    state_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "state.json")
     try:
         import json
         with open(state_file, 'r', encoding='utf-8') as f:
@@ -341,8 +353,8 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         prepared_statuses = ["ready", "preparing", "running", "completed", "stopped", "failed"]
         if status in prepared_statuses and config_generated:
             # 获取文件统计信息
-            profiles_file = os.path.join(simulation_dir, "reddit_profiles.json")
-            config_file = os.path.join(simulation_dir, "simulation_config.json")
+            profiles_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "reddit_profiles.json")
+            config_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "simulation_config.json")
             
             profiles_count = 0
             if os.path.exists(profiles_file):
@@ -356,8 +368,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
                     state_data["status"] = "ready"
                     from datetime import datetime
                     state_data["updated_at"] = datetime.now().isoformat()
-                    with open(state_file, 'w', encoding='utf-8') as f:
-                        json.dump(state_data, f, ensure_ascii=False, indent=2)
+                    atomic_write_json(state_file, state_data)
                     logger.info(f"自动更新模拟状态: {simulation_id} preparing -> ready")
                     status = "ready"
                 except Exception as e:
@@ -432,6 +443,9 @@ def prepare_simulation():
     from ..models.task import TaskManager, TaskStatus
     from ..config import Config
     
+    claim = None
+    background_started = False
+    simulation_id = None
     try:
         data = request.get_json() or {}
         
@@ -442,6 +456,17 @@ def prepare_simulation():
                 "error": t('api.requireSimulationId')
             }), 400
         
+        validate_storage_id(simulation_id, "simulation_id")
+        parallel_profile_count = data.get('parallel_profile_count', 5)
+        if type(parallel_profile_count) is not int or not 1 <= parallel_profile_count <= 32:
+            return jsonify({"success": False, "error": "parallel_profile_count must be an integer between 1 and 32"}), 400
+
+        with _prepare_lock:
+            if simulation_id in _prepare_claims:
+                return jsonify({"success": False, "error": "Simulation preparation is already in progress"}), 409
+            claim = object()
+            _prepare_claims[simulation_id] = claim
+
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
@@ -496,8 +521,6 @@ def prepare_simulation():
         
         entity_types_list = data.get('entity_types')
         use_llm_for_profiles = data.get('use_llm_for_profiles', True)
-        parallel_profile_count = data.get('parallel_profile_count', 5)
-        
         # ========== 同步获取实体数量（在后台任务启动前） ==========
         # 这样前端在调用prepare后立即就能获取到预期Agent总数
         try:
@@ -536,8 +559,8 @@ def prepare_simulation():
 
         # 定义后台任务
         def run_prepare():
-            set_locale(current_locale)
             try:
+                set_locale(current_locale)
                 task_manager.update_task(
                     task_id,
                     status=TaskStatus.PROCESSING,
@@ -641,10 +664,20 @@ def prepare_simulation():
                     state.status = SimulationStatus.FAILED
                     state.error = str(e)
                     manager._save_simulation_state(state)
+            finally:
+                _release_prepare_claim(simulation_id, claim)
         
         # 启动后台线程
-        thread = threading.Thread(target=run_prepare, daemon=True)
-        thread.start()
+        try:
+            thread = threading.Thread(target=run_prepare, daemon=True)
+            thread.start()
+        except Exception:
+            task_manager.fail_task(task_id, "Unable to start preparation worker")
+            state.status = SimulationStatus.FAILED
+            state.error = "Unable to start preparation worker"
+            manager._save_simulation_state(state)
+            raise
+        background_started = True
         
         return jsonify({
             "success": True,
@@ -663,7 +696,7 @@ def prepare_simulation():
         return jsonify({
             "success": False,
             "error": str(e)
-        }), 404
+        }), 400
         
     except Exception as e:
         logger.error(f"启动准备任务失败: {str(e)}")
@@ -672,6 +705,9 @@ def prepare_simulation():
             "error": str(e),
             "traceback": traceback.format_exc()
         }), 500
+    finally:
+        if claim is not None and not background_started:
+            _release_prepare_claim(simulation_id, claim)
 
 
 @simulation_bp.route('/prepare/status', methods=['POST'])
@@ -875,11 +911,13 @@ def _get_report_id_for_simulation(simulation_id: str) -> str:
     
     try:
         for report_folder in os.listdir(reports_dir):
-            report_path = os.path.join(reports_dir, report_folder)
+            try:
+                report_path = storage_path(reports_dir, report_folder)
+                meta_file = storage_path(reports_dir, report_folder, "meta.json")
+            except ValueError:
+                continue
             if not os.path.isdir(report_path):
                 continue
-            
-            meta_file = os.path.join(report_path, "meta.json")
             if not os.path.exists(meta_file):
                 continue
             
@@ -1096,7 +1134,7 @@ def get_simulation_profiles_realtime(simulation_id: str):
         platform = request.args.get('platform') or _get_default_platform(simulation_id)
 
         # 获取模拟目录
-        sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
+        sim_dir = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
         
         if not os.path.exists(sim_dir):
             return jsonify({
@@ -1106,9 +1144,9 @@ def get_simulation_profiles_realtime(simulation_id: str):
         
         # 确定文件路径
         if platform == "reddit":
-            profiles_file = os.path.join(sim_dir, "reddit_profiles.json")
+            profiles_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "reddit_profiles.json")
         else:
-            profiles_file = os.path.join(sim_dir, "twitter_profiles.csv")
+            profiles_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "twitter_profiles.csv")
         
         # 检查文件是否存在
         file_exists = os.path.exists(profiles_file)
@@ -1138,7 +1176,7 @@ def get_simulation_profiles_realtime(simulation_id: str):
         status = None
         error = None
         
-        state_file = os.path.join(sim_dir, "state.json")
+        state_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "state.json")
         if os.path.exists(state_file):
             try:
                 with open(state_file, 'r', encoding='utf-8') as f:
@@ -1204,7 +1242,7 @@ def get_simulation_config_realtime(simulation_id: str):
     
     try:
         # 获取模拟目录
-        sim_dir = os.path.join(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
+        sim_dir = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id)
         
         if not os.path.exists(sim_dir):
             return jsonify({
@@ -1213,7 +1251,7 @@ def get_simulation_config_realtime(simulation_id: str):
             }), 404
         
         # 配置文件路径
-        config_file = os.path.join(sim_dir, "simulation_config.json")
+        config_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "simulation_config.json")
         
         # 检查文件是否存在
         file_exists = os.path.exists(config_file)
@@ -1240,7 +1278,7 @@ def get_simulation_config_realtime(simulation_id: str):
         profiles_generated = False
         config_generated = False
         
-        state_file = os.path.join(sim_dir, "state.json")
+        state_file = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "state.json")
         if os.path.exists(state_file):
             try:
                 with open(state_file, 'r', encoding='utf-8') as f:
@@ -1345,9 +1383,7 @@ def get_simulation_config(simulation_id: str):
 def download_simulation_config(simulation_id: str):
     """下载模拟配置文件"""
     try:
-        manager = SimulationManager()
-        sim_dir = manager._get_simulation_dir(simulation_id)
-        config_path = os.path.join(sim_dir, "simulation_config.json")
+        config_path = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, "simulation_config.json")
         
         if not os.path.exists(config_path):
             return jsonify({
@@ -1564,20 +1600,12 @@ def start_simulation():
                 "error": "force must be a JSON boolean",
             }), 400
 
-        # 验证 max_rounds 参数
-        if max_rounds is not None:
-            try:
-                max_rounds = int(max_rounds)
-                if max_rounds <= 0:
-                    return jsonify({
-                        "success": False,
-                        "error": t('api.maxRoundsPositive')
-                    }), 400
-            except (ValueError, TypeError):
-                return jsonify({
-                    "success": False,
-                    "error": t('api.maxRoundsInvalid')
-                }), 400
+        # Bound caller-selected work and reject JSON booleans/fractional values.
+        if max_rounds is not None and (type(max_rounds) is not int or not 1 <= max_rounds <= 10000):
+            return jsonify({
+                "success": False,
+                "error": "max_rounds must be an integer between 1 and 10000",
+            }), 400
 
         if platform not in ['twitter', 'reddit', 'parallel']:
             return jsonify({
@@ -2158,16 +2186,13 @@ def get_simulation_posts(simulation_id: str):
     """
     try:
         platform = request.args.get('platform') or _get_default_platform(simulation_id)
+        if platform not in {'twitter', 'reddit'}:
+            raise ValueError('Invalid platform')
         limit = request.args.get('limit', 50, type=int)
         offset = request.args.get('offset', 0, type=int)
 
-        sim_dir = os.path.join(
-            os.path.dirname(__file__),
-            f'../../uploads/simulations/{simulation_id}'
-        )
-
         db_file = f"{platform}_simulation.db"
-        db_path = os.path.join(sim_dir, db_file)
+        db_path = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, db_file)
         
         if not os.path.exists(db_path):
             return jsonify({
@@ -2181,7 +2206,8 @@ def get_simulation_posts(simulation_id: str):
             })
         
         import sqlite3
-        conn = sqlite3.connect(db_path)
+        from pathlib import Path
+        conn = sqlite3.connect(Path(db_path).as_uri() + "?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -2213,6 +2239,8 @@ def get_simulation_posts(simulation_id: str):
             }
         })
         
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         logger.error(f"获取帖子失败: {str(e)}")
         return jsonify({
@@ -2235,16 +2263,13 @@ def get_simulation_comments(simulation_id: str):
     """
     try:
         platform = request.args.get('platform') or _get_default_platform(simulation_id)
+        if platform not in {'twitter', 'reddit'}:
+            raise ValueError('Invalid platform')
         post_id = request.args.get('post_id')
         limit = request.args.get('limit', 50, type=int)
         offset = request.args.get('offset', 0, type=int)
 
-        sim_dir = os.path.join(
-            os.path.dirname(__file__),
-            f'../../uploads/simulations/{simulation_id}'
-        )
-        
-        db_path = os.path.join(sim_dir, f"{platform}_simulation.db")
+        db_path = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, f"{platform}_simulation.db")
         
         if not os.path.exists(db_path):
             return jsonify({
@@ -2256,7 +2281,8 @@ def get_simulation_comments(simulation_id: str):
             })
         
         import sqlite3
-        conn = sqlite3.connect(db_path)
+        from pathlib import Path
+        conn = sqlite3.connect(Path(db_path).as_uri() + "?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -2290,6 +2316,8 @@ def get_simulation_comments(simulation_id: str):
             }
         })
         
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         logger.error(f"获取评论失败: {str(e)}")
         return jsonify({

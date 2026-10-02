@@ -12,6 +12,7 @@ from typing import Dict, Any, List, Optional
 from enum import Enum
 from dataclasses import dataclass, field, asdict
 from ..config import Config
+from ..utils.storage import atomic_write_json, storage_path
 
 
 class ProjectStatus(str, Enum):
@@ -118,22 +119,22 @@ class ProjectManager:
     @classmethod
     def _get_project_dir(cls, project_id: str) -> str:
         """获取项目目录路径"""
-        return os.path.join(cls.PROJECTS_DIR, project_id)
+        return storage_path(cls.PROJECTS_DIR, project_id)
     
     @classmethod
     def _get_project_meta_path(cls, project_id: str) -> str:
         """获取项目元数据文件路径"""
-        return os.path.join(cls._get_project_dir(project_id), 'project.json')
+        return storage_path(cls.PROJECTS_DIR, project_id, 'project.json')
     
     @classmethod
     def _get_project_files_dir(cls, project_id: str) -> str:
         """获取项目文件存储目录"""
-        return os.path.join(cls._get_project_dir(project_id), 'files')
+        return storage_path(cls.PROJECTS_DIR, project_id, 'files')
     
     @classmethod
     def _get_project_text_path(cls, project_id: str) -> str:
         """获取项目提取文本存储路径"""
-        return os.path.join(cls._get_project_dir(project_id), 'extracted_text.txt')
+        return storage_path(cls.PROJECTS_DIR, project_id, 'extracted_text.txt')
     
     @classmethod
     def create_project(cls, name: str = "Unnamed Project") -> Project:
@@ -176,8 +177,7 @@ class ProjectManager:
         project.updated_at = datetime.now().isoformat()
         meta_path = cls._get_project_meta_path(project.project_id)
         
-        with open(meta_path, 'w', encoding='utf-8') as f:
-            json.dump(project.to_dict(), f, ensure_ascii=False, indent=2)
+        atomic_write_json(meta_path, project.to_dict())
     
     @classmethod
     def get_project(cls, project_id: str) -> Optional[Project]:
@@ -211,11 +211,15 @@ class ProjectManager:
         Returns:
             项目列表，按创建时间倒序
         """
-        cls._ensure_projects_dir()
+        if not os.path.isdir(cls.PROJECTS_DIR):
+            return []
         
         projects = []
         for project_id in os.listdir(cls.PROJECTS_DIR):
-            project = cls.get_project(project_id)
+            try:
+                project = cls.get_project(project_id)
+            except ValueError:
+                continue
             if project:
                 projects.append(project)
         
@@ -272,7 +276,7 @@ class ProjectManager:
         # 生成安全的文件名
         ext = os.path.splitext(original_filename)[1].lower()
         safe_filename = f"{uuid.uuid4().hex[:8]}{ext}"
-        file_path = os.path.join(files_dir, safe_filename)
+        file_path = storage_path(cls.PROJECTS_DIR, project_id, "files", safe_filename)
         
         # 保存文件
         file_storage.save(file_path)
@@ -314,7 +318,7 @@ class ProjectManager:
             return []
         
         return [
-            os.path.join(files_dir, f) 
-            for f in os.listdir(files_dir) 
-            if os.path.isfile(os.path.join(files_dir, f))
+            storage_path(cls.PROJECTS_DIR, project_id, "files", f)
+            for f in os.listdir(files_dir)
+            if os.path.isfile(storage_path(cls.PROJECTS_DIR, project_id, "files", f))
         ]

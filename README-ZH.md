@@ -1,3 +1,5 @@
+> **维护分支说明：** 本仓库是 [christiancerdan/MiroFish](https://github.com/christiancerdan/MiroFish) 的维护分支，面向私有、单用户的模拟工作区。请按 [当前安装与配置说明](./README.md) 和 [部署指南](./docs/deployment.md) 操作；下文保留上游原始文档，其中的配置与部署步骤可能已过时。
+
 <div align="center">
 
 <img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>

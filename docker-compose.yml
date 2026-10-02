@@ -1,14 +1,25 @@
 services:
   mirofish:
-    image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
-    # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+    build: .
+    image: mirofish-maintained:local
+    init: true
     env_file:
       - .env
+    environment:
+      FLASK_HOST: 0.0.0.0
+      FLASK_PORT: "5001"
+      FLASK_DEBUG: "false"
     ports:
-      - "3000:3000"
-      - "5001:5001"
+      - "127.0.0.1:3000:5001"
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
-      - ./backend/uploads:/app/backend/uploads
+      - mirofish_uploads:/app/backend/uploads
+      - mirofish_logs:/app/backend/logs
+
+volumes:
+  mirofish_uploads:
+  mirofish_logs:
