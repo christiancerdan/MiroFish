@@ -1,6 +1,7 @@
 <template>
   <div class="env-setup-panel">
     <div class="scroll-container">
+      <p v-if="prepareError" class="workflow-error" role="alert">{{ prepareError }}</p>
       <!-- Step 01: 模拟实例 -->
       <div class="step-card" :class="{ 'active': phase === 0, 'completed': phase > 0 }">
         <div class="card-header">
@@ -659,6 +660,7 @@ const taskId = ref(null)
 const prepareProgress = ref(0)
 const currentStage = ref('')
 const progressMessage = ref('')
+const prepareError = ref('')
 const profiles = ref([])
 const entityTypes = ref([])
 const expectedTotal = ref(null)
@@ -741,6 +743,7 @@ const addLog = (msg) => {
 }
 
 const handlePrepareFailure = (message) => {
+  prepareError.value = message || 'Preparation stopped. Open Workspace to review this job and its budget.'
   stopPolling()
   stopProfilesPolling()
   stopConfigPolling()
@@ -905,8 +908,8 @@ const pollPrepareStatus = async () => {
         stopPolling()
         stopProfilesPolling()
         await loadPreparedData()
-      } else if (data.status === 'failed') {
-        handlePrepareFailure(data.error)
+      } else if (['failed', 'interrupted', 'budget_exceeded', 'cancelled'].includes(data.status)) {
+        handlePrepareFailure(`Preparation ${data.status.replaceAll('_', ' ')}. ${data.error || 'Open Workspace to review this job and its budget.'}`)
       }
     }
   } catch (err) {
@@ -1102,6 +1105,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.workflow-error { padding: 14px; color: #8b342b; background: #fff3ef; font-size: 13px; }
 .env-setup-panel {
   height: 100%;
   display: flex;

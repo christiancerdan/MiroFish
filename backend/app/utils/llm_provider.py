@@ -155,5 +155,5 @@ def create_camel_model(
         context_token_limit=settings.token_limit,
         model_config_dict=model_config,
         timeout=180,
-        max_retries=2,
+        max_retries=0,
     )

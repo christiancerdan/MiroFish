@@ -7,6 +7,11 @@ from zep_cloud.core.api_error import ApiError as ZepApiError
 from app.utils import zep
 
 
+@pytest.fixture(autouse=True)
+def explicit_cloud_backend(monkeypatch):
+    monkeypatch.setattr(zep.Config, "GRAPH_BACKEND", "zep", raising=False)
+
+
 def test_permanent_zep_errors_fail_without_retry():
     calls = []
 

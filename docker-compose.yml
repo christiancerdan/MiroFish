@@ -12,6 +12,13 @@ services:
     ports:
       - "127.0.0.1:3000:5001"
     restart: unless-stopped
+    # Container-wide bounds include the API plus simulation subprocesses.
+    mem_limit: 12g
+    cpus: 2.0
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
     security_opt:
       - no-new-privileges:true
     cap_drop:

@@ -41,8 +41,15 @@ def main():
     port = int(os.environ.get('FLASK_PORT', 5001))
     debug = Config.DEBUG
     
-    # 启动服务
-    app.run(host=host, port=port, debug=debug, threaded=True)
+    # Start paid/recoverable work only in the actual serving process, not the
+    # Werkzeug reloader's supervising parent.
+    from app.services.job_dispatcher import start_job_dispatcher, stop_job_dispatcher
+    if not debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        start_job_dispatcher(app)
+    try:
+        app.run(host=host, port=port, debug=debug, threaded=True)
+    finally:
+        stop_job_dispatcher(app)
 
 
 if __name__ == '__main__':

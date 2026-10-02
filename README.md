@@ -8,7 +8,7 @@ The original project remains credited in [README-UPSTREAM.md](./README-UPSTREAM.
 
 ## Local setup
 
-Requirements: **Node.js 22.12+**, **Python 3.11**, and **uv**. The backend installs from `uv.lock`; npm installs from the committed lockfiles.
+Requirements: **Node.js 22.12+**, **Python 3.11 or 3.12**, and **uv**. The API and simulation runtimes install into separate environments from `uv.lock`; npm installs from the committed lockfiles.
 
 ```sh
 git clone https://github.com/christiancerdan/MiroFish.git
@@ -16,7 +16,7 @@ cd MiroFish
 npm run setup:config
 ```
 
-This creates a Git-ignored `.env` with a random `MIROFISH_ACCESS_KEY` and restrictive file permissions. It preserves any existing `.env`. Open the file locally, fill in **`ZEP_API_KEY`**, and review the model settings. Zep Cloud is required for document ingestion and graph workflows; documents are sent to that service. Keep workspace and provider keys private.
+This creates a Git-ignored `.env` with a random `MIROFISH_ACCESS_KEY` and restrictive file permissions. It preserves any existing `.env`. Review the model settings locally and keep workspace and provider keys private. **No Zep account is required:** `GRAPH_BACKEND=local` stores graph memory in SQLite on your server. Extraction still sends source text to your configured model; Ollama Cloud therefore receives prompts. Existing Zep projects need explicit `GRAPH_BACKEND=zep` and their original key. Switching backends does not migrate existing data. See [local memory](./docs/local-memory.md).
 
 The example configuration uses **`gpt-oss:20b-cloud` through a signed-in local Ollama daemon** at `http://127.0.0.1:11434/v1`. Sign in with `ollama signin` and confirm the alias is available in `ollama list`. Direct Ollama Cloud authentication and other OpenAI-compatible endpoints are also supported; see [Ollama configuration and capability checks](./docs/ollama-cloud.md).
 
@@ -40,14 +40,24 @@ docker compose up --build -d
 
 Open [http://127.0.0.1:3000](http://127.0.0.1:3000). Compose publishes only a loopback port and stores uploads and logs in named volumes. On Docker Desktop, change the local Ollama URL in `.env` to `http://host.docker.internal:11434/v1`: `127.0.0.1` inside the container refers to the container itself.
 
-See [deployment instructions](./docs/deployment.md) for persistent data, migration from upstream bind mounts, HTTPS configuration, and the single-process limit. Existing simulation and task state does not support multiple backend workers or replicas.
+See [deployment instructions](./docs/deployment.md) for persistent data, migration from upstream bind mounts, HTTPS configuration, and the single-process limit. Job claims are transactional, but project and simulation lifecycle coordination still requires one server process.
+
+## Workspace controls
+
+The **Workspace** panel shows memory/model location, project usage limits, and background jobs. Queued work resumes at startup; interrupted work requires an explicit acknowledged retry. Model call, token, output, and active-time budgets persist across stages and retries. Monetary estimates require your configured model prices; unknown subscription costs stay unknown.
+
+Reports include saved source evidence, citation checks, run metadata, and explicit uncertainty. Citation checks establish reference integrity, not whether a claim is true. The [forecast evaluation CLI](./docs/forecast-evaluation.md) supports dated holdouts, proper scores, baselines, and repeated-run variability; the bundled example is synthetic.
 
 ## Verification and maintenance
 
-Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Reddit action with a saved post and matching SQLite trace were verified with the configured local Ollama cloud alias on **2026-10-02 UTC**. Direct hosted Ollama authentication and the complete document → Zep → simulation → report workflow have not been live-verified. Run the capability checks for your own account and model before starting simulations; hosted model usage may incur charges.
+Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Reddit action with a saved post and matching SQLite trace were verified with the configured local Ollama cloud alias on **2026-10-02 UTC**, including the modernized simulation runtime. Direct hosted Ollama authentication and the complete Zep-backed workflow have not been live-verified. Run the capability checks for your own account and model before starting simulations; hosted model usage may incur charges.
 
 - [Ollama Cloud and local daemon configuration](./docs/ollama-cloud.md)
 - [Private deployment and access-key setup](./docs/deployment.md)
+- [Local graph memory and Zep migration boundaries](./docs/local-memory.md)
+- [Durable jobs and explicit recovery](./docs/durable-jobs.md)
+- [Project usage budgets](./docs/run-budgets.md)
+- [Evidence and forecast evaluation](./docs/forecast-evaluation.md)
 - [Security changes and verification boundaries](./docs/security-remediation.md)
-- [Dependency audit results and remaining constraints](./docs/dependency-security.md)
+- [Dependency audit results and maintained OASIS source](./docs/dependency-security.md)
 - [Maintenance roadmap](./docs/ROADMAP.md)

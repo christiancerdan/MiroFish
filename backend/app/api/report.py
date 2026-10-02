@@ -5,7 +5,7 @@ Report API路由
 
 import os
 import traceback
-import threading
+import uuid
 from flask import request, jsonify, send_file
 
 from . import report_bp
@@ -15,7 +15,7 @@ from ..services.simulation_manager import SimulationManager
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
 from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
 from ..models.project import ProjectManager, ProjectStatus
-from ..models.task import TaskManager, TaskStatus
+from ..models.task import JobCancelled, JobLeaseLost, TaskManager, TaskStatus
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
 from ..utils.zep_lifecycle import (
@@ -28,6 +28,91 @@ logger = get_logger('mirofish.api.report')
 
 
 # ============== 报告生成接口 ==============
+
+def run_report_job(task_id, parameters):
+    """Generate a queued report only while its original graph and run remain valid."""
+    task_manager = TaskManager()
+    simulation_id = parameters["simulation_id"]
+    graph_id = parameters["graph_id"]
+    report_id = task_manager.get_task(task_id).metadata["report_id"]
+    reader_id = f"{report_id}:{uuid.uuid4().hex}"
+    reader_registered = False
+    set_locale(parameters.get("locale", "en"))
+    try:
+        with graph_lifecycle_lock(graph_id):
+            state = SimulationManager().get_simulation(simulation_id)
+            project = ProjectManager.get_project(parameters["project_id"])
+            if (
+                state is None or project is None
+                or state.project_id != parameters["project_id"]
+                or project.graph_id != graph_id
+                or (state.graph_id and state.graph_id != graph_id)
+                or project.status != ProjectStatus.GRAPH_COMPLETED
+            ):
+                raise ValueError("The project graph changed before reporting started")
+            if project.simulation_requirement != parameters["simulation_requirement"]:
+                raise ValueError("The simulation requirement changed before reporting started")
+            run_state = SimulationRunner.get_run_state(simulation_id)
+            if ZepGraphMemoryManager.get_updater(simulation_id) is not None:
+                raise ValueError("Graph ingestion is still active; reporting cannot start")
+            if run_state is None or run_state.runner_status not in {
+                RunnerStatus.COMPLETED, RunnerStatus.STOPPED,
+            }:
+                raise ValueError("A successfully completed or stopped simulation is required before reporting")
+            if (
+                getattr(run_state, "started_at", None) != parameters.get("run_started_at")
+                or getattr(run_state, "completed_at", None) != parameters.get("run_completed_at")
+            ):
+                raise ValueError("The simulation run changed before reporting started")
+            register_graph_reader(graph_id, reader_id)
+            reader_registered = True
+        task_manager.update_task(
+            task_id, status=TaskStatus.PROCESSING, progress=0,
+            message=t('api.initReportAgent'),
+        )
+        agent = ReportAgent(
+            graph_id=graph_id,
+            simulation_id=simulation_id,
+            simulation_requirement=parameters["simulation_requirement"]
+        )
+
+        def progress_callback(stage, progress, message):
+            task_manager.update_task(
+                task_id,
+                progress=progress,
+                message=f"[{stage}] {message}"
+            )
+
+        report = agent.generate_report(
+            progress_callback=progress_callback,
+            report_id=report_id
+        )
+        with task_manager.publication_guard():
+            ReportManager.save_report(report)
+
+        if report.status == ReportStatus.COMPLETED:
+            task_manager.complete_task(
+                task_id,
+                result={
+                    "report_id": report.report_id,
+                    "simulation_id": simulation_id,
+                    "status": "completed"
+                }
+            )
+        else:
+            task_manager.fail_task(
+                task_id,
+                report.error or t('api.reportGenerateFailed')
+            )
+    except (JobLeaseLost, JobCancelled):
+        raise
+    except Exception as e:
+        logger.error(f"报告生成失败: {str(e)}")
+        task_manager.fail_task(task_id, e)
+    finally:
+        if reader_registered:
+            unregister_graph_reader(graph_id, reader_id)
+
 
 @report_bp.route('/generate', methods=['POST'])
 def generate_report():
@@ -153,13 +238,10 @@ def generate_report():
             }), 400
         
         # 提前生成 report_id，以便立即返回给前端
-        import uuid
         report_id = f"report_{uuid.uuid4().hex[:12]}"
         
-        # Register the background report as a graph reader under the same lock
-        # used by graph deletion and updater startup. A lock itself cannot be
-        # acquired in this request thread and released by the worker, so the
-        # durable reader registration is the cross-thread lease.
+        # Admission and cache lookup share the graph lifecycle barrier. A queued
+        # job acquires its reader lease only after execution-time validation.
         with graph_lifecycle_lock(graph_id):
             refreshed_state = manager.get_simulation(simulation_id)
             refreshed_project = (
@@ -211,7 +293,7 @@ def generate_report():
             # Cached-report reuse is now part of the same atomic barrier, so a
             # concurrent rerun cannot make the returned report stale between
             # the status check and response.
-            if not force_regenerate:
+            if not force_regenerate and not request.headers.get("Idempotency-Key"):
                 existing_report = ReportManager.get_report_by_simulation(
                     simulation_id
                 )
@@ -231,85 +313,52 @@ def generate_report():
                     })
 
             task_manager = TaskManager()
-            task_id = task_manager.create_task(
+            task_id = task_manager.enqueue(
                 task_type="report_generate",
+                handler="report_generate",
+                parameters={
+                    "simulation_id": simulation_id,
+                    "project_id": project.project_id,
+                    "graph_id": graph_id,
+                    "simulation_requirement": simulation_requirement,
+                    "force_regenerate": force_regenerate,
+                    "run_started_at": getattr(refreshed_run_state, "started_at", None),
+                    "run_completed_at": getattr(refreshed_run_state, "completed_at", None),
+                    "locale": get_locale(),
+                },
                 metadata={
                     "simulation_id": simulation_id,
+                    "project_id": project.project_id,
                     "graph_id": graph_id,
-                    "report_id": report_id
-                }
+                    "report_id": report_id,
+                },
+                dedupe_key=f"report_generate:{simulation_id}",
+                idempotency_key=request.headers.get("Idempotency-Key"),
             )
-            current_locale = get_locale()
-            register_graph_reader(graph_id, report_id)
+            # Dedupe/idempotency may return a previously queued report.
+            task = task_manager.get_task(task_id)
+            report_id = task.metadata["report_id"]
+            response_status = {
+                TaskStatus.PENDING: "generating", TaskStatus.PROCESSING: "generating",
+                TaskStatus.COMPLETED: "completed",
+            }.get(task.status, task.status.value)
 
-            def run_generate():
-                set_locale(current_locale)
-                try:
-                    task_manager.update_task(
-                        task_id,
-                        status=TaskStatus.PROCESSING,
-                        progress=0,
-                        message=t('api.initReportAgent')
-                    )
-
-                    agent = ReportAgent(
-                        graph_id=graph_id,
-                        simulation_id=simulation_id,
-                        simulation_requirement=simulation_requirement
-                    )
-
-                    def progress_callback(stage, progress, message):
-                        task_manager.update_task(
-                            task_id,
-                            progress=progress,
-                            message=f"[{stage}] {message}"
-                        )
-
-                    report = agent.generate_report(
-                        progress_callback=progress_callback,
-                        report_id=report_id
-                    )
-                    ReportManager.save_report(report)
-
-                    if report.status == ReportStatus.COMPLETED:
-                        task_manager.complete_task(
-                            task_id,
-                            result={
-                                "report_id": report.report_id,
-                                "simulation_id": simulation_id,
-                                "status": "completed"
-                            }
-                        )
-                    else:
-                        task_manager.fail_task(
-                            task_id,
-                            report.error or t('api.reportGenerateFailed')
-                        )
-                except Exception as e:
-                    logger.error(f"报告生成失败: {str(e)}")
-                    task_manager.fail_task(task_id, str(e))
-                finally:
-                    unregister_graph_reader(graph_id, report_id)
-
-            try:
-                thread = threading.Thread(target=run_generate, daemon=True)
-                thread.start()
-            except Exception:
-                unregister_graph_reader(graph_id, report_id)
-                raise
-        
         return jsonify({
             "success": True,
             "data": {
                 "simulation_id": simulation_id,
                 "report_id": report_id,
                 "task_id": task_id,
-                "status": "generating",
-                "message": t('api.reportGenerateStarted'),
-                "already_generated": False
+                "status": response_status,
+                "task_status": task.status.value,
+                "error_code": task.error_code,
+                "message": task.message or t('api.reportGenerateStarted'),
+                "already_generated": task.status == TaskStatus.COMPLETED
             }
         })
         
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         logger.error(f"启动报告生成任务失败: {str(e)}")
         return jsonify({
@@ -348,7 +397,7 @@ def get_generate_status():
         simulation_id = data.get('simulation_id')
         
         # 如果提供了simulation_id，先检查是否已有完成的报告
-        if simulation_id:
+        if simulation_id and not task_id:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
                 return jsonify({

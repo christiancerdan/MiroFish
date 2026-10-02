@@ -17,7 +17,7 @@ const classes = {
 markdown.core.ruler.push('report_styles', state => {
   const decorate = tokens => {
     const lists = []
-    for (const token of tokens) {
+    for (const [index, token] of tokens.entries()) {
       if (classes[token.type]) token.attrJoin('class', classes[token.type])
       if (token.type === 'bullet_list_open' || token.type === 'ordered_list_open') {
         lists.push(token.type)
@@ -29,6 +29,10 @@ markdown.core.ruler.push('report_styles', state => {
       if (token.type === 'heading_open' || token.type === 'heading_close') {
         token.tag = `h${Math.min(Number(token.tag.slice(1)) + 1, 6)}`
         if (token.type === 'heading_open') token.attrJoin('class', `md-${token.tag}`)
+        if (token.type === 'heading_open') {
+          const citation = tokens[index + 1]?.content?.match(/^Source (e-[0-9a-f]{24})$/)
+          if (citation) token.attrSet('id', `source-${citation[1]}`)
+        }
       }
       if (token.children) decorate(token.children)
     }

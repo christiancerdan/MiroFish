@@ -9,13 +9,14 @@ RUN npm run build --prefix frontend
 
 FROM python:3.11-slim-bookworm AS runtime
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.16 /uv /uvx /bin/
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     FLASK_HOST=0.0.0.0 \
     FLASK_PORT=5001 \
-    FLASK_DEBUG=false
+    FLASK_DEBUG=false \
+    SIMULATION_PYTHON=/app/backend/.venv-simulation/bin/python
 
 # Runtime libraries used by document processing and simulation dependencies.
 RUN apt-get update \
@@ -26,12 +27,23 @@ RUN apt-get update \
 
 WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock ./
+COPY backend/vendor/ ./vendor/
+# The API interpreter never installs the simulation/ML dependency tree.
 RUN uv sync --frozen --no-dev --no-install-project
+# CAMEL's psutil 5.x has no Linux ARM64 wheel. Build its extension here,
+# then remove the compiler/headers in the same image layer.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libc6-dev \
+    && UV_PROJECT_ENVIRONMENT=/app/backend/.venv-simulation uv sync --frozen --no-dev --extra simulation --no-install-project \
+    && apt-get purge -y --auto-remove gcc libc6-dev \
+    && rm -rf /var/lib/apt/lists/* /root/.cache/uv
 COPY backend/ ./
 RUN uv sync --frozen --no-dev \
+    && UV_PROJECT_ENVIRONMENT=/app/backend/.venv-simulation uv sync --frozen --no-dev --extra simulation \
     && mkdir -p uploads logs \
     && chown -R mirofish:mirofish uploads logs
 COPY --from=frontend-build /build/frontend/dist /app/frontend/dist
+COPY locales/ /app/locales/
 
 USER mirofish
 EXPOSE 5001

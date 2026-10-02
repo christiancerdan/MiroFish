@@ -23,6 +23,7 @@ from ..utils.llm_provider import settings_from_config
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, t
 from ..utils.openai_chat_compat import create_chat_completion, extract_chat_completion_text
+from ..utils.budget import BudgetExceeded, bind_budget_client
 from .zep_entity_reader import EntityNode, ZepEntityReader
 
 logger = get_logger('mirofish.simulation_config')
@@ -239,6 +240,7 @@ class SimulationConfigGenerator:
             api_key=self.api_key,
             base_url=self.base_url
         )
+        bind_budget_client(self.client)
     
     def generate_config(
         self,
@@ -473,6 +475,8 @@ class SimulationConfigGenerator:
                     
                     last_error = e
                     
+            except BudgetExceeded:
+                raise
             except Exception as e:
                 logger.warning(f"LLM调用失败 (attempt {attempt+1}): {str(e)[:80]}")
                 last_error = e
@@ -591,6 +595,8 @@ class SimulationConfigGenerator:
 
         try:
             return self._call_llm_with_retry(prompt, system_prompt)
+        except BudgetExceeded:
+            raise
         except Exception as e:
             logger.warning(f"时间配置LLM生成失败: {e}, 使用默认配置")
             return self._get_default_time_config(num_entities)
@@ -708,6 +714,8 @@ class SimulationConfigGenerator:
 
         try:
             return self._call_llm_with_retry(prompt, system_prompt)
+        except BudgetExceeded:
+            raise
         except Exception as e:
             logger.warning(f"事件配置LLM生成失败: {e}, 使用默认配置")
             return {
@@ -873,6 +881,8 @@ class SimulationConfigGenerator:
         try:
             result = self._call_llm_with_retry(prompt, system_prompt)
             llm_configs = {cfg["agent_id"]: cfg for cfg in result.get("agent_configs", [])}
+        except BudgetExceeded:
+            raise
         except Exception as e:
             logger.warning(f"Agent配置批次LLM生成失败: {e}, 使用规则生成")
             llm_configs = {}

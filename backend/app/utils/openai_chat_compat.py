@@ -61,7 +61,8 @@ def create_chat_completion(
         else:
             kwargs["max_tokens"] = max_tokens
 
-    return client.chat.completions.create(**kwargs)
+    from .budget import budgeted_chat_completion
+    return budgeted_chat_completion(client, **kwargs)
 
 
 def extract_chat_completion_text(response: Any) -> str:

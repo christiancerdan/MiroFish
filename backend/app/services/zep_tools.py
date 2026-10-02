@@ -68,6 +68,7 @@ class NodeInfo:
     labels: List[str]
     summary: str
     attributes: Dict[str, Any]
+    source_episode_ids: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -75,7 +76,8 @@ class NodeInfo:
             "name": self.name,
             "labels": self.labels,
             "summary": self.summary,
-            "attributes": self.attributes
+            "attributes": self.attributes,
+            "source_episode_ids": self.source_episode_ids
         }
     
     def to_text(self) -> str:
@@ -99,6 +101,7 @@ class EdgeInfo:
     valid_at: Optional[str] = None
     invalid_at: Optional[str] = None
     expired_at: Optional[str] = None
+    source_episode_ids: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -112,7 +115,8 @@ class EdgeInfo:
             "created_at": self.created_at,
             "valid_at": self.valid_at,
             "invalid_at": self.invalid_at,
-            "expired_at": self.expired_at
+            "expired_at": self.expired_at,
+            "source_episode_ids": self.source_episode_ids
         }
     
     def to_text(self, include_temporal: bool = False) -> str:
@@ -430,8 +434,6 @@ class ZepToolsService:
     
     def __init__(self, api_key: Optional[str] = None, llm_client: Optional[LLMClient] = None):
         self.api_key = api_key or Config.ZEP_API_KEY
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY 未配置")
         
         self.client = get_zep_client(self.api_key)
         # LLM客户端用于InsightForge生成子问题
@@ -509,6 +511,7 @@ class ZepToolsService:
                         "fact": getattr(edge, 'fact', ''),
                         "source_node_uuid": getattr(edge, 'source_node_uuid', ''),
                         "target_node_uuid": getattr(edge, 'target_node_uuid', ''),
+                        "source_episode_ids": list(getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None) or []),
                     })
             
             # 解析节点搜索结果
@@ -519,6 +522,7 @@ class ZepToolsService:
                         "name": getattr(node, 'name', ''),
                         "labels": getattr(node, 'labels', []),
                         "summary": getattr(node, 'summary', ''),
+                        "source_episode_ids": list(getattr(node, "source_episode_ids", None) or getattr(node, "episodes", None) or []),
                     })
                     # 节点摘要也算作事实
                     if hasattr(node, 'summary') and node.summary:
@@ -540,6 +544,43 @@ class ZepToolsService:
             logger.error(t("console.zepSearchApiFallback", error=str(e)))
             raise
     
+    def get_evidence(self, graph_id: str, source_ids: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """Return graph-scoped raw sources; never infer citations from model text."""
+        if getattr(self.client, "backend", None) == "local":
+            return self.client.graph.get_evidence(graph_id, source_ids)
+        # The optional Cloud backend exposes episode IDs on graph edges. Check
+        # membership before reading any caller-supplied source ID.
+        import hashlib
+        allowed = set()
+        for edge in fetch_all_edges(self.client, graph_id):
+            allowed.update(str(value) for value in (getattr(edge, "episodes", None) or []))
+        requested = allowed if source_ids is None else allowed.intersection(source_ids)
+        result = []
+        for source_id in sorted(requested):
+            episode = self._call_with_retry(
+                lambda: self.client.graph.episode.get(uuid_=source_id), "read source evidence"
+            )
+            text = getattr(episode, "content", None) or getattr(episode, "data", None)
+            if not isinstance(text, str) or not text:
+                continue
+            metadata = getattr(episode, "metadata", None) or {}
+            created = getattr(episode, "created_at", None)
+            kind = "unknown"
+            if metadata.get("source") == "mirofish_simulation" or metadata.get("kind") == "simulation":
+                kind = "simulation"
+            elif metadata.get("kind") == "document" or metadata.get("mirofish_operation_id") or metadata.get("source") == "mirofish_document":
+                kind = "document"
+            result.append({
+                "id": source_id, "source_id": source_id, "graph_id": graph_id,
+                "kind": kind,
+                "text": text, "metadata": metadata,
+                "created_at": str(created) if created else None,
+                "reference_time": None,
+                "source_name": metadata.get("source_name"), "source_uri": metadata.get("source_uri"),
+                "source_hash": hashlib.sha256(text.encode()).hexdigest(),
+            })
+        return result
+
     def _local_search(
         self, 
         graph_id: str, 
@@ -666,7 +707,8 @@ class ZepToolsService:
                 name=node.name or "",
                 labels=node.labels or [],
                 summary=node.summary or "",
-                attributes=node.attributes or {}
+                attributes=node.attributes or {},
+                source_episode_ids=list(getattr(node, "source_episode_ids", None) or getattr(node, "episodes", None) or []),
             ))
 
         logger.info(t("console.fetchedNodes", count=len(result)))
@@ -695,7 +737,8 @@ class ZepToolsService:
                 name=edge.name or "",
                 fact=edge.fact or "",
                 source_node_uuid=edge.source_node_uuid or "",
-                target_node_uuid=edge.target_node_uuid or ""
+                target_node_uuid=edge.target_node_uuid or "",
+                source_episode_ids=list(getattr(edge, "source_episode_ids", None) or getattr(edge, "episodes", None) or []),
             )
 
             # 添加时间信息
@@ -736,7 +779,8 @@ class ZepToolsService:
                 name=node.name or "",
                 labels=node.labels or [],
                 summary=node.summary or "",
-                attributes=node.attributes or {}
+                attributes=node.attributes or {},
+                source_episode_ids=list(getattr(node, "source_episode_ids", None) or getattr(node, "episodes", None) or []),
             )
         except NotFoundError:
             return None

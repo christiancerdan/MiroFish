@@ -1,17 +1,18 @@
 """\n配置管理\n统一从项目根目录的 .env 文件加载配置\n"""
 
 import os
+import sys
 from dotenv import load_dotenv
 
 # 加载项目根目录的 .env 文件
 # 路径: MiroFish/.env (相对于 backend/app/config.py)
 project_root_env = os.path.join(os.path.dirname(__file__), '../../.env')
 
-if os.path.exists(project_root_env):
-    load_dotenv(project_root_env, override=False)
-else:
-    # 如果根目录没有 .env，尝试加载环境变量（用于生产环境）
-    load_dotenv(override=False)
+if os.environ.get('MIROFISH_SIMULATION_WORKER') != '1':
+    if os.path.exists(project_root_env):
+        load_dotenv(project_root_env, override=False)
+    else:
+        load_dotenv(override=False)
 
 
 class Config:
@@ -45,11 +46,26 @@ class Config:
     
     # Zep配置
     ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
+    GRAPH_BACKEND = os.environ.get('GRAPH_BACKEND', 'local').strip().lower()
     
     # 文件上传配置
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '../uploads')
+    UPLOAD_FOLDER = os.environ.get('MIROFISH_DATA_DIR', os.path.join(os.path.dirname(__file__), '../uploads'))
     ALLOWED_EXTENSIONS = {'pdf', 'md', 'txt', 'markdown'}
+    LOCAL_GRAPH_DB_PATH = os.environ.get('LOCAL_GRAPH_DB_PATH', os.path.join(UPLOAD_FOLDER, 'memory.sqlite3'))
+    JOBS_DB_PATH = os.environ.get('JOBS_DB_PATH', os.path.join(UPLOAD_FOLDER, 'jobs.sqlite3'))
+    JOB_WORKERS = int(os.environ.get('JOB_WORKERS', '2'))
+    JOB_LEASE_SECONDS = int(os.environ.get('JOB_LEASE_SECONDS', '60'))
+    # Server entrypoints start the dispatcher explicitly. Importing an app for
+    # tests or an administrative script must never launch persisted paid work.
+    JOBS_AUTOSTART = os.environ.get('JOBS_AUTOSTART', 'false').lower() == 'true'
+    BUDGET_DB_PATH = os.environ.get('BUDGET_DB_PATH', os.path.join(UPLOAD_FOLDER, 'budgets.sqlite3'))
+    BUDGET_MAX_CALLS = int(os.environ.get('BUDGET_MAX_CALLS', '1000'))
+    BUDGET_MAX_TOKENS = int(os.environ.get('BUDGET_MAX_TOKENS', '1000000'))
+    BUDGET_MAX_OUTPUT_TOKENS = int(os.environ.get('BUDGET_MAX_OUTPUT_TOKENS', '250000'))
+    BUDGET_MAX_WALL_SECONDS = int(os.environ.get('BUDGET_MAX_WALL_SECONDS', '3600'))
+    BUDGET_MAX_COST_USD = float(os.environ['BUDGET_MAX_COST_USD']) if os.environ.get('BUDGET_MAX_COST_USD') else None
+    BUDGET_MODEL_PRICING_JSON = os.environ.get('BUDGET_MODEL_PRICING_JSON', '{}')
     
     # 文本处理配置
     DEFAULT_CHUNK_SIZE = 500  # 默认切块大小
@@ -57,7 +73,17 @@ class Config:
     
     # OASIS模拟配置
     OASIS_DEFAULT_MAX_ROUNDS = int(os.environ.get('OASIS_DEFAULT_MAX_ROUNDS', '10'))
-    OASIS_SIMULATION_DATA_DIR = os.path.join(os.path.dirname(__file__), '../uploads/simulations')
+    OASIS_SIMULATION_DATA_DIR = os.path.join(UPLOAD_FOLDER, 'simulations')
+    _SIMULATION_ENV_PYTHON = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '..', '.venv-simulation',
+        'Scripts/python.exe' if os.name == 'nt' else 'bin/python',
+    ))
+    SIMULATION_PYTHON = os.environ.get('SIMULATION_PYTHON') or (
+        _SIMULATION_ENV_PYTHON if os.path.isfile(_SIMULATION_ENV_PYTHON) else sys.executable
+    )
+    SIMULATION_MAX_WALL_SECONDS = int(os.environ.get('SIMULATION_MAX_WALL_SECONDS', '3600'))
+    SIMULATION_MAX_CPU_SECONDS = int(os.environ.get('SIMULATION_MAX_CPU_SECONDS', '1800'))
+    SIMULATION_MAX_MEMORY_MB = int(os.environ.get('SIMULATION_MAX_MEMORY_MB', '8192'))
     
     # OASIS平台可用动作配置
     OASIS_TWITTER_ACTIONS = [
@@ -87,9 +113,11 @@ class Config:
             errors.append(str(exc))
         if not cls.MIROFISH_ACCESS_KEY or len(cls.MIROFISH_ACCESS_KEY) < 32:
             errors.append('MIROFISH_ACCESS_KEY must contain at least 32 characters; run python3 scripts/setup_config.py')
-        if not cls.ZEP_API_KEY:
+        if cls.GRAPH_BACKEND not in {'local', 'zep'}:
+            errors.append('GRAPH_BACKEND must be local or zep')
+        if cls.GRAPH_BACKEND == 'zep' and not cls.ZEP_API_KEY:
             errors.append("ZEP_API_KEY 未配置")
-        if os.environ.get("ZEP_API_URL"):
+        if cls.GRAPH_BACKEND == 'zep' and os.environ.get("ZEP_API_URL"):
             errors.append("ZEP_API_URL 不受支持；MiroFish 仅连接 Zep Cloud")
         if cls.DEBUG:
             import warnings

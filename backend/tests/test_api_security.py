@@ -125,6 +125,16 @@ def test_login_is_rate_limited(client):
     assert client.post("/api/auth/login", json={"access_key": KEY}).status_code == 429
 
 
+def test_allowed_origin_can_preflight_idempotent_job_retry(client):
+    response = client.options('/api/graph/task/task_test/retry', headers={
+        'Origin': 'http://localhost:3000',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'Idempotency-Key, X-CSRF-Token',
+    })
+    assert response.status_code == 204
+    assert 'Idempotency-Key' in response.headers['Access-Control-Allow-Headers']
+
+
 @pytest.mark.parametrize("path", ["/api/test/error", "/api/test/raise"])
 def test_server_errors_do_not_expose_internals(client, path):
     response = client.get(path, headers={"Authorization": "Bearer " + KEY})

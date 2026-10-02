@@ -22,9 +22,13 @@ def server(monkeypatch):
     config_module.Config = config
     waitress_module = ModuleType("waitress")
     waitress_module.serve = lambda app, **kwargs: calls.append((app, kwargs))
+    jobs_module = ModuleType("app.services.job_dispatcher")
+    jobs_module.start_job_dispatcher = lambda app: calls.append("start_jobs")
+    jobs_module.stop_job_dispatcher = lambda app: calls.append("stop_jobs")
     monkeypatch.setitem(sys.modules, "app", app_module)
     monkeypatch.setitem(sys.modules, "app.config", config_module)
     monkeypatch.setitem(sys.modules, "waitress", waitress_module)
+    monkeypatch.setitem(sys.modules, "app.services.job_dispatcher", jobs_module)
 
     namespace = runpy.run_path(str(Path(__file__).resolve().parents[1] / "serve.py"))
     return SimpleNamespace(
@@ -37,7 +41,9 @@ def test_production_defaults_bind_loopback_once_without_debug(server):
 
     assert server.calls == [
         "create_app",
+        "start_jobs",
         (server.application, {"host": "127.0.0.1", "port": 5001, "threads": 8}),
+        "stop_jobs",
     ]
     assert server.application.debug is False
 
@@ -49,7 +55,7 @@ def test_production_honors_explicit_listener_and_thread_settings(server, monkeyp
 
     server.main()
 
-    assert server.calls[-1] == (
+    assert server.calls[-2] == (
         server.application,
         {"host": "0.0.0.0", "port": 8080, "threads": 16},
     )

@@ -9,7 +9,9 @@ from flask import Flask
 
 from app.api import simulation as simulation_api
 from app.config import Config
-from app.models.project import ProjectManager
+from app.models.project import ProjectManager, ProjectStatus
+from app.models.task import TaskManager, TaskStatus
+from app.utils.zep_lifecycle import get_graph_readers
 from app.services.simulation_manager import SimulationManager, SimulationStatus
 
 
@@ -126,6 +128,8 @@ def test_database_endpoints_read_valid_records_in_configured_storage(storage, cl
 def prepared_inputs(storage, monkeypatch):
     project = ProjectManager.create_project("Security regression")
     project.simulation_requirement = "Describe the likely response"
+    project.graph_id = "graph-test"
+    project.status = ProjectStatus.GRAPH_COMPLETED
     ProjectManager.save_project(project)
     state = SimulationManager().create_simulation(project.project_id, "graph-test")
     monkeypatch.setattr(simulation_api, "ZepEntityReader", lambda: SimpleNamespace(
@@ -134,19 +138,18 @@ def prepared_inputs(storage, monkeypatch):
     return state.simulation_id
 
 
-def test_overlapping_prepare_requests_do_not_start_duplicate_work(client, prepared_inputs, monkeypatch):
-    started, finish = threading.Event(), threading.Event()
-    workers = []
-    original_thread = threading.Thread
-    def track_thread(**kwargs):
-        worker = original_thread(**kwargs)
-        workers.append(worker)
-        return worker
-    monkeypatch.setattr(threading, "Thread", track_thread)
+@pytest.fixture
+def tasks(tmp_path, monkeypatch):
+    manager = TaskManager(db_path=tmp_path / "jobs.sqlite3")
+    monkeypatch.setattr(simulation_api, "TaskManager", lambda: manager)
+    return manager
 
+
+def test_overlapping_prepare_requests_do_not_start_duplicate_work(client, prepared_inputs, tasks, monkeypatch):
+    calls = []
     def prepare(self, simulation_id, **kwargs):
-        started.set()
-        assert finish.wait(5)
+        calls.append(kwargs)
+        assert get_graph_readers("graph-test")
         state = self.get_simulation(simulation_id)
         state.status = SimulationStatus.READY
         self._save_simulation_state(state)
@@ -154,53 +157,94 @@ def test_overlapping_prepare_requests_do_not_start_duplicate_work(client, prepar
 
     monkeypatch.setattr(SimulationManager, "prepare_simulation", prepare)
     payload = {"simulation_id": prepared_inputs, "force_regenerate": True}
-    try:
-        first = client.post("/api/simulation/prepare", json=payload)
-        assert first.status_code == 200
-        assert started.wait(2)
-        second = client.post("/api/simulation/prepare", json=payload)
-        assert second.status_code == 409 or (
-            second.status_code == 200 and second.json["data"].get("task_id") == first.json["data"]["task_id"]
-        )
-    finally:
-        finish.set()
-        for worker in workers:
-            worker.join(timeout=5)
-            assert not worker.is_alive()
+    first = client.post("/api/simulation/prepare", json=payload)
+    assert first.status_code == 200
+    assert calls == []
+    first_id = first.json["data"]["task_id"]
+    second = client.post("/api/simulation/prepare", json=payload)
+    assert second.status_code == 200
+    assert second.json["data"]["task_id"] == first_id
+    assert get_graph_readers("graph-test") == []
+
+    # A fresh queue handle can execute the saved request without a request closure.
+    restarted = TaskManager(db_path=tasks.db_path)
+    queued = restarted.get_task(first_id)
+    assert queued.handler == "simulation_prepare"
+    assert "document_text" not in queued.parameters
+    assert queued.parameters["project_id"] == queued.metadata["project_id"]
+    monkeypatch.setattr(ProjectManager, "get_extracted_text", lambda _project_id: "reloaded document")
+    simulation_api.run_prepare_job(first_id, queued.parameters)
+    assert restarted.get_task(first_id).status == TaskStatus.COMPLETED
+    assert calls[0]["document_text"] == "reloaded document"
+    assert get_graph_readers("graph-test") == []
     retried = client.post("/api/simulation/prepare", json=payload)
     assert retried.status_code == 200
-    assert retried.json["data"]["task_id"] != first.json["data"]["task_id"]
-    for worker in workers:
-        worker.join(timeout=5)
-        assert not worker.is_alive()
+    assert retried.json["data"]["task_id"] != first_id
 
 
-def test_prepare_claim_released_after_thread_start_failure(client, prepared_inputs, monkeypatch):
-    class BrokenThread:
-        def __init__(self, **kwargs):
-            pass
-        def start(self):
-            raise RuntimeError("thread unavailable")
-
-    monkeypatch.setattr(threading, "Thread", BrokenThread)
+def test_prepare_claim_released_after_enqueue_failure(client, prepared_inputs, tasks, monkeypatch):
+    enqueue = tasks.enqueue
+    def fail_enqueue(**_kwargs):
+        raise RuntimeError("queue unavailable")
+    monkeypatch.setattr(tasks, "enqueue", fail_enqueue)
     first = client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs})
     assert first.status_code == 500
 
-    class DeferredThread:
-        def __init__(self, target, **kwargs):
-            self.target = target
-        def start(self):
-            self.target()
-
-    monkeypatch.setattr(threading, "Thread", DeferredThread)
+    monkeypatch.setattr(tasks, "enqueue", enqueue)
     def fail_prepare(self, **kwargs):
         raise RuntimeError("provider failed")
     monkeypatch.setattr(SimulationManager, "prepare_simulation", fail_prepare)
     second = client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs})
     assert second.status_code == 200
+    task_id = second.json["data"]["task_id"]
+    simulation_api.run_prepare_job(task_id, tasks.get_task(task_id).parameters)
+    assert tasks.get_task(task_id).status == TaskStatus.FAILED
+    assert get_graph_readers("graph-test") == []
     third = client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs})
     assert third.status_code == 200
     assert second.json["data"]["task_id"] != third.json["data"]["task_id"]
+
+
+def test_prepare_idempotency_reuses_completed_task(client, prepared_inputs, tasks):
+    payload = {"simulation_id": prepared_inputs}
+    headers = {"Idempotency-Key": "prepare-request-1"}
+    first = client.post("/api/simulation/prepare", json=payload, headers=headers)
+    assert first.status_code == 200
+    task_id = first.json["data"]["task_id"]
+    tasks.complete_task(task_id, {"simulation_id": prepared_inputs})
+    second = client.post("/api/simulation/prepare", json=payload, headers=headers)
+    assert second.status_code == 200
+    assert second.json["data"]["task_id"] == task_id
+
+
+def test_prepare_job_rejects_changed_graph_before_provider_call(client, prepared_inputs, tasks, monkeypatch):
+    response = client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs})
+    task_id = response.json["data"]["task_id"]
+    queued = tasks.get_task(task_id)
+    project = ProjectManager.get_project(queued.parameters["project_id"])
+    project.graph_id = "new-graph"
+    ProjectManager.save_project(project)
+    def unexpected_prepare(*_args, **_kwargs):
+        pytest.fail("Must not generate against a replaced graph")
+    monkeypatch.setattr(SimulationManager, "prepare_simulation", unexpected_prepare)
+    simulation_api.run_prepare_job(task_id, queued.parameters)
+    assert tasks.get_task(task_id).status == TaskStatus.FAILED
+    assert "graph changed" in tasks.get_task(task_id).error
+    assert SimulationManager().get_simulation(prepared_inputs).status == SimulationStatus.CREATED
+    assert get_graph_readers("graph-test") == []
+
+
+def test_prepare_job_preserves_budget_failure(client, prepared_inputs, tasks, monkeypatch):
+    response = client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs})
+    task_id = response.json["data"]["task_id"]
+    error = RuntimeError("project budget exhausted")
+    error.code = "budget_exceeded"
+    def fail_prepare(*_args, **_kwargs):
+        raise error
+    monkeypatch.setattr(SimulationManager, "prepare_simulation", fail_prepare)
+    simulation_api.run_prepare_job(task_id, tasks.get_task(task_id).parameters)
+    assert tasks.get_task(task_id).status == TaskStatus.BUDGET_EXCEEDED
+    assert get_graph_readers("graph-test") == []
 
 
 @pytest.mark.parametrize("count", [0, -1, 33, 2.5, True, "3", None])
@@ -243,7 +287,7 @@ def test_listing_storage_skips_symlink_escapes_and_keeps_valid_records(storage, 
     assert [item.project_id for item in ProjectManager.list_projects()] == [project.project_id]
 
 
-def test_prepare_claim_is_held_while_synchronous_preview_is_still_running(client, prepared_inputs, monkeypatch):
+def test_prepare_claim_is_held_while_synchronous_preview_is_still_running(client, prepared_inputs, tasks, monkeypatch):
     preview_started, release_preview = threading.Event(), threading.Event()
     responses = []
 
@@ -255,26 +299,11 @@ def test_prepare_claim_is_held_while_synchronous_preview_is_still_running(client
 
     monkeypatch.setattr(simulation_api, "ZepEntityReader", lambda: SimpleNamespace(filter_defined_entities=preview))
 
-    def prepare(self, simulation_id, **kwargs):
-        state = self.get_simulation(simulation_id)
-        state.status = SimulationStatus.READY
-        self._save_simulation_state(state)
-        return state
-
-    monkeypatch.setattr(SimulationManager, "prepare_simulation", prepare)
-    real_thread = threading.Thread
-    workers = []
-    def track_worker(**kwargs):
-        worker = real_thread(**kwargs)
-        workers.append(worker)
-        return worker
-    monkeypatch.setattr(threading, "Thread", track_worker)
-
     def first_request():
         with client.application.test_client() as another_client:
             responses.append(another_client.post("/api/simulation/prepare", json={"simulation_id": prepared_inputs}))
 
-    request_thread = real_thread(target=first_request)
+    request_thread = threading.Thread(target=first_request)
     request_thread.start()
     try:
         assert preview_started.wait(2)
@@ -283,7 +312,49 @@ def test_prepare_claim_is_held_while_synchronous_preview_is_still_running(client
     finally:
         release_preview.set()
         request_thread.join(timeout=5)
-        for worker in workers:
-            worker.join(timeout=5)
     assert not request_thread.is_alive()
     assert responses[0].status_code == 200
+
+
+@pytest.mark.parametrize('status, error_code', [
+    (TaskStatus.INTERRUPTED, 'worker_interrupted'),
+    (TaskStatus.BUDGET_EXCEEDED, 'budget_exceeded'),
+])
+def test_prepare_idempotent_response_exposes_terminal_state(client, prepared_inputs, tasks, status, error_code):
+    headers = {'Idempotency-Key': 'original-prepare'}
+    payload = {'simulation_id': prepared_inputs}
+    first = client.post('/api/simulation/prepare', json=payload, headers=headers)
+    task_id = first.json['data']['task_id']
+    tasks.update_task(task_id, status=status, error_code=error_code, message='Requires attention')
+    repeated = client.post('/api/simulation/prepare', json=payload, headers=headers)
+    assert repeated.status_code == 200
+    assert repeated.json['data']['status'] == status.value
+    assert repeated.json['data']['task_status'] == status.value
+    assert repeated.json['data']['error_code'] == error_code
+    assert repeated.json['data']['message'] == 'Requires attention'
+
+
+def test_prepare_status_prioritizes_explicit_failed_task_over_cached_simulation(client, prepared_inputs, tasks, monkeypatch):
+    task_id = tasks.enqueue('simulation_prepare', 'simulation_prepare', {})
+    tasks.fail_task(task_id, RuntimeError('new preparation failed'))
+    client.application.config['JOBS_DB_PATH'] = tasks.db_path
+    def unexpected_cache(_simulation_id):
+        pytest.fail('An explicit task_id must not be hidden by a cached preparation')
+    monkeypatch.setattr(simulation_api, '_check_simulation_prepared', unexpected_cache)
+    response = client.post('/api/simulation/prepare/status', json={'task_id': task_id, 'simulation_id': prepared_inputs})
+    assert response.status_code == 200
+    assert response.json['data']['status'] == 'failed'
+    assert response.json['data']['error'] == 'new preparation failed'
+
+
+def test_prepare_validates_force_and_detects_changed_idempotent_semantics(client, prepared_inputs, tasks):
+    payload = {'simulation_id': prepared_inputs, 'force_regenerate': 'false'}
+    assert client.post('/api/simulation/prepare', json=payload).status_code == 400
+    payload['force_regenerate'] = False
+    headers = {'Idempotency-Key': 'original-prepare'}
+    first = client.post('/api/simulation/prepare', json=payload, headers=headers)
+    assert first.status_code == 200
+    payload['force_regenerate'] = True
+    changed = client.post('/api/simulation/prepare', json=payload, headers=headers)
+    assert changed.status_code == 400
+    assert 'Idempotency-Key' in changed.json['error']

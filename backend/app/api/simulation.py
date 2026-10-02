@@ -5,6 +5,7 @@ Step2: Zep实体读取与过滤、OASIS模拟准备与运行（全程自动化�
 
 import os
 import traceback
+import uuid
 import threading
 from contextlib import nullcontext
 from flask import request, jsonify, send_file
@@ -23,8 +24,11 @@ from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
 from ..utils.logger import get_logger
 from ..utils.locale import t, get_locale, set_locale
 from ..utils.storage import atomic_write_json, storage_path, validate_storage_id
-from ..utils.zep_lifecycle import get_graph_readers, graph_lifecycle_lock
-from ..models.project import ProjectManager
+from ..utils.zep_lifecycle import (
+    get_graph_readers, graph_lifecycle_lock, register_graph_reader, unregister_graph_reader,
+)
+from ..models.project import ProjectManager, ProjectStatus
+from ..models.task import JobCancelled, JobLeaseLost, TaskManager, TaskStatus
 
 logger = get_logger('mirofish.api.simulation')
 
@@ -397,6 +401,151 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         return False, {"reason": f"读取状态文件失败: {str(e)}"}
 
 
+def run_prepare_job(task_id, parameters):
+    """Execute a persisted preparation request after validating its inputs again."""
+    task_manager = TaskManager()
+    manager = SimulationManager()
+    simulation_id = parameters["simulation_id"]
+    graph_id = parameters["graph_id"]
+    reader_id = f"{task_id}:{uuid.uuid4().hex}"
+    reader_registered = False
+    preparation_started = False
+    set_locale(parameters.get("locale", "en"))
+    try:
+        with graph_lifecycle_lock(graph_id):
+            state = manager.get_simulation(simulation_id)
+            project = ProjectManager.get_project(parameters["project_id"])
+            if (
+                state is None or project is None
+                or state.project_id != parameters["project_id"]
+                or state.graph_id != graph_id or project.graph_id != graph_id
+                or project.status != ProjectStatus.GRAPH_COMPLETED
+            ):
+                raise ValueError("The project graph changed before preparation started")
+            if project.simulation_requirement != parameters["simulation_requirement"]:
+                raise ValueError("The simulation requirement changed before preparation started")
+            run_state = SimulationRunner.get_run_state(simulation_id)
+            if ZepGraphMemoryManager.get_updater(simulation_id) is not None or (
+                run_state is not None and run_state.runner_status in {
+                    RunnerStatus.STARTING, RunnerStatus.RUNNING,
+                    RunnerStatus.PAUSED, RunnerStatus.STOPPING,
+                }
+            ):
+                raise ValueError("Simulation or graph ingestion is active; preparation cannot start")
+            register_graph_reader(graph_id, reader_id)
+            reader_registered = True
+        document_text = ProjectManager.get_extracted_text(parameters["project_id"]) or ""
+        task_manager.update_task(
+            task_id, status=TaskStatus.PROCESSING, progress=0,
+            message=t('progress.startPreparingEnv'),
+        )
+        preparation_started = True
+        # 准备模拟（带进度回调）
+        # 存储阶段进度详情
+        stage_details = {}
+
+        def progress_callback(stage, progress, message, **kwargs):
+            # 计算总进度
+            stage_weights = {
+                "reading": (0, 20),           # 0-20%
+                "generating_profiles": (20, 70),  # 20-70%
+                "generating_config": (70, 90),    # 70-90%
+                "copying_scripts": (90, 100)       # 90-100%
+            }
+
+            start, end = stage_weights.get(stage, (0, 100))
+            current_progress = int(start + (end - start) * progress / 100)
+
+            # 构建详细进度信息
+            stage_names = {
+                "reading": t('progress.readingGraphEntities'),
+                "generating_profiles": t('progress.generatingProfiles'),
+                "generating_config": t('progress.generatingSimConfig'),
+                "copying_scripts": t('progress.preparingScripts')
+            }
+
+            stage_index = list(stage_weights.keys()).index(stage) + 1 if stage in stage_weights else 1
+            total_stages = len(stage_weights)
+
+            # 更新阶段详情
+            stage_details[stage] = {
+                "stage_name": stage_names.get(stage, stage),
+                "stage_progress": progress,
+                "current": kwargs.get("current", 0),
+                "total": kwargs.get("total", 0),
+                "item_name": kwargs.get("item_name", "")
+            }
+
+            # 构建详细进度信息
+            detail = stage_details[stage]
+            progress_detail_data = {
+                "current_stage": stage,
+                "current_stage_name": stage_names.get(stage, stage),
+                "stage_index": stage_index,
+                "total_stages": total_stages,
+                "stage_progress": progress,
+                "current_item": detail["current"],
+                "total_items": detail["total"],
+                "item_description": message
+            }
+
+            # 构建简洁消息
+            if detail["total"] > 0:
+                detailed_message = (
+                    f"[{stage_index}/{total_stages}] {stage_names.get(stage, stage)}: "
+                    f"{detail['current']}/{detail['total']} - {message}"
+                )
+            else:
+                detailed_message = f"[{stage_index}/{total_stages}] {stage_names.get(stage, stage)}: {message}"
+
+            task_manager.update_task(
+                task_id,
+                progress=current_progress,
+                message=detailed_message,
+                progress_detail=progress_detail_data
+            )
+
+        result_state = manager.prepare_simulation(
+            simulation_id=simulation_id,
+            simulation_requirement=parameters["simulation_requirement"],
+            document_text=document_text,
+            defined_entity_types=parameters.get("entity_types"),
+            use_llm_for_profiles=parameters.get("use_llm_for_profiles", True),
+            progress_callback=progress_callback,
+            parallel_profile_count=parameters.get("parallel_profile_count", 5)
+        )
+
+        if result_state.status == SimulationStatus.FAILED:
+            task_manager.fail_task(
+                task_id,
+                result_state.error or "模拟准备失败"
+            )
+        else:
+            task_manager.complete_task(
+                task_id,
+                result=result_state.to_simple_dict()
+            )
+
+    except (JobLeaseLost, JobCancelled):
+        # A stale worker must not overwrite the state owned by its replacement.
+        raise
+    except Exception as e:
+        logger.error(f"准备模拟失败: {str(e)}")
+        # Publish while this execution still owns a processing task. Marking
+        # the task failed first would make the publication guard reject it.
+        if preparation_started:
+            with task_manager.publication_guard():
+                state = manager.get_simulation(simulation_id)
+                if state:
+                    state.status = SimulationStatus.FAILED
+                    state.error = str(e)
+                    manager._save_simulation_state(state)
+        task_manager.fail_task(task_id, e)
+    finally:
+        if reader_registered:
+            unregister_graph_reader(graph_id, reader_id)
+
+
 @simulation_bp.route('/prepare', methods=['POST'])
 def prepare_simulation():
     """
@@ -438,13 +587,7 @@ def prepare_simulation():
             }
         }
     """
-    import threading
-    import os
-    from ..models.task import TaskManager, TaskStatus
-    from ..config import Config
-    
     claim = None
-    background_started = False
     simulation_id = None
     try:
         data = request.get_json() or {}
@@ -478,10 +621,12 @@ def prepare_simulation():
         
         # 检查是否强制重新生成
         force_regenerate = data.get('force_regenerate', False)
+        if not isinstance(force_regenerate, bool):
+            return jsonify({"success": False, "error": "force_regenerate must be a JSON boolean"}), 400
         logger.info(f"开始处理 /prepare 请求: simulation_id={simulation_id}, force_regenerate={force_regenerate}")
         
         # 检查是否已经准备完成（避免重复生成）
-        if not force_regenerate:
+        if not force_regenerate and not request.headers.get("Idempotency-Key"):
             logger.debug(f"检查模拟 {simulation_id} 是否已准备完成...")
             is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
             logger.debug(f"检查结果: is_prepared={is_prepared}, prepare_info={prepare_info}")
@@ -516,9 +661,6 @@ def prepare_simulation():
                 "error": t('api.projectMissingRequirement')
             }), 400
         
-        # 获取文档文本
-        document_text = ProjectManager.get_extracted_text(state.project_id) or ""
-        
         entity_types_list = data.get('entity_types')
         use_llm_for_profiles = data.get('use_llm_for_profiles', True)
         # ========== 同步获取实体数量（在后台任务启动前） ==========
@@ -540,153 +682,47 @@ def prepare_simulation():
             logger.warning(f"同步获取实体数量失败（将在后台任务中重试）: {e}")
             # 失败不影响后续流程，后台任务会重新获取
         
-        # 创建异步任务
+        # Persist only replayable inputs. The dispatcher reloads state and documents.
         task_manager = TaskManager()
-        task_id = task_manager.create_task(
+        task_id = task_manager.enqueue(
             task_type="simulation_prepare",
+            handler="simulation_prepare",
+            parameters={
+                "simulation_id": simulation_id,
+                "project_id": state.project_id,
+                "graph_id": state.graph_id,
+                "simulation_requirement": simulation_requirement,
+                "entity_types": entity_types_list,
+                "use_llm_for_profiles": use_llm_for_profiles,
+                "parallel_profile_count": parallel_profile_count,
+                "force_regenerate": force_regenerate,
+                "locale": get_locale(),
+            },
             metadata={
                 "simulation_id": simulation_id,
-                "project_id": state.project_id
-            }
+                "project_id": state.project_id,
+                "graph_id": state.graph_id,
+            },
+            dedupe_key=f"simulation_prepare:{simulation_id}",
+            idempotency_key=request.headers.get("Idempotency-Key"),
         )
-        
-        # 更新模拟状态（包含预先获取的实体数量）
-        state.status = SimulationStatus.PREPARING
-        manager._save_simulation_state(state)
-        
-        # Capture locale before spawning background thread
-        current_locale = get_locale()
 
-        # 定义后台任务
-        def run_prepare():
-            try:
-                set_locale(current_locale)
-                task_manager.update_task(
-                    task_id,
-                    status=TaskStatus.PROCESSING,
-                    progress=0,
-                    message=t('progress.startPreparingEnv')
-                )
-                
-                # 准备模拟（带进度回调）
-                # 存储阶段进度详情
-                stage_details = {}
-                
-                def progress_callback(stage, progress, message, **kwargs):
-                    # 计算总进度
-                    stage_weights = {
-                        "reading": (0, 20),           # 0-20%
-                        "generating_profiles": (20, 70),  # 20-70%
-                        "generating_config": (70, 90),    # 70-90%
-                        "copying_scripts": (90, 100)       # 90-100%
-                    }
-                    
-                    start, end = stage_weights.get(stage, (0, 100))
-                    current_progress = int(start + (end - start) * progress / 100)
-                    
-                    # 构建详细进度信息
-                    stage_names = {
-                        "reading": t('progress.readingGraphEntities'),
-                        "generating_profiles": t('progress.generatingProfiles'),
-                        "generating_config": t('progress.generatingSimConfig'),
-                        "copying_scripts": t('progress.preparingScripts')
-                    }
-                    
-                    stage_index = list(stage_weights.keys()).index(stage) + 1 if stage in stage_weights else 1
-                    total_stages = len(stage_weights)
-                    
-                    # 更新阶段详情
-                    stage_details[stage] = {
-                        "stage_name": stage_names.get(stage, stage),
-                        "stage_progress": progress,
-                        "current": kwargs.get("current", 0),
-                        "total": kwargs.get("total", 0),
-                        "item_name": kwargs.get("item_name", "")
-                    }
-                    
-                    # 构建详细进度信息
-                    detail = stage_details[stage]
-                    progress_detail_data = {
-                        "current_stage": stage,
-                        "current_stage_name": stage_names.get(stage, stage),
-                        "stage_index": stage_index,
-                        "total_stages": total_stages,
-                        "stage_progress": progress,
-                        "current_item": detail["current"],
-                        "total_items": detail["total"],
-                        "item_description": message
-                    }
-                    
-                    # 构建简洁消息
-                    if detail["total"] > 0:
-                        detailed_message = (
-                            f"[{stage_index}/{total_stages}] {stage_names.get(stage, stage)}: "
-                            f"{detail['current']}/{detail['total']} - {message}"
-                        )
-                    else:
-                        detailed_message = f"[{stage_index}/{total_stages}] {stage_names.get(stage, stage)}: {message}"
-                    
-                    task_manager.update_task(
-                        task_id,
-                        progress=current_progress,
-                        message=detailed_message,
-                        progress_detail=progress_detail_data
-                    )
-                
-                result_state = manager.prepare_simulation(
-                    simulation_id=simulation_id,
-                    simulation_requirement=simulation_requirement,
-                    document_text=document_text,
-                    defined_entity_types=entity_types_list,
-                    use_llm_for_profiles=use_llm_for_profiles,
-                    progress_callback=progress_callback,
-                    parallel_profile_count=parallel_profile_count
-                )
+        task = task_manager.get_task(task_id)
+        response_status = {
+            TaskStatus.PENDING: "preparing", TaskStatus.PROCESSING: "preparing",
+            TaskStatus.COMPLETED: "ready",
+        }.get(task.status, task.status.value)
 
-                if result_state.status == SimulationStatus.FAILED:
-                    task_manager.fail_task(
-                        task_id,
-                        result_state.error or "模拟准备失败"
-                    )
-                else:
-                    task_manager.complete_task(
-                        task_id,
-                        result=result_state.to_simple_dict()
-                    )
-                
-            except Exception as e:
-                logger.error(f"准备模拟失败: {str(e)}")
-                task_manager.fail_task(task_id, str(e))
-                
-                # 更新模拟状态为失败
-                state = manager.get_simulation(simulation_id)
-                if state:
-                    state.status = SimulationStatus.FAILED
-                    state.error = str(e)
-                    manager._save_simulation_state(state)
-            finally:
-                _release_prepare_claim(simulation_id, claim)
-        
-        # 启动后台线程
-        try:
-            thread = threading.Thread(target=run_prepare, daemon=True)
-            thread.start()
-        except Exception:
-            task_manager.fail_task(task_id, "Unable to start preparation worker")
-            state.status = SimulationStatus.FAILED
-            state.error = "Unable to start preparation worker"
-            manager._save_simulation_state(state)
-            raise
-        background_started = True
-        
         return jsonify({
             "success": True,
             "data": {
                 "simulation_id": simulation_id,
                 "task_id": task_id,
-                "status": "preparing",
-                "message": t('api.prepareStarted'),
-                "already_prepared": False,
+                "status": response_status,
+                "task_status": task.status.value,
+                "error_code": task.error_code,
+                "message": task.message or t('api.prepareStarted'),
+                "already_prepared": task.status == TaskStatus.COMPLETED,
                 "expected_entities_count": state.entities_count,  # 预期的Agent总数
                 "entity_types": state.entity_types  # 实体类型列表
             }
@@ -706,7 +742,7 @@ def prepare_simulation():
             "traceback": traceback.format_exc()
         }), 500
     finally:
-        if claim is not None and not background_started:
+        if claim is not None:
             _release_prepare_claim(simulation_id, claim)
 
 
@@ -747,7 +783,7 @@ def get_prepare_status():
         simulation_id = data.get('simulation_id')
         
         # 如果提供了simulation_id，先检查是否已准备完成
-        if simulation_id:
+        if simulation_id and not task_id:
             is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
             if is_prepared:
                 return jsonify({
@@ -1623,108 +1659,110 @@ def start_simulation():
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
 
-        force_restarted = False
-        
-        # 智能处理状态：如果准备工作已完成，允许重新启动
-        if state.status != SimulationStatus.READY:
-            # 检查准备工作是否已完成
-            is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
+        # Reports also read run logs when graph-memory updates are disabled.
+        # Hold the lifecycle barrier across cleanup and start so a report cannot
+        # acquire a lease between the check and destructive forced-rerun cleanup.
+        project = ProjectManager.get_project(state.project_id)
+        current_project_graph = project.graph_id if project else None
+        graph_id = current_project_graph if enable_graph_memory_update else None
+        if enable_graph_memory_update and not graph_id:
+            return jsonify({
+                "success": False,
+                "error": t('api.graphIdRequiredForMemory'),
+            }), 400
+        reader_graph_id = current_project_graph or state.graph_id
+        graph_guard = graph_lifecycle_lock(reader_graph_id) if reader_graph_id else nullcontext()
+        with graph_guard:
+            active_reports = get_graph_readers(reader_graph_id) if reader_graph_id else []
+            if active_reports:
+                return jsonify({
+                    "success": False,
+                    "error": "A report or preparation is reading this graph; wait before restarting the simulation",
+                    "active_reports": active_reports,
+                }), 409
 
-            if is_prepared:
-                run_state = SimulationRunner.get_run_state(simulation_id)
-                updater = ZepGraphMemoryManager.get_updater(simulation_id)
-                needs_finalization = bool(
-                    run_state
-                    and run_state.runner_status in {
-                        RunnerStatus.RUNNING,
-                        RunnerStatus.PAUSED,
-                        RunnerStatus.STOPPING,
-                        RunnerStatus.FAILED,
-                    }
-                    and (
-                        run_state.runner_status
-                        in {
+            force_restarted = False
+
+            # 智能处理状态：如果准备工作已完成，允许重新启动
+            if state.status != SimulationStatus.READY:
+                # 检查准备工作是否已完成
+                is_prepared, prepare_info = _check_simulation_prepared(simulation_id)
+
+                if is_prepared:
+                    run_state = SimulationRunner.get_run_state(simulation_id)
+                    updater = ZepGraphMemoryManager.get_updater(simulation_id)
+                    needs_finalization = bool(
+                        run_state
+                        and run_state.runner_status in {
                             RunnerStatus.RUNNING,
                             RunnerStatus.PAUSED,
                             RunnerStatus.STOPPING,
+                            RunnerStatus.FAILED,
                         }
-                        or updater is not None
+                        and (
+                            run_state.runner_status
+                            in {
+                                RunnerStatus.RUNNING,
+                                RunnerStatus.PAUSED,
+                                RunnerStatus.STOPPING,
+                            }
+                            or updater is not None
+                        )
                     )
-                )
-                if needs_finalization:
-                    if not force:
-                        return jsonify({
-                            "success": False,
-                            "error": t('api.simRunningForceHint')
-                        }), 400
-                    logger.info(f"强制模式：先完成旧模拟终止 {simulation_id}")
-                    try:
-                        stopped = SimulationRunner.stop_simulation(simulation_id)
-                    except SimulationStopPending as error:
-                        return jsonify({
-                            "success": False,
-                            "pending": True,
-                            "error": str(error),
-                        }), 409
-                    except Exception as error:
-                        return jsonify({
-                            "success": False,
-                            "error": (
-                                "Cannot restart until the previous simulation "
-                                f"finalizes safely: {error}"
-                            ),
-                        }), 409
-                    if stopped.runner_status != RunnerStatus.STOPPED:
-                        return jsonify({
-                            "success": False,
-                            "error": "Previous simulation did not reach STOPPED",
-                        }), 409
+                    if needs_finalization:
+                        if not force:
+                            return jsonify({
+                                "success": False,
+                                "error": t('api.simRunningForceHint')
+                            }), 400
+                        logger.info(f"强制模式：先完成旧模拟终止 {simulation_id}")
+                        try:
+                            stopped = SimulationRunner.stop_simulation(simulation_id)
+                        except SimulationStopPending as error:
+                            return jsonify({
+                                "success": False,
+                                "pending": True,
+                                "error": str(error),
+                            }), 409
+                        except Exception as error:
+                            return jsonify({
+                                "success": False,
+                                "error": (
+                                    "Cannot restart until the previous simulation "
+                                    f"finalizes safely: {error}"
+                                ),
+                            }), 409
+                        if stopped.runner_status != RunnerStatus.STOPPED:
+                            return jsonify({
+                                "success": False,
+                                "error": "Previous simulation did not reach STOPPED",
+                            }), 409
 
-                # 如果是强制模式，清理运行日志
-                if force:
-                    logger.info(f"强制模式：清理模拟日志 {simulation_id}")
-                    cleanup_result = SimulationRunner.cleanup_simulation_logs(simulation_id)
-                    if not cleanup_result.get("success"):
-                        return jsonify({
-                            "success": False,
-                            "error": (
-                                "Failed to clean previous simulation logs: "
-                                f"{cleanup_result.get('errors')}"
-                            ),
-                        }), 500
-                    force_restarted = True
+                    # 如果是强制模式，清理运行日志
+                    if force:
+                        logger.info(f"强制模式：清理模拟日志 {simulation_id}")
+                        cleanup_result = SimulationRunner.cleanup_simulation_logs(simulation_id)
+                        if not cleanup_result.get("success"):
+                            return jsonify({
+                                "success": False,
+                                "error": (
+                                    "Failed to clean previous simulation logs: "
+                                    f"{cleanup_result.get('errors')}"
+                                ),
+                            }), 500
+                        force_restarted = True
 
-                # 进程不存在或已结束，重置状态为 ready
-                logger.info(f"模拟 {simulation_id} 准备工作已完成，重置状态为 ready（原状态: {state.status.value}）")
-                state.status = SimulationStatus.READY
-                manager._save_simulation_state(state)
-            else:
-                # 准备工作未完成
-                return jsonify({
-                    "success": False,
-                    "error": t('api.simNotReady', status=state.status.value)
-                }), 400
-        
-        # 获取图谱ID（用于图谱记忆更新）
-        graph_id = None
-        if enable_graph_memory_update:
-            # The project is authoritative. A graph ID copied into an older
-            # simulation can outlive a project reset/rebuild and must not be
-            # used to resurrect writes to a deleted graph.
-            project = ProjectManager.get_project(state.project_id)
-            graph_id = project.graph_id if project else None
-            if not graph_id:
-                return jsonify({
-                    "success": False,
-                    "error": t('api.graphIdRequiredForMemory')
-                }), 400
+                    # 进程不存在或已结束，重置状态为 ready
+                    logger.info(f"模拟 {simulation_id} 准备工作已完成，重置状态为 ready（原状态: {state.status.value}）")
+                    state.status = SimulationStatus.READY
+                    manager._save_simulation_state(state)
+                else:
+                    # 准备工作未完成
+                    return jsonify({
+                        "success": False,
+                        "error": t('api.simNotReady', status=state.status.value)
+                    }), 400
 
-        graph_guard = (
-            graph_lifecycle_lock(graph_id)
-            if enable_graph_memory_update
-            else nullcontext()
-        )
-        with graph_guard:
             if enable_graph_memory_update:
                 # Re-read both references under the same per-graph lock used
                 # by reset/delete. Keep the lock through updater creation in
@@ -1756,17 +1794,6 @@ def start_simulation():
                             "The simulation references an older graph; "
                             "prepare it again before enabling graph memory"
                         ),
-                    }), 409
-                active_reports = get_graph_readers(graph_id)
-                if active_reports:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "A report is currently reading this graph; wait "
-                            "for report generation to finish before enabling "
-                            "graph memory updates"
-                        ),
-                        "active_reports": active_reports,
                     }), 409
                 state = refreshed_state
                 logger.info(

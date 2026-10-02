@@ -27,7 +27,7 @@ uv run python scripts/check_llm_provider.py --list-models
 Copy the desired ID into `LLM_MODEL_NAME`, then test the selected model:
 
 ```sh
-uv run python scripts/check_llm_provider.py
+uv run --extra simulation python scripts/check_llm_provider.py
 ```
 
 The command sends four small synthetic requests: text, JSON mode, a function tool call, and a function tool call through the same asynchronous CAMEL backend OASIS uses. It does not send project uploads or run any returned tool. It reports success only when all checks pass. Provider failures report the error class and HTTP status without printing credentials or response bodies. `--skip-camel` checks only the application SDK and cannot establish simulation compatibility.
@@ -35,7 +35,7 @@ The command sends four small synthetic requests: text, JSON mode, a function too
 To verify that OASIS actually executes and saves a model-selected action:
 
 ```sh
-uv run python scripts/check_oasis_provider.py
+uv run --extra simulation python scripts/check_oasis_provider.py
 ```
 
 This creates one synthetic Reddit agent, runs one step with only `CREATE_POST` available, and checks the exact saved post and matching action trace in SQLite. Its temporary database and logs are deleted afterward. It does not create a public social-media post or require Zep. The check fails if OASIS silently swallows an agent error. Use `--timeout 120` to bound the check and `--boost` to check the optional second provider.
@@ -77,8 +77,10 @@ Live verification on 2026-10-02 UTC passed text, JSON, function tools, and async
 
 The real OASIS probe also passed on that route: one Reddit agent, one step, one exact-content post, and one matching `create_post` SQLite trace. The probe used no HTTP mocks. The database and library logs were removed afterward. This verifies a persisted social action; it does not verify Twitter recommendations or a complete prediction workflow.
 
-The disposable live-test environment used CAMEL 0.2.78, OASIS 0.2.5, OpenAI SDK 1.109.1, HTTPX 0.28.1, MCP 1.30.0, Torch 2.14.1, Transformers 4.57.6, and Sentence Transformers 3.0.0, matching the refreshed lock for those packages. It was not a full frozen-lock installation: NumPy was 2.4.6 versus locked 2.3.5, Pydantic 2.13.5 versus 2.12.5, and Flask-CORS 6.0.5 versus 6.0.2.
+The initial hardening pass used CAMEL 0.2.78, OASIS 0.2.5, OpenAI SDK 1.109.1, HTTPX 0.28.1, MCP 1.30.0, Torch 2.14.1, Transformers 4.57.6, and Sentence Transformers 3.0.0, matching the refreshed lock for those packages. It was not a full frozen-lock installation: NumPy was 2.4.6 versus locked 2.3.5, Pydantic 2.13.5 versus 2.12.5, and Flask-CORS 6.0.5 versus 6.0.2.
 
-Automated tests use the real OpenAI SDK and pinned CAMEL backend with synthetic HTTP responses to verify authentication, arbitrary model IDs, JSON requests, synchronous/asynchronous tools, provider isolation, and error redaction. They do not establish live account access, billing status, model availability, or prediction quality. The probe establishes those selected API capabilities for one model/endpoint; a full simulation additionally depends on Zep Cloud, generated profiles, and OASIS. OASIS can swallow agent failures, so inspect persisted actions when validating a complete run.
+The modernized locked environment subsequently passed the real OASIS persisted-action probe with CAMEL 0.2.90 and the maintained OASIS package, including restricted worker startup. The API and simulation installations are now separate; see [dependency details](dependency-security.md). Use `.venv-simulation/bin/python` for capability checks after `npm run setup:all`, or `uv run --extra simulation` to select the extra explicitly.
+
+Automated tests use the real OpenAI SDK and pinned CAMEL backend with synthetic HTTP responses to verify authentication, arbitrary model IDs, JSON requests, synchronous/asynchronous tools, provider isolation, and error redaction. They do not establish live account access, billing status, model availability, or prediction quality. The probe establishes those selected API capabilities for one model/endpoint; a full simulation additionally depends on the selected graph backend, generated profiles, and OASIS. OASIS can swallow agent failures, so inspect persisted actions when validating a complete run.
 
 Official references: [API introduction](https://docs.ollama.com/api/introduction), [authentication](https://docs.ollama.com/api/authentication), [OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility).

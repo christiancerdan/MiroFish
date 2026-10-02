@@ -102,3 +102,44 @@ def test_each_simulation_entrypoint_sends_local_cloud_alias_to_configured_endpoi
     finally:
         model._client.close()
         asyncio.run(model._async_client.close())
+
+
+@pytest.mark.parametrize('asynchronous', [False, True])
+@pytest.mark.parametrize('structured', [False, True])
+def test_camel_calls_reserve_real_budget_and_stop_before_second_http(tmp_path, monkeypatch, asynchronous, structured):
+    from app.utils.budget import BudgetContext, BudgetStore, BudgetExceeded
+    from pydantic import BaseModel
+    class Answer(BaseModel):
+        choice: str
+    store = BudgetStore(str(tmp_path / 'camel.sqlite3'))
+    store.configure('simulation-project', {'max_calls': 1})
+    requests = []
+
+    def respond(request):
+        requests.append(request)
+        return httpx.Response(200, json={'id': 'budget-test', 'object': 'chat.completion', 'created': 1, 'model': 'model', 'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': '{"choice":"yes"}' if structured else 'ok'}, 'finish_reason': 'stop'}], 'usage': {'prompt_tokens': 10, 'completion_tokens': 5, 'total_tokens': 15}})
+
+    monkeypatch.setattr(httpx.HTTPTransport, 'handle_request', lambda self, request: respond(request))
+    async def arespond(self, request):
+        return respond(request)
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, 'handle_async_request', arespond)
+    with BudgetContext('simulation-project', db_path=store.db_path):
+        model = create_camel_model(settings=resolve_llm_settings({'LLM_API_KEY': 'test', 'LLM_MODEL_NAME': 'model'}))
+    # Client captures identity so calls remain budgeted beyond creating context.
+    try:
+        messages = [{'role': 'user', 'content': 'hello'}]
+        def run():
+            options = {'response_format': Answer} if structured else {'tools': [TOOL]}
+            return asyncio.run(model.arun(messages, **options)) if asynchronous else model.run(messages, **options)
+        message = run().choices[0].message
+        assert message.content == ('{"choice":"yes"}' if structured else 'ok')
+        if structured:
+            assert message.parsed.choice == 'yes'
+        with pytest.raises(BudgetExceeded):
+            run()
+        assert len(requests) == 1
+        assert store.get('simulation-project')['usage']['calls'] == 1
+        assert store.get('simulation-project')['usage']['tokens'] == 15
+    finally:
+        model._client.close()
+        asyncio.run(model._async_client.close())

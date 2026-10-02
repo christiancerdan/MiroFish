@@ -17,12 +17,15 @@ from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from functools import wraps
 
 from ..config import Config
+from ..models.task import JobCancelled, JobLeaseLost, TaskManager
 from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, t
 from ..utils.storage import atomic_write_json, contained_path, storage_path, validate_storage_id
+from .report_provenance import (EvidenceRegistry, REPORT_EVIDENCE_RULES, sha256_text, uncertainty_metadata, utc_now)
 from .zep_tools import (
     ZepToolsService, 
     SearchResult, 
@@ -32,6 +35,15 @@ from .zep_tools import (
 )
 
 logger = get_logger('mirofish.report_agent')
+
+
+def _fenced_report_write(operation):
+    """Keep short report writes behind the durable job's ownership barrier."""
+    @wraps(operation)
+    def publish(*args, **kwargs):
+        with TaskManager().publication_guard():
+            return operation(*args, **kwargs)
+    return publish
 
 
 class ReportLogger:
@@ -56,6 +68,7 @@ class ReportLogger:
         self.start_time = datetime.now()
         self._ensure_log_file()
     
+    @_fenced_report_write
     def _ensure_log_file(self):
         """确保日志文件所在目录存在"""
         log_dir = os.path.dirname(self.log_file_path)
@@ -65,6 +78,7 @@ class ReportLogger:
         """获取从开始到现在的耗时（秒）"""
         return (datetime.now() - self.start_time).total_seconds()
     
+    @_fenced_report_write
     def log(
         self, 
         action: str, 
@@ -331,11 +345,13 @@ class ReportConsoleLogger:
         self._ensure_log_file()
         self._setup_file_handler()
     
+    @_fenced_report_write
     def _ensure_log_file(self):
         """确保日志文件所在目录存在"""
         log_dir = os.path.dirname(self.log_file_path)
         os.makedirs(log_dir, exist_ok=True)
     
+    @_fenced_report_write
     def _setup_file_handler(self):
         """设置文件处理器，将日志同时写入文件"""
         import logging
@@ -455,6 +471,10 @@ class Report:
     created_at: str = ""
     completed_at: str = ""
     error: Optional[str] = None
+    evidence: Dict[str, Any] = field(default_factory=dict)
+    citation_validation: Dict[str, Any] = field(default_factory=dict)
+    uncertainty: Dict[str, Any] = field(default_factory=uncertainty_metadata)
+    manifest: Dict[str, Any] = field(default_factory=dict)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -467,7 +487,11 @@ class Report:
             "markdown_content": self.markdown_content,
             "created_at": self.created_at,
             "completed_at": self.completed_at,
-            "error": self.error
+            "error": self.error,
+            "evidence": self.evidence,
+            "citation_validation": self.citation_validation,
+            "uncertainty": self.uncertainty,
+            "manifest": self.manifest
         }
 
 
@@ -553,44 +577,12 @@ TOOL_DESC_INTERVIEW_AGENTS = """\
 
 # ── 大纲规划 prompt ──
 
-PLAN_SYSTEM_PROMPT = """\
-你是一个「未来预测报告」的撰写专家，拥有对模拟世界的「上帝视角」——你可以洞察模拟中每一位Agent的行为、言论和互动。
-
-【核心理念】
-我们构建了一个模拟世界，并向其中注入了特定的「模拟需求」作为变量。模拟世界的演化结果，就是对未来可能发生情况的预测。你正在观察的不是"实验数据"，而是"未来的预演"。
-
-【你的任务】
-撰写一份「未来预测报告」，回答：
-1. 在我们设定的条件下，未来发生了什么？
-2. 各类Agent（人群）是如何反应和行动？
-3. 这个模拟揭示了哪些值得关注的未来趋势和风险？
-
-【报告定位】
-- ✅ 这是一份基于模拟的未来预测报告，揭示"如果这样，未来会怎样"
-- ✅ 聚焦于预测结果：事件走向、群体反应、涌现现象、潜在风险
-- ✅ 模拟世界中的Agent言行就是对未来人群行为的预测
-- ❌ 不是对现实世界现状的分析
-- ❌ 不是泛泛而谈的舆情综述
-
-【章节数量限制】
-- 最少2个章节，最多5个章节
-- 不需要子章节，每个章节直接撰写完整内容
-- 内容要精炼，聚焦于核心预测发现
-- 章节结构由你根据预测结果自主设计
-
-请输出JSON格式的报告大纲，格式如下：
-{
-    "title": "报告标题",
-    "summary": "报告摘要（一句话概括核心预测发现）",
-    "sections": [
-        {
-            "title": "章节标题",
-            "description": "章节内容描述"
-        }
-    ]
-}
-
-注意：sections数组最少2个，最多5个元素！"""
+PLAN_SYSTEM_PROMPT = """You write evidence-based conditional scenario analyses.
+Plan 2 to 5 concise sections covering assumptions, observed simulation behavior,
+and uncertainty. Do not imply generated outcomes are established future facts.
+Return JSON: {"title": "report title", "summary": "one sentence",
+"sections": [{"title": "section title", "description": "coverage"}]}.
+"""
 
 PLAN_USER_PROMPT_TEMPLATE = """\
 【预测场景设定】
@@ -602,11 +594,11 @@ PLAN_USER_PROMPT_TEMPLATE = """\
 - 实体类型分布: {entity_types}
 - 活跃Agent数量: {total_entities}
 
-【模拟预测到的部分未来事实样本】
+【检索到的模拟样本（不代表真实未来）】
 {related_facts_json}
 
-请以「上帝视角」审视这个未来预演：
-1. 在我们设定的条件下，未来呈现出了什么样的状态？
+请分析这个条件模拟并明确不确定性：
+1. 在我们设定的条件下，模拟呈现出了什么样的状态？
 2. 各类人群（Agent）是如何反应和行动的？
 3. 这个模拟揭示了哪些值得关注的未来趋势？
 
@@ -616,165 +608,27 @@ PLAN_USER_PROMPT_TEMPLATE = """\
 
 # ── 章节生成 prompt ──
 
-SECTION_SYSTEM_PROMPT_TEMPLATE = """\
-你是一个「未来预测报告」的撰写专家，正在撰写报告的一个章节。
+SECTION_SYSTEM_PROMPT_TEMPLATE = """Write one section of a conditional scenario analysis.
+Report: {report_title}
+Summary: {report_summary}
+Scenario assumptions: {simulation_requirement}
+Current section: {section_title}
 
-报告标题: {report_title}
-报告摘要: {report_summary}
-预测场景（模拟需求）: {simulation_requirement}
+Use the provided tools to inspect evidence. Distinguish source evidence,
+simulation observations, and assumptions/interpretations in the prose.
+If evidence is missing, say so. Never invent quotations, metrics or sources.
+Do not add Markdown headings: the system adds the section title.
 
-当前要撰写的章节: {section_title}
-
-═══════════════════════════════════════════════════════════════
-【核心理念】
-═══════════════════════════════════════════════════════════════
-
-模拟世界是对未来的预演。我们向模拟世界注入了特定条件（模拟需求），
-模拟中Agent的行为和互动，就是对未来人群行为的预测。
-
-你的任务是：
-- 揭示在设定条件下，未来发生了什么
-- 预测各类人群（Agent）是如何反应和行动的
-- 发现值得关注的未来趋势、风险和机会
-
-❌ 不要写成对现实世界现状的分析
-✅ 要聚焦于"未来会怎样"——模拟结果就是预测的未来
-
-═══════════════════════════════════════════════════════════════
-【最重要的规则 - 必须遵守】
-═══════════════════════════════════════════════════════════════
-
-1. 【必须调用工具观察模拟世界】
-   - 你正在以「上帝视角」观察未来的预演
-   - 所有内容必须来自模拟世界中发生的事件和Agent言行
-   - 禁止使用你自己的知识来编写报告内容
-   - 每个章节至少调用3次工具（最多5次）来观察模拟的世界，它代表了未来
-
-2. 【必须引用Agent的原始言行】
-   - Agent的发言和行为是对未来人群行为的预测
-   - 在报告中使用引用格式展示这些预测，例如：
-     > "某类人群会表示：原文内容..."
-   - 这些引用是模拟预测的核心证据
-
-3. 【语言一致性 - 引用内容必须翻译为报告语言】
-   - 工具返回的内容可能包含与报告语言不同的表述
-   - 报告必须全部使用与用户指定语言一致的语言撰写
-   - 当你引用工具返回的其他语言内容时，必须将其翻译为报告语言后再写入
-   - 翻译时保持原意不变，确保表述自然通顺
-   - 这一规则同时适用于正文和引用块（> 格式）中的内容
-
-4. 【忠实呈现预测结果】
-   - 报告内容必须反映模拟世界中的代表未来的模拟结果
-   - 不要添加模拟中不存在的信息
-   - 如果某方面信息不足，如实说明
-
-5. 【禁止捏造数据】
-   - ❌ 禁止捏造用户名、引用、统计数字或互动数据
-   - ❌ 禁止在回复中包含 <tool_result> 块 — 只有系统会提供工具结果
-   - ✅ 只能引用真实出现在工具结果中的实体、引用和数据
-   - 如果工具结果中没有相关内容，应如实说明，而非编造
-
-═══════════════════════════════════════════════════════════════
-【⚠️ 格式规范 - 极其重要！】
-═══════════════════════════════════════════════════════════════
-
-【一个章节 = 最小内容单位】
-- 每个章节是报告的最小分块单位
-- ❌ 禁止在章节内使用任何 Markdown 标题（#、##、###、#### 等）
-- ❌ 禁止在内容开头添加章节主标题
-- ✅ 章节标题由系统自动添加，你只需撰写纯正文内容
-- ✅ 使用**粗体**、段落分隔、引用、列表来组织内容，但不要用标题
-
-【正确示例】
-```
-本章节分析了事件的舆论传播态势。通过对模拟数据的深入分析，我们发现...
-
-**首发引爆阶段**
-
-微博作为舆情的第一现场，承担了信息首发的核心功能：
-
-> "微博贡献了68%的首发声量..."
-
-**情绪放大阶段**
-
-抖音平台进一步放大了事件影响力：
-
-- 视觉冲击力强
-- 情绪共鸣度高
-```
-
-【错误示例】
-```
-## 执行摘要          ← 错误！不要添加任何标题
-### 一、首发阶段     ← 错误！不要用###分小节
-#### 1.1 详细分析   ← 错误！不要用####细分
-
-本章节分析了...
-```
-
-═══════════════════════════════════════════════════════════════
-【可用检索工具】（每章节调用3-5次）
-═══════════════════════════════════════════════════════════════
-
+Tools:
 {tools_description}
 
-【工具使用建议 - 请混合使用不同工具，不要只用一种】
-- insight_forge: 深度洞察分析，自动分解问题并多维度检索事实和关系
-- panorama_search: 广角全景搜索，了解事件全貌、时间线和演变过程
-- quick_search: 快速验证某个具体信息点
-- interview_agents: 采访模拟Agent，获取不同角色的第一人称观点和真实反应
-
-═══════════════════════════════════════════════════════════════
-【工作流程】
-═══════════════════════════════════════════════════════════════
-
-每次回复你只能做以下两件事之一（不可同时做）：
-
-选项A - 调用工具：
-输出你的思考，然后用以下格式调用一个工具：
+Each reply must either call one tool or give the section, never both:
 <tool_call>
-{{"name": "工具名称", "parameters": {{"参数名": "参数值"}}}}
+{{"name": "tool_name", "parameters": {{"query": "your query"}}}}
 </tool_call>
-系统会执行工具并把结果返回给你。你不需要也不能自己编写工具返回结果。
-
-选项B - 输出最终内容：
-当你已通过工具获取了足够信息，以 "Final Answer:" 开头输出章节内容。
-
-⚠️ 严格禁止：
-- 禁止在一次回复中同时包含工具调用和 Final Answer
-- 禁止自己编造工具返回结果（Observation），所有工具结果由系统注入
-- 每次回复最多调用一个工具
-
-═══════════════════════════════════════════════════════════════
-【章节内容要求】
-═══════════════════════════════════════════════════════════════
-
-1. 内容必须基于工具检索到的模拟数据
-2. 大量引用原文来展示模拟效果
-3. 使用Markdown格式（但禁止使用标题）：
-   - 使用 **粗体文字** 标记重点（代替子标题）
-   - 使用列表（-或1.2.3.）组织要点
-   - 使用空行分隔不同段落
-   - ❌ 禁止使用 #、##、###、#### 等任何标题语法
-4. 【引用格式规范 - 必须单独成段】
-   引用必须独立成段，前后各有一个空行，不能混在段落中：
-
-   ✅ 正确格式：
-   ```
-   校方的回应被认为缺乏实质内容。
-
-   > "校方的应对模式在瞬息万变的社交媒体环境中显得僵化和迟缓。"
-
-   这一评价反映了公众的普遍不满。
-   ```
-
-   ❌ 错误格式：
-   ```
-   校方的回应被认为缺乏实质内容。> "校方的应对模式..." 这一评价反映了...
-   ```
-5. 保持与其他章节的逻辑连贯性
-6. 【避免重复】仔细阅读下方已完成的章节内容，不要重复描述相同的信息
-7. 【再次强调】不要添加任何标题！用**粗体**代替小节标题"""
+Or: Final Answer: followed by the complete section with supplied evidence citations.
+Never manufacture tool results or observation blocks.
+"""
 
 SECTION_USER_PROMPT_TEMPLATE = """\
 已完成的章节内容（请仔细阅读，避免重复）：
@@ -915,6 +769,8 @@ class ReportAgent:
         
         self.llm = llm_client or LLMClient()
         self.zep_tools = zep_tools or ZepToolsService()
+        self.evidence_registry = EvidenceRegistry(graph_id, "unsaved-report")
+        self._report_metrics = {"llm_calls": 0, "tool_calls": 0}
         
         # 工具定义
         self.tools = self._define_tools()
@@ -926,6 +782,98 @@ class ReportAgent:
         
         logger.info(t('report.agentInitDone', graphId=graph_id, simulationId=simulation_id))
     
+    def _report_chat(self, **kwargs):
+        self._report_metrics["llm_calls"] += 1
+        return self.llm.chat(**kwargs)
+
+    def _report_chat_json(self, **kwargs):
+        self._report_metrics["llm_calls"] += 1
+        return self.llm.chat_json(**kwargs)
+
+    def _prepare_evidence(self, report):
+        self.evidence_registry = EvidenceRegistry(self.graph_id, report.report_id)
+        self._report_metrics = {"llm_calls": 0, "tool_calls": 0}
+        getter = getattr(self.zep_tools, "get_evidence", None)
+        if getter is None:
+            self.evidence_registry.warnings.append("This provider does not expose durable source episodes.")
+        else:
+            try:
+                episodes = getter(self.graph_id)
+                for episode in episodes:
+                    try:
+                        self.evidence_registry.add_episode(episode)
+                    except (ValueError, TypeError) as error:
+                        self.evidence_registry.warnings.append(str(error))
+                self.evidence_registry.status = "available" if self.evidence_registry.sources else "unavailable"
+            except Exception as error:
+                self._raise_if_terminal_error(error)
+                self.evidence_registry.warnings.append("Source retrieval unavailable: " + type(error).__name__)
+        if self.simulation_requirement.strip():
+            self.evidence_registry.add_assumption(self.simulation_requirement)
+        report.evidence = self.evidence_registry.snapshot()
+        report.manifest = {
+            "version": 1, "generated_at": utc_now(), "graph_id": self.graph_id,
+            "simulation_id": self.simulation_id, "model": getattr(self.llm, "model", None),
+            "settings": {"planning_temperature": 0.3, "section_temperature": 0.5,
+                         "max_output_tokens": 4096, "max_tool_calls_per_section": self.MAX_TOOL_CALLS_PER_SECTION,
+                         "memory_backend": getattr(Config, "GRAPH_BACKEND", "local")},
+            "input_hashes": {"simulation_requirement": sha256_text(self.simulation_requirement),
+                             "report_prompts": sha256_text(PLAN_SYSTEM_PROMPT + PLAN_USER_PROMPT_TEMPLATE +
+                                 SECTION_SYSTEM_PROMPT_TEMPLATE + SECTION_USER_PROMPT_TEMPLATE + REPORT_EVIDENCE_RULES)},
+            "missing_inputs": [], "metrics": {},
+        }
+        from .simulation_runner import SimulationRunner
+        for name in ("simulation_config.json", "run_state.json", "twitter_profiles.csv", "reddit_profiles.json",
+                     "twitter/actions.jsonl", "reddit/actions.jsonl"):
+            path = storage_path(SimulationRunner.RUN_STATE_DIR, self.simulation_id, *name.split("/"))
+            if os.path.isfile(path):
+                import hashlib
+                digest = hashlib.sha256()
+                with open(path, "rb") as handle:
+                    for chunk in iter(lambda: handle.read(65536), b""):
+                        digest.update(chunk)
+                report.manifest["input_hashes"][name] = digest.hexdigest()
+                if name in {"simulation_config.json", "run_state.json"}:
+                    with open(path, encoding="utf-8") as handle:
+                        saved_input = json.load(handle)
+                    if name == "simulation_config.json":
+                        report.manifest["simulation_settings"] = {
+                            key: saved_input.get(key) for key in
+                            ("time_config", "twitter_config", "reddit_config", "llm_model", "seed", "random_seed")}
+                        report.manifest["simulation_settings"]["agent_count"] = len(saved_input.get("agent_configs", []))
+                    else:
+                        report.manifest["simulation_metrics"] = {
+                            key: saved_input.get(key) for key in
+                            ("runner_status", "current_round", "total_rounds", "twitter_actions_count",
+                             "reddit_actions_count", "started_at", "completed_at", "budget_run_id")}
+            else:
+                report.manifest["missing_inputs"].append(name)
+        self._sync_provenance(report)
+
+    @staticmethod
+    def _raise_if_terminal_error(error):
+        # Budget limits are terminal and must never be hidden by report fallbacks.
+        from ..utils.budget import BudgetExceeded
+        if isinstance(error, (BudgetExceeded, JobLeaseLost, JobCancelled)):
+            raise error
+
+    def _sync_provenance(self, report, elapsed_seconds=None):
+        report.evidence = self.evidence_registry.snapshot()
+        report.citation_validation = self.evidence_registry.validation()
+        report.uncertainty = uncertainty_metadata()
+        report.manifest["source_timestamps"] = [
+            {"citation_id": item["citation_id"], "created_at": item["created_at"], "reference_time": item["reference_time"]}
+            for item in self.evidence_registry.sources]
+        report.manifest.setdefault("input_hashes", {})["evidence_snapshot"] = sha256_text(
+            json.dumps(report.evidence, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+        report.manifest["metrics"] = dict(self._report_metrics)
+        if elapsed_seconds is not None:
+            report.manifest["metrics"]["elapsed_seconds"] = elapsed_seconds
+        from ..utils.budget import current_budget
+        budget = current_budget()
+        if budget is not None:
+            report.manifest["metrics"]["budget_snapshot"] = budget.snapshot()
+
     def _define_tools(self) -> Dict[str, Dict[str, Any]]:
         """定义可用工具"""
         return {
@@ -964,6 +912,13 @@ class ReportAgent:
         }
     
     def _execute_tool(self, tool_name: str, parameters: Dict[str, Any], report_context: str = "") -> str:
+        self._report_metrics["tool_calls"] += 1
+        result = self._execute_tool_raw(tool_name, parameters, report_context)
+        source = self.evidence_registry.add_tool_observation(tool_name, parameters, result)
+        return (f"Simulation/tool observation (may include model-derived analysis); "
+                f"cite [[source:{source['citation_id']}]].\n{result}")
+
+    def _execute_tool_raw(self, tool_name: str, parameters: Dict[str, Any], report_context: str = "") -> str:
         """
         执行工具调用
         
@@ -1068,6 +1023,7 @@ class ReportAgent:
                 return f"未知工具: {tool_name}。请使用以下工具之一: insight_forge, panorama_search, quick_search"
                 
         except Exception as e:
+            self._raise_if_terminal_error(e)
             logger.error(t('report.toolExecFailed', toolName=tool_name, error=str(e)))
             return f"工具执行失败: {str(e)}"
     
@@ -1206,7 +1162,7 @@ class ReportAgent:
         if progress_callback:
             progress_callback("planning", 30, t('progress.generatingOutline'))
         
-        system_prompt = f"{PLAN_SYSTEM_PROMPT}\n\n{get_language_instruction()}"
+        system_prompt = f"{PLAN_SYSTEM_PROMPT}\n\n{get_language_instruction()}\n\n{self.evidence_registry.prompt()}"
         user_prompt = PLAN_USER_PROMPT_TEMPLATE.format(
             simulation_requirement=self.simulation_requirement,
             total_nodes=context.get('graph_statistics', {}).get('total_nodes', 0),
@@ -1217,7 +1173,7 @@ class ReportAgent:
         )
 
         try:
-            response = self.llm.chat_json(
+            response = self._report_chat_json(
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1249,6 +1205,7 @@ class ReportAgent:
             return outline
             
         except Exception as e:
+            self._raise_if_terminal_error(e)
             logger.error(t('report.outlinePlanFailed', error=str(e)))
             # 返回默认大纲（3个章节，作为fallback）
             return ReportOutline(
@@ -1302,7 +1259,7 @@ class ReportAgent:
             section_title=section.title,
             tools_description=self._get_tools_description(),
         )
-        system_prompt = f"{system_prompt}\n\n{get_language_instruction()}"
+        system_prompt = f"{system_prompt}\n\n{get_language_instruction()}\n\n{self.evidence_registry.prompt()}"
 
         # 构建用户prompt - 每个已完成章节各传入最大4000字
         if previous_sections:
@@ -1345,7 +1302,7 @@ class ReportAgent:
                 )
             
             # 调用LLM
-            response = self.llm.chat(
+            response = self._report_chat(
                 messages=messages,
                 temperature=0.5,
                 max_tokens=4096
@@ -1551,7 +1508,7 @@ class ReportAgent:
         logger.warning(t('report.sectionMaxIter', title=section.title))
         messages.append({"role": "user", "content": REACT_FORCE_FINAL_MSG})
         
-        response = self.llm.chat(
+        response = self._report_chat(
             messages=messages,
             temperature=0.5,
             max_tokens=4096
@@ -1624,8 +1581,9 @@ class ReportAgent:
         completed_section_titles = []
         
         try:
+            self._prepare_evidence(report)
             # 初始化：创建报告文件夹并保存初始状态
-            ReportManager._ensure_report_folder(report_id)
+            ReportManager.start_attempt(report_id)
             
             # 初始化日志记录器（结构化日志 agent_log.jsonl）
             self.report_logger = ReportLogger(report_id)
@@ -1661,6 +1619,8 @@ class ReportAgent:
                 progress_callback=lambda stage, prog, msg: 
                     progress_callback(stage, prog // 5, msg) if progress_callback else None
             )
+            outline.title, _ = self.evidence_registry.validate_and_render(outline.title)
+            outline.summary, _ = self.evidence_registry.validate_and_render(outline.summary)
             report.outline = outline
             
             # 记录规划完成日志
@@ -1715,10 +1675,14 @@ class ReportAgent:
                     section_index=section_num
                 )
                 
+                section_content, _ = self.evidence_registry.validate_and_render(section_content, require_citation=True)
+                section.title, _ = self.evidence_registry.validate_and_render(section.title)
                 section.content = section_content
+                self._sync_provenance(report)
                 generated_sections.append(f"## {section.title}\n\n{section_content}")
 
                 # 保存章节
+                ReportManager.save_report(report)
                 ReportManager.save_section(report_id, section_num, section)
                 completed_section_titles.append(section.title)
 
@@ -1753,13 +1717,19 @@ class ReportAgent:
             )
             
             # 使用ReportManager组装完整报告
-            report.markdown_content = ReportManager.assemble_full_report(report_id, outline)
+            assembled_content = ReportManager.assemble_full_report(report_id, outline)
+            report.markdown_content, _ = self.evidence_registry.validate_and_render(assembled_content)
+            report.markdown_content += "\n\n" + self.evidence_registry.markdown_appendix()
+            self._sync_provenance(report, (datetime.now() - start_time).total_seconds())
             report.status = ReportStatus.COMPLETED
             report.completed_at = datetime.now().isoformat()
             
             # 计算总耗时
             total_time_seconds = (datetime.now() - start_time).total_seconds()
             
+            # Persist evidence and final metadata before announcing completion.
+            ReportManager.save_report(report)
+
             # 记录报告完成日志
             if self.report_logger:
                 self.report_logger.log_report_complete(
@@ -1767,8 +1737,6 @@ class ReportAgent:
                     total_time_seconds=total_time_seconds
                 )
             
-            # 保存最终报告
-            ReportManager.save_report(report)
             ReportManager.update_progress(
                 report_id, "completed", 100, t('progress.reportComplete'),
                 completed_sections=completed_section_titles
@@ -1786,10 +1754,24 @@ class ReportAgent:
             
             return report
             
+        except (JobLeaseLost, JobCancelled):
+            if self.console_logger:
+                self.console_logger.close()
+                self.console_logger = None
+            raise
         except Exception as e:
+            # Ownership may have changed while an unrelated provider error was in flight.
+            try:
+                TaskManager().assert_current_execution()
+            except (JobLeaseLost, JobCancelled):
+                if self.console_logger:
+                    self.console_logger.close()
+                    self.console_logger = None
+                raise
             logger.error(t('report.reportGenFailed', error=str(e)))
             report.status = ReportStatus.FAILED
             report.error = str(e)
+            self._sync_provenance(report, (datetime.now() - start_time).total_seconds())
             
             # 记录错误日志
             if self.report_logger:
@@ -1802,6 +1784,8 @@ class ReportAgent:
                     report_id, "failed", -1, t('progress.reportFailed', error=str(e)),
                     completed_sections=completed_section_titles
                 )
+            except (JobLeaseLost, JobCancelled):
+                raise
             except Exception:
                 pass  # 忽略保存失败的错误
             
@@ -1810,7 +1794,12 @@ class ReportAgent:
                 self.console_logger.close()
                 self.console_logger = None
             
+            self._raise_if_terminal_error(e)
             return report
+        finally:
+            if self.console_logger:
+                self.console_logger.close()
+                self.console_logger = None
     
     def chat(
         self, 
@@ -1847,6 +1836,7 @@ class ReportAgent:
                 if len(report.markdown_content) > 15000:
                     report_content += "\n\n... [报告内容已截断] ..."
         except Exception as e:
+            self._raise_if_terminal_error(e)
             logger.warning(t('report.fetchReportFailed', error=e))
         
         system_prompt = CHAT_SYSTEM_PROMPT_TEMPLATE.format(
@@ -1854,7 +1844,7 @@ class ReportAgent:
             report_content=report_content if report_content else "（暂无报告）",
             tools_description=self._get_tools_description(),
         )
-        system_prompt = f"{system_prompt}\n\n{get_language_instruction()}"
+        system_prompt = f"{system_prompt}\n\n{get_language_instruction()}\n\n{self.evidence_registry.prompt()}"
 
         # 构建消息
         messages = [{"role": "system", "content": system_prompt}]
@@ -1874,7 +1864,7 @@ class ReportAgent:
         max_iterations = 2  # 减少迭代轮数
         
         for iteration in range(max_iterations):
-            response = self.llm.chat(
+            response = self._report_chat(
                 messages=messages,
                 temperature=0.5
             )
@@ -1916,7 +1906,7 @@ class ReportAgent:
             })
         
         # 达到最大迭代，获取最终响应
-        final_response = self.llm.chat(
+        final_response = self._report_chat(
             messages=messages,
             temperature=0.5
         )
@@ -1955,6 +1945,7 @@ class ReportManager:
     REPORTS_DIR = os.path.join(Config.UPLOAD_FOLDER, 'reports')
     
     @classmethod
+    @_fenced_report_write
     def _ensure_reports_dir(cls):
         """确保报告根目录存在"""
         os.makedirs(cls.REPORTS_DIR, exist_ok=True)
@@ -1965,12 +1956,32 @@ class ReportManager:
         return storage_path(cls.REPORTS_DIR, report_id)
     
     @classmethod
+    @_fenced_report_write
     def _ensure_report_folder(cls, report_id: str) -> str:
         """确保报告文件夹存在并返回路径"""
         folder = cls._get_report_folder(report_id)
         os.makedirs(folder, exist_ok=True)
         return folder
     
+    @classmethod
+    @_fenced_report_write
+    def start_attempt(cls, report_id):
+        """Archive prior outputs so a shorter retry cannot expose old sections."""
+        import uuid
+        folder = cls._ensure_report_folder(report_id)
+        fixed = {"meta.json", "outline.json", "progress.json", "evidence.json", "manifest.json",
+                 "full_report.md", "agent_log.jsonl", "console_log.txt"}
+        old = [name for name in os.listdir(folder)
+               if name in fixed or re.fullmatch(r"section_[0-9]+\.md", name)]
+        if not old:
+            return
+        archive = storage_path(cls.REPORTS_DIR, report_id, "attempt_history", uuid.uuid4().hex)
+        os.makedirs(archive, exist_ok=False)
+        for name in old:
+            source = storage_path(cls.REPORTS_DIR, report_id, name)
+            destination = contained_path(archive, name)
+            os.replace(source, destination)
+
     @classmethod
     def _get_report_path(cls, report_id: str) -> str:
         """获取报告元信息文件路径"""
@@ -2130,6 +2141,7 @@ class ReportManager:
         return result["logs"]
     
     @classmethod
+    @_fenced_report_write
     def save_outline(cls, report_id: str, outline: ReportOutline) -> None:
         """
         保存报告大纲
@@ -2143,6 +2155,7 @@ class ReportManager:
         logger.info(t('report.outlineSaved', reportId=report_id))
     
     @classmethod
+    @_fenced_report_write
     def save_section(
         cls,
         report_id: str,
@@ -2248,6 +2261,7 @@ class ReportManager:
         return '\n'.join(cleaned_lines)
     
     @classmethod
+    @_fenced_report_write
     def update_progress(
         cls, 
         report_id: str, 
@@ -2330,18 +2344,15 @@ class ReportManager:
         md_content += f"---\n\n"
         
         # 按顺序读取所有章节文件
-        sections = cls.get_generated_sections(report_id)
-        for section_info in sections:
-            md_content += section_info["content"]
+        for index, _section in enumerate(outline.sections, start=1):
+            path = cls._get_section_path(report_id, index)
+            with open(path, encoding="utf-8") as handle:
+                md_content += handle.read()
         
         # 后处理：清理整个报告的标题问题
         md_content = cls._post_process_report(md_content, outline)
         
-        # 保存完整报告
-        full_path = cls._get_report_markdown_path(report_id)
-        with open(full_path, 'w', encoding='utf-8') as f:
-            f.write(md_content)
-        
+        # The caller validates the assembled citations before publishing Markdown.
         logger.info(t('report.fullReportAssembled', reportId=report_id))
         return md_content
     
@@ -2472,12 +2483,15 @@ class ReportManager:
         return '\n'.join(result_lines)
     
     @classmethod
+    @_fenced_report_write
     def save_report(cls, report: Report) -> None:
         """保存报告元信息和完整报告"""
         cls._ensure_report_folder(report.report_id)
         
         # 保存元信息JSON
         atomic_write_json(cls._get_report_path(report.report_id), report.to_dict())
+        for filename, value in (("evidence.json", report.evidence), ("manifest.json", report.manifest)):
+            atomic_write_json(storage_path(cls.REPORTS_DIR, report.report_id, filename), value)
         
         # 保存大纲
         if report.outline:
@@ -2540,7 +2554,11 @@ class ReportManager:
             markdown_content=markdown_content,
             created_at=data.get('created_at', ''),
             completed_at=data.get('completed_at', ''),
-            error=data.get('error')
+            error=data.get('error'),
+            evidence=data.get('evidence', {}),
+            citation_validation=data.get('citation_validation', {}),
+            uncertainty=data.get('uncertainty') or uncertainty_metadata(),
+            manifest=data.get('manifest', {})
         )
     
     @classmethod

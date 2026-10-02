@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "description": "Fictional cases and probabilities for testing the scorer. This is not evidence of MiroFish forecast accuracy.",
+  "evaluated_at": "2025-04-01T00:00:00Z",
+  "baseline": {
+    "label": "Predeclared fixed 50% comparator; not an estimated prior",
+    "probability": 0.5,
+    "declared_at": "2025-01-01T00:00:00Z"
+  },
+  "evidence": [
+    {"id": "synthetic-memo-a", "published_at": "2025-01-02T12:00:00Z", "available_at": "2025-01-03T09:00:00Z", "text": "Fictional input memo for software testing."},
+    {"id": "synthetic-memo-b", "published_at": "2025-01-05T12:00:00Z", "available_at": "2025-01-05T13:00:00Z", "text": "Second fictional input memo for software testing."}
+  ],
+  "forecasts": [
+    {"forecast_id": "f-a-1", "case_id": "a", "run_id": "seed-1", "issued_at": "2025-02-02T12:00:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.7, "evidence_ids": ["synthetic-memo-a"]},
+    {"forecast_id": "f-a-2", "case_id": "a", "run_id": "seed-2", "issued_at": "2025-02-02T12:05:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.6, "evidence_ids": ["synthetic-memo-a"]},
+    {"forecast_id": "f-b-1", "case_id": "b", "run_id": "seed-1", "issued_at": "2025-02-02T12:00:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.3, "evidence_ids": ["synthetic-memo-b"]},
+    {"forecast_id": "f-b-2", "case_id": "b", "run_id": "seed-2", "issued_at": "2025-02-02T12:05:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.5, "evidence_ids": ["synthetic-memo-b"]},
+    {"forecast_id": "f-c-1", "case_id": "c", "run_id": "seed-1", "issued_at": "2025-02-02T12:00:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.2, "evidence_ids": ["synthetic-memo-a", "synthetic-memo-b"]},
+    {"forecast_id": "f-c-2", "case_id": "c", "run_id": "seed-2", "issued_at": "2025-02-02T12:05:00Z", "as_of": "2025-02-01T00:00:00Z", "probability": 0.4, "evidence_ids": ["synthetic-memo-a", "synthetic-memo-b"]}
+  ],
+  "outcomes": [
+    {"case_id": "a", "question": "Did fictional town A adopt the fictional proposal by March 1?", "outcome": 1, "resolved_at": "2025-03-01T00:00:00Z"},
+    {"case_id": "b", "question": "Did fictional product B reach its fictional target by March 1?", "outcome": 0, "resolved_at": "2025-03-01T00:00:00Z"},
+    {"case_id": "c", "question": "Did fictional organization C announce a fictional expansion by March 1?", "outcome": 1, "resolved_at": "2025-03-01T00:00:00Z"}
+  ]
+}

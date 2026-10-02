@@ -23,8 +23,13 @@ def main():
 
     application = create_app()
     application.debug = False
+    from app.services.job_dispatcher import start_job_dispatcher, stop_job_dispatcher
+    start_job_dispatcher(application)
     # Background simulations share process memory; use threads, not worker processes.
-    serve(application, host=host, port=port, threads=threads)
+    try:
+        serve(application, host=host, port=port, threads=threads)
+    finally:
+        stop_job_dispatcher(application)
 
 
 if __name__ == "__main__":

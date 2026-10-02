@@ -1,4 +1,4 @@
-"""Shared Zep Cloud client, request limits, and retry policy."""
+"""Graph backend selection plus the optional Zep Cloud request/retry policy."""
 
 from __future__ import annotations
 
@@ -62,8 +62,26 @@ def _cached_zep_client(api_key: str, timeout: float) -> Zep:
     )
 
 
-def get_zep_client(api_key: str | None = None, timeout: float | None = None) -> Zep:
-    """Return a process-shared, explicitly configured Zep Cloud client."""
+@lru_cache(maxsize=4)
+def _cached_local_client(db_path: str):
+    from ..services.local_graph import LocalGraphClient
+    return LocalGraphClient(db_path)
+
+
+def get_zep_client(api_key: str | None = None, timeout: float | None = None) -> Any:
+    """Return the configured graph backend; only explicit ``zep`` uses Cloud.
+
+    The historic name is retained for consumers. Credentials never select the
+    backend, so an old ZEP_API_KEY cannot send local documents to Cloud.
+    """
+    backend = str(getattr(Config, "GRAPH_BACKEND", "local")).strip().lower()
+    if backend == "local":
+        from pathlib import Path
+        default = Path(__file__).resolve().parents[2] / "uploads" / "memory.sqlite3"
+        db_path = str(Path(getattr(Config, "LOCAL_GRAPH_DB_PATH", default)).expanduser().resolve())
+        return _cached_local_client(db_path)
+    if backend != "zep":
+        raise ValueError("GRAPH_BACKEND must be local or zep")
 
     # zep-cloud gives ZEP_API_URL precedence even when base_url is explicit.
     # Reject it so this Cloud-only integration cannot silently target a
@@ -87,6 +105,7 @@ def clear_zep_client_cache() -> None:
     """Clear cached clients. Intended for tests and controlled reconfiguration."""
 
     _cached_zep_client.cache_clear()
+    _cached_local_client.cache_clear()
 
 
 def is_retryable_zep_error(error: BaseException) -> bool:

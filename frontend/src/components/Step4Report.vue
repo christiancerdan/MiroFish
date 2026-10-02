@@ -1,5 +1,6 @@
 <template>
   <div class="report-panel">
+    <p v-if="reportIssue" class="workflow-error" role="alert">{{ reportIssue }}</p>
     <!-- Main Split Layout -->
     <div class="main-split-layout">
       <!-- LEFT PANEL: Report Style -->
@@ -17,6 +18,7 @@
           </div>
 
           <!-- Sections List -->
+          <ReportEvidence v-if="reportData" :report="reportData" />
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -66,7 +68,7 @@
         </div>
 
         <!-- Waiting State -->
-        <div v-if="!reportOutline" class="waiting-placeholder">
+        <div v-if="!reportOutline && !reportIssue" class="waiting-placeholder">
           <div class="waiting-animation">
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
@@ -394,7 +396,9 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick, h, reactive } f
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { renderMarkdown } from '../utils/markdown'
-import { getAgentLog, getConsoleLog } from '../api/report'
+import { getAgentLog, getConsoleLog, getReport } from '../api/report'
+import ReportEvidence from './ReportEvidence.vue'
+import service from '../api'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -420,6 +424,9 @@ const consoleLogs = ref([])
 const agentLogLine = ref(0)
 const consoleLogLine = ref(0)
 const reportOutline = ref(null)
+const reportData = ref(null)
+const reportIssue = ref('')
+const reportTaskId = ref(null)
 const currentSectionIndex = ref(null)
 const generatedSections = ref({})
 const expandedContent = ref(new Set())
@@ -1704,12 +1711,14 @@ const QuickSearchDisplay = {
 
 // Computed
 const statusClass = computed(() => {
+  if (reportIssue.value) return 'error'
   if (isComplete.value) return 'completed'
   if (agentLogs.value.length > 0) return 'processing'
   return 'pending'
 })
 
 const statusText = computed(() => {
+  if (reportIssue.value) return 'Needs review'
   if (isComplete.value) return 'Completed'
   if (agentLogs.value.length > 0) return 'Generating...'
   return 'Waiting'
@@ -1912,6 +1921,37 @@ const getLogLevelClass = (log) => {
 // Polling
 let agentLogTimer = null
 let consoleLogTimer = null
+let reportTaskTimer = null
+
+const fetchReportTask = async () => {
+  const reportId = props.reportId
+  if (!reportId || isComplete.value) return
+  try {
+    let task
+    if (reportTaskId.value) {
+      const result = await service.get(`/api/graph/task/${encodeURIComponent(reportTaskId.value)}`)
+      task = result.data
+    } else {
+      const result = await service.get('/api/graph/tasks', { params: { task_type: 'report_generate' } })
+      task = Array.isArray(result.data) ? result.data.find(item => item.metadata?.report_id === reportId) : null
+    }
+    if (reportId !== props.reportId || !task) return
+    reportTaskId.value = task.task_id
+    if (['failed', 'interrupted', 'budget_exceeded', 'cancelled'].includes(task.status)) {
+      reportIssue.value = `Report ${task.status.replaceAll('_', ' ')}. ${task.error || 'Open Workspace to review this job and its budget.'}`
+      currentSectionIndex.value = null
+      stopPolling()
+      emit('update-status', 'error')
+    } else if (task.status === 'completed') {
+      isComplete.value = true
+      currentSectionIndex.value = null
+      stopPolling()
+      emit('update-status', 'completed')
+    }
+  } catch {
+    // Log polling can continue while the durable job status is unavailable.
+  }
+}
 
 const fetchAgentLog = async () => {
   if (!props.reportId) return
@@ -2051,12 +2091,15 @@ const startPolling = () => {
   
   fetchAgentLog()
   fetchConsoleLog()
+  fetchReportTask()
   
   agentLogTimer = setInterval(fetchAgentLog, 2000)
   consoleLogTimer = setInterval(fetchConsoleLog, 1500)
+  reportTaskTimer = setInterval(fetchReportTask, 5000)
 }
 
 const stopPolling = () => {
+  if (reportTaskTimer) { clearInterval(reportTaskTimer); reportTaskTimer = null }
   if (agentLogTimer) {
     clearInterval(agentLogTimer)
     agentLogTimer = null
@@ -2068,6 +2111,25 @@ const stopPolling = () => {
 }
 
 // Lifecycle
+const loadReportEvidence = async () => {
+  const reportId = props.reportId
+  if (!reportId) return
+  try {
+    const result = await getReport(reportId)
+    if (reportId !== props.reportId || !result.data) return
+    reportData.value = result.data
+    if (result.data.outline) {
+      reportOutline.value = result.data.outline
+      result.data.outline.sections?.forEach((section, index) => {
+        if (section.content) generatedSections.value[index + 1] = section.content
+      })
+    }
+  } catch {
+    // Evidence remains unavailable until a saved report can be read.
+    if (reportId === props.reportId) reportData.value = { report_id: reportId }
+  }
+}
+watch(isComplete, complete => { if (complete) loadReportEvidence() })
 onMounted(() => {
   if (props.reportId) {
     addLog(`Report Agent initialized: ${props.reportId}`)
@@ -2086,6 +2148,9 @@ watch(() => props.reportId, (newId) => {
     agentLogLine.value = 0
     consoleLogLine.value = 0
     reportOutline.value = null
+    reportData.value = null
+    reportIssue.value = ''
+    reportTaskId.value = null
     currentSectionIndex.value = null
     generatedSections.value = {}
     expandedContent.value = new Set()
@@ -2094,12 +2159,14 @@ watch(() => props.reportId, (newId) => {
     isComplete.value = false
     startTime.value = null
     
+    loadReportEvidence()
     startPolling()
   }
 }, { immediate: true })
 </script>
 
 <style scoped>
+.workflow-error { padding: 14px 24px; color: #8b342b; background: #fff3ef; font-size: 13px; }
 .report-panel {
   height: 100%;
   display: flex;

@@ -185,14 +185,8 @@ def test_stale_build_after_restart_is_recoverable_instead_of_reused(monkeypatch)
 
 def test_stale_build_resumes_a_persisted_processing_batch(monkeypatch):
     project = _project(ProjectStatus.GRAPH_BUILDING)
-    created_threads = []
-
-    class Tasks:
-        def get_task(self, _task_id):
-            return None
-
-        def create_task(self, _description):
-            return "task-resumed"
+    from app.models.task import TaskManager
+    tasks = TaskManager()
 
     class Builder:
         def __init__(self, **_kwargs):
@@ -202,17 +196,9 @@ def test_stale_build_resumes_a_persisted_processing_batch(monkeypatch):
             assert batch_id == "batch-1"
             return SimpleNamespace(status="processing")
 
-    class Thread:
-        def __init__(self, *, target, daemon):
-            created_threads.append((target, daemon))
-
-        def start(self):
-            pass
-
     monkeypatch.setattr(graph_api.Config, "ZEP_API_KEY", "test-key")
-    monkeypatch.setattr(graph_api, "TaskManager", Tasks)
+    monkeypatch.setattr(graph_api, "TaskManager", lambda: tasks)
     monkeypatch.setattr(graph_api, "GraphBuilderService", Builder)
-    monkeypatch.setattr(graph_api.threading, "Thread", Thread)
     monkeypatch.setattr(
         graph_api.ProjectManager,
         "get_project",
@@ -239,9 +225,15 @@ def test_stale_build_resumes_a_persisted_processing_batch(monkeypatch):
 
     assert status == 200
     assert body["data"]["resumed"] is True
-    assert body["data"]["task_id"] == "task-resumed"
-    assert project.graph_build_task_id == "task-resumed"
-    assert len(created_threads) == 1
+    task_id = body["data"]["task_id"]
+    # The durable worker owns project writes; admission must not overwrite a
+    # newer checkpoint created by another server process.
+    assert project.graph_build_task_id == "task-1"
+    restarted = TaskManager(db_path=tasks.db_path)
+    task = restarted.get_task(task_id)
+    assert task.handler == "graph_build"
+    assert task.parameters["project_id"] == "proj-1"
+    assert task.status == TaskStatus.PENDING
 
 
 def test_project_delete_removes_cloud_graph_before_local_files(monkeypatch):

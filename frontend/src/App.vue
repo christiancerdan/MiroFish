@@ -1,8 +1,10 @@
 <template>
   <template v-if="session.status === 'authenticated'">
     <router-view />
+    <WorkspacePanel v-if="workspaceOpen" @close="workspaceOpen = false" />
     <div class="session-control">
       <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+      <button type="button" aria-label="Open workspace controls" aria-haspopup="dialog" @click="workspaceOpen = true">Workspace</button>
       <button type="button" aria-label="Sign out" :disabled="busy" @click="signOut">
         {{ busy ? 'Signing out…' : 'Sign out' }}
       </button>
@@ -45,8 +47,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import service from './api'
+import WorkspacePanel from './components/WorkspacePanel.vue'
 import { session, beginSessionCheck, applySession, clearSession } from './auth/session'
 
 const accessKey = ref('')
@@ -54,6 +57,8 @@ const busy = ref(false)
 const loginError = ref('')
 const logoutError = ref('')
 const verificationError = ref('')
+const workspaceOpen = ref(false)
+watch(() => session.status, status => { if (status !== 'authenticated') workspaceOpen.value = false })
 
 async function verifySession() {
   beginSessionCheck()

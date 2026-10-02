@@ -14,6 +14,7 @@ import signal
 import atexit
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
+from contextlib import nullcontext
 from datetime import datetime
 from enum import Enum
 from queue import Queue
@@ -28,6 +29,7 @@ from ..utils.zep import (
 )
 from .zep_graph_memory_updater import ZepGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
+from .simulation_runtime import build_worker_environment, worker_command
 
 logger = get_logger('mirofish.simulation_runner')
 
@@ -149,6 +151,9 @@ class SimulationRunState:
     
     # 错误信息
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    budget_run_id: Optional[str] = None
+    worker_runtime_dir: Optional[str] = None
     
     # 进程ID（用于停止）
     process_pid: Optional[int] = None
@@ -191,6 +196,8 @@ class SimulationRunState:
             "updated_at": self.updated_at,
             "completed_at": self.completed_at,
             "error": self.error,
+            "error_code": self.error_code,
+            "budget_run_id": self.budget_run_id,
             "process_pid": self.process_pid,
         }
     
@@ -214,10 +221,7 @@ class SimulationRunner:
     """
     
     # 运行状态存储目录
-    RUN_STATE_DIR = os.path.join(
-        os.path.dirname(__file__),
-        '../../uploads/simulations'
-    )
+    RUN_STATE_DIR = Config.OASIS_SIMULATION_DATA_DIR
     
     # 脚本目录
     SCRIPTS_DIR = os.path.join(
@@ -297,6 +301,20 @@ class SimulationRunner:
         # 尝试从文件加载
         state = cls._load_run_state(simulation_id)
         if state:
+            # Only this process's handles prove ownership. Never signal a PID
+            # read from disk: it could now belong to an unrelated process.
+            if state.runner_status in {
+                RunnerStatus.STARTING, RunnerStatus.RUNNING,
+                RunnerStatus.PAUSED, RunnerStatus.STOPPING,
+            } and simulation_id not in cls._processes:
+                state.runner_status = RunnerStatus.FAILED
+                state.error_code = "interrupted"
+                state.error = "Simulation interrupted by server restart; retry explicitly."
+                state.twitter_running = state.reddit_running = False
+                state.completed_at = datetime.now().isoformat()
+                state.process_pid = None
+                cls._save_run_state(state)
+                cls._sync_simulation_status(simulation_id, RunnerStatus.FAILED, state.error)
             cls._run_states[simulation_id] = state
         return state
     
@@ -333,6 +351,9 @@ class SimulationRunner:
                 updated_at=data.get("updated_at", datetime.now().isoformat()),
                 completed_at=data.get("completed_at"),
                 error=data.get("error"),
+                error_code=data.get("error_code"),
+                budget_run_id=data.get("budget_run_id"),
+                worker_runtime_dir=data.get("worker_runtime_dir"),
                 process_pid=data.get("process_pid"),
             )
             
@@ -364,6 +385,7 @@ class SimulationRunner:
         state_file = storage_path(cls.RUN_STATE_DIR, state.simulation_id, "run_state.json")
         
         data = state.to_detail_dict()
+        data["worker_runtime_dir"] = state.worker_runtime_dir
         
         atomic_write_json(state_file, data)
         
@@ -420,6 +442,7 @@ class SimulationRunner:
             total_rounds=total_rounds,
             total_simulation_hours=total_hours,
             started_at=datetime.now().isoformat(),
+            budget_run_id=config.get("project_id"),
         )
         
         # Atomically claim this simulation ID. The expensive updater/process
@@ -445,7 +468,10 @@ class SimulationRunner:
                 raise ValueError("启用图谱记忆更新时必须提供 graph_id")
             
             try:
-                ZepGraphMemoryManager.create_updater(simulation_id, graph_id)
+                from ..utils.budget import BudgetContext
+                budget_context = BudgetContext(state.budget_run_id) if state.budget_run_id else nullcontext()
+                with budget_context:
+                    ZepGraphMemoryManager.create_updater(simulation_id, graph_id)
                 cls._graph_memory_enabled[simulation_id] = True
                 logger.info(f"已启用图谱记忆更新: simulation_id={simulation_id}, graph_id={graph_id}")
             except Exception as e:
@@ -453,6 +479,7 @@ class SimulationRunner:
                 cls._graph_memory_enabled[simulation_id] = False
                 state.runner_status = RunnerStatus.FAILED
                 state.error = f"Zep图谱更新器初始化失败: {e}"
+                state.error_code = getattr(e, "code", "memory_initialization_failed")
                 with cls._finalization_lock(simulation_id):
                     cls._save_run_state(state)
                     cls._sync_simulation_status(
@@ -465,14 +492,17 @@ class SimulationRunner:
             cls._graph_memory_enabled[simulation_id] = False
         
         # 确定运行哪个脚本（脚本位于 backend/scripts/ 目录）
+        # All API launches need the same action log and completion protocol.
+        # The standalone legacy scripts do not emit those runner events.
+        script_name = "run_parallel_simulation.py"
+        platform_arguments = []
         if platform == "twitter":
-            script_name = "run_twitter_simulation.py"
+            platform_arguments = ["--twitter-only"]
             state.twitter_running = True
         elif platform == "reddit":
-            script_name = "run_reddit_simulation.py"
+            platform_arguments = ["--reddit-only"]
             state.reddit_running = True
         else:
-            script_name = "run_parallel_simulation.py"
             state.twitter_running = True
             state.reddit_running = True
         
@@ -516,11 +546,14 @@ class SimulationRunner:
             #   reddit/actions.jsonl  - Reddit 动作日志
             #   simulation.log        - 主进程日志
             
-            cmd = [
-                sys.executable,  # Python解释器
-                script_path,
-                "--config", config_path,  # 使用完整配置文件路径
-            ]
+            budget_env = {}
+            if state.budget_run_id:
+                from ..utils.budget import BudgetStore, budget_environment
+                BudgetStore().start(state.budget_run_id)
+                budget_env = budget_environment(run_id=state.budget_run_id)
+            env = build_worker_environment(sim_dir, budget=budget_env)
+            state.worker_runtime_dir = env['MIROFISH_WORKER_RUNTIME_DIR']
+            cmd = worker_command(script_path, ["--config", os.path.abspath(config_path), *platform_arguments], env, Config)
             
             # 如果指定了最大轮数，添加到命令行参数
             if max_rounds is not None and max_rounds > 0:
@@ -529,12 +562,6 @@ class SimulationRunner:
             # 创建主日志文件，避免 stdout/stderr 管道缓冲区满导致进程阻塞
             main_log_path = storage_path(cls.RUN_STATE_DIR, simulation_id, "simulation.log")
             main_log_file = open(main_log_path, 'w', encoding='utf-8')
-            
-            # 设置子进程环境变量，确保 Windows 上使用 UTF-8 编码
-            # 这可以修复第三方库（如 OASIS）读取文件时未指定编码的问题
-            env = os.environ.copy()
-            env['PYTHONUTF8'] = '1'  # Python 3.7+ 支持，让所有 open() 默认使用 UTF-8
-            env['PYTHONIOENCODING'] = 'utf-8'  # 确保 stdout/stderr 使用 UTF-8
             
             # 设置工作目录为模拟目录（数据库等文件会生成在此）
             # 使用 start_new_session=True 创建新的进程组，确保可以通过 os.killpg 终止所有子进程
@@ -605,6 +632,7 @@ class SimulationRunner:
             state.twitter_running = False
             state.reddit_running = False
             state.error = str(e)
+            state.error_code = getattr(e, "code", "simulation_start_failed")
             if cleanup_errors:
                 state.error += "; " + "; ".join(cleanup_errors)
             with cls._finalization_lock(simulation_id):
@@ -640,6 +668,9 @@ class SimulationRunner:
         exit_code: int | None = None
         try:
             while process.poll() is None:  # 进程仍在运行
+                if state.budget_run_id:
+                    from ..utils.budget import BudgetStore
+                    BudgetStore().check(state.budget_run_id)
                 # 读取 Twitter 动作日志
                 if os.path.exists(twitter_actions_log):
                     twitter_position = cls._read_action_log(
@@ -663,10 +694,23 @@ class SimulationRunner:
                 cls._read_action_log(reddit_actions_log, reddit_position, state, "reddit")
             
             exit_code = process.returncode
+            if state.budget_run_id:
+                from ..utils.budget import BudgetStore
+                BudgetStore().check(state.budget_run_id)
+            if state.worker_runtime_dir:
+                failure_path = os.path.join(state.worker_runtime_dir, "failure.json")
+                if os.path.isfile(failure_path):
+                    with open(failure_path, encoding="utf-8") as failure_file:
+                        failure = json.load(failure_file)
+                    state.error_code = failure.get("code", "simulation_failed")
+                    raise RuntimeError(state.error_code)
             
         except Exception as e:
             logger.error(f"监控线程异常: {simulation_id}, error={str(e)}")
             monitor_error = e
+            state.error_code = getattr(e, "code", None) or state.error_code or "simulation_failed"
+            if process.poll() is None:
+                cls._terminate_process(process, simulation_id)
         
         finally:
             # Manual stop and natural completion can observe the same process
@@ -693,6 +737,7 @@ class SimulationRunner:
                         error_message = str(monitor_error)
                     elif not manual_stop and exit_code != 0:
                         desired_status = RunnerStatus.FAILED
+                        state.error_code = state.error_code or "simulation_failed"
                         main_log_path = storage_path(cls.RUN_STATE_DIR, simulation_id, "simulation.log")
                         error_info = ""
                         try:
@@ -730,6 +775,17 @@ class SimulationRunner:
                             desired_status = RunnerStatus.FAILED
                             error_message = f"Zep图谱写入未完整完成: {error}"
 
+                    # Local-memory extraction can consume budget while the
+                    # updater drains after the producer exits. Recheck before
+                    # publishing a successful terminal state.
+                    if state.budget_run_id:
+                        from ..utils.budget import BudgetStore, BudgetExceeded
+                        try:
+                            BudgetStore().check(state.budget_run_id)
+                        except BudgetExceeded as error:
+                            desired_status = RunnerStatus.FAILED
+                            state.error_code = error.code
+                            error_message = str(error)
                     state.runner_status = desired_status
                     state.error = error_message
                     state.completed_at = datetime.now().isoformat()
@@ -1689,6 +1745,13 @@ class SimulationRunner:
             return default_status
 
     @classmethod
+    def _check_simulation_budget(cls, simulation_id: str) -> None:
+        state = cls.get_run_state(simulation_id)
+        if state and state.budget_run_id:
+            from ..utils.budget import BudgetStore
+            BudgetStore().check(state.budget_run_id)
+
+    @classmethod
     def interview_agent(
         cls,
         simulation_id: str,
@@ -1728,12 +1791,18 @@ class SimulationRunner:
 
         logger.info(f"发送Interview命令: simulation_id={simulation_id}, agent_id={agent_id}, platform={platform}")
 
-        response = ipc_client.send_interview(
-            agent_id=agent_id,
-            prompt=prompt,
-            platform=platform,
-            timeout=timeout
-        )
+        cls._check_simulation_budget(simulation_id)
+        try:
+            response = ipc_client.send_interview(
+                agent_id=agent_id,
+                prompt=prompt,
+                platform=platform,
+                timeout=timeout
+            )
+        finally:
+            # CAMEL/OASIS may turn a model exception into a result or the
+            # monitor may terminate the worker while IPC is waiting.
+            cls._check_simulation_budget(simulation_id)
 
         if response.status.value == "completed":
             return {
@@ -1790,11 +1859,15 @@ class SimulationRunner:
 
         logger.info(f"发送批量Interview命令: simulation_id={simulation_id}, count={len(interviews)}, platform={platform}")
 
-        response = ipc_client.send_batch_interview(
-            interviews=interviews,
-            platform=platform,
-            timeout=timeout
-        )
+        cls._check_simulation_budget(simulation_id)
+        try:
+            response = ipc_client.send_batch_interview(
+                interviews=interviews,
+                platform=platform,
+                timeout=timeout
+            )
+        finally:
+            cls._check_simulation_budget(simulation_id)
 
         if response.status.value == "completed":
             return {

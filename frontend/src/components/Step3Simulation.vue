@@ -1,5 +1,6 @@
 <template>
   <div class="simulation-panel">
+    <p v-if="startError" class="workflow-error" role="alert">{{ startError }}</p>
     <!-- Top Control Bar -->
     <div class="control-bar">
       <div class="status-group">
@@ -262,7 +263,7 @@
           </div>
         </TransitionGroup>
 
-        <div v-if="allActions.length === 0" class="waiting-state">
+        <div v-if="allActions.length === 0 && !startError && phase !== 2" class="waiting-state">
           <div class="pulse-ring"></div>
           <span>Waiting for agent actions...</span>
         </div>
@@ -398,7 +399,6 @@ const doStartSimulation = async () => {
     const params = {
       simulation_id: props.simulationId,
       platform: 'parallel',
-      force: true,  // 强制重新开始
       enable_graph_memory_update: true  // 开启动态图谱更新
     }
     
@@ -513,13 +513,14 @@ const fetchRunStatus = async () => {
       
       // 检测模拟是否已完成（通过 runner_status 或平台完成状态判断）
       const isCompleted = data.runner_status === 'completed' || data.runner_status === 'stopped'
-      const isFailed = data.runner_status === 'failed'
+      const isFailed = ['failed', 'interrupted', 'budget_exceeded', 'cancelled'].includes(data.runner_status)
       
       // runner_status is authoritative because the backend only publishes a
       // terminal state after the Zep ingestion barrier has completed.
       if (isFailed) {
+        startError.value = `Simulation ${data.error_code === 'budget_exceeded' ? 'budget exceeded' : data.runner_status.replaceAll('_', ' ')}. ${data.error || 'Open Workspace to review usage and saved jobs.'}`
         addLog(t('log.simFailed') + (data.error ? `: ${data.error}` : ''))
-        phase.value = 2
+        phase.value = 0
         stopPolling()
         emit('update-status', 'error')
       } else if (isCompleted) {
@@ -688,10 +689,27 @@ watch(() => props.systemLogs?.length, () => {
   })
 })
 
-onMounted(() => {
+onMounted(async () => {
   addLog(t('log.step3Init'))
   if (props.simulationId) {
-    doStartSimulation()
+    try {
+      const result = await getRunStatus(props.simulationId)
+      if (result.data?.runner_status === 'idle') {
+        await doStartSimulation()
+      } else if (result.data?.runner_status) {
+        // Reopening a saved run must never force-restart external work.
+        phase.value = 1
+        startStatusPolling()
+        startDetailPolling()
+        await fetchRunStatus()
+        await fetchRunStatusDetail()
+      } else {
+        startError.value = 'Unable to verify the saved simulation state. Reload to retry.'
+      }
+    } catch (error) {
+      startError.value = error.message || 'Unable to verify the saved simulation state. Reload to retry.'
+      emit('update-status', 'error')
+    }
   }
 })
 
@@ -701,6 +719,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.workflow-error { padding: 14px 24px; color: #8b342b; background: #fff3ef; font-size: 13px; }
 .simulation-panel {
   height: 100%;
   display: flex;

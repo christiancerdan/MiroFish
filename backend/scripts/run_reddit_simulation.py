@@ -36,15 +36,17 @@ _project_root = os.path.abspath(os.path.join(_backend_dir, '..'))
 sys.path.insert(0, _scripts_dir)
 sys.path.insert(0, _backend_dir)
 
-# 加载项目根目录的 .env 文件（包含 LLM_API_KEY 等配置）
-from dotenv import load_dotenv
-_env_file = os.path.join(_project_root, '.env')
-if os.path.exists(_env_file):
-    load_dotenv(_env_file)
-else:
-    _backend_env = os.path.join(_backend_dir, '.env')
-    if os.path.exists(_backend_env):
-        load_dotenv(_backend_env)
+# Standalone CLI runs may load local configuration. The supervised worker
+# receives only the provider/budget allowlist and must never reload API secrets.
+if os.environ.get('MIROFISH_SIMULATION_WORKER') != '1':
+    from dotenv import load_dotenv
+    _env_file = os.path.join(_project_root, '.env')
+    if os.path.exists(_env_file):
+        load_dotenv(_env_file)
+    else:
+        _backend_env = os.path.join(_backend_dir, '.env')
+        if os.path.exists(_backend_env):
+            load_dotenv(_backend_env)
 
 
 import re
@@ -126,7 +128,7 @@ try:
     )
 except ImportError as e:
     print(f"错误: 缺少依赖 {e}")
-    print("请先安装: pip install oasis-ai camel-ai")
+    print("Install the simulation runtime from the project root: python3 scripts/setup_backend.py --simulation-only")
     sys.exit(1)
 
 

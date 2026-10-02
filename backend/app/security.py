@@ -186,7 +186,7 @@ def install_security(app):
             if origin and origin != "null" and (origin in origins or origin == request.host_url.rstrip("/")):
                 response.headers["Access-Control-Allow-Origin"] = origin
                 response.headers["Vary"] = "Origin, Cookie"
-                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-CSRF-Token, Accept-Language"
+                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-CSRF-Token, Accept-Language, Idempotency-Key"
                 response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
                 response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["X-Request-ID"] = request_id
