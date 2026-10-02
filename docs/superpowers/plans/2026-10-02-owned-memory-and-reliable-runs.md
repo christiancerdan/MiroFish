@@ -32,6 +32,8 @@
 
 - [x] Run the complete backend/root and frontend suites, including the separate simulation environment tests.
 - [x] Audit the exact core and simulation resolutions without globally ignored advisories; record remaining platform-specific limitations accurately.
-- [ ] Run a small synthetic local graph → profiles → simulation → report path with Ollama Cloud and no Zep key. Validate persisted graph sources and action records, budget usage, report evidence, and restart behavior.
+- [x] Run a small synthetic local graph → profiles → simulation → report path with Ollama Cloud and no Zep key. Validate persisted graph sources and action records, budget usage, report evidence, and restart behavior.
 - [x] Update setup, privacy, isolation, evaluation, and migration documentation. Existing Zep graphs remain available through explicit Zep configuration; there is no automatic remote-data export claim.
 - [ ] Review changes, publish a pull request in the user's fork, pass CI, merge, and sync local main as in the prior approved delivery.
+
+Release tracking: [pull request #2](https://github.com/christiancerdan/MiroFish/pull/2). Live verification passed with local memory and Ollama Cloud; final publication/merge status is recorded on that pull request.

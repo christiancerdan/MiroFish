@@ -30,7 +30,7 @@ No provider price or Ollama Cloud subscription price is inferred. Configure `BUD
 {"your-exact-model":{"input_per_million":1.25,"output_per_million":5}}
 ```
 
-These numbers are an **example configuration**, not quoted pricing. Rates are snapshotted when a project budget is created, so a child process cannot silently change accounting. If any admitted call lacks rates, total `estimated_cost_usd` is null. A monetary cap fails closed with `pricing_unavailable` before requesting an unpriced model. Call and token caps still operate when no monetary rates are configured. Estimates assume the configured input/output rates; subscription allowances, cached-token discounts, taxes and provider billing adjustments are not modeled, and this is not a billing guarantee.
+These numbers are an **example configuration**, not quoted pricing. Rates are snapshotted when a project budget is created, so a child process cannot silently change accounting. If any admitted call lacks rates, total `estimated_cost_usd` is null. A monetary cap fails closed with `pricing_unavailable` before requesting an unpriced model. Call and token caps still operate when no monetary rates are configured. The ledger meters this application’s model-client requests. If you explicitly use Zep Cloud, its managed ingestion/service charges are separate and are not metered by these model limits. Estimates assume the configured input/output rates; subscription allowances, cached-token discounts, taxes and provider billing adjustments are not modeled, and this is not a billing guarantee.
 
 ## Verification
 

@@ -73,7 +73,7 @@ Leave all three empty to disable it. Unmodified `your_*_here` placeholders from 
 
 ## Verification boundaries
 
-Live verification on 2026-10-02 UTC passed text, JSON, function tools, and asynchronous CAMEL tools using `gpt-oss:20b-cloud` through the signed-in local daemon at `http://127.0.0.1:11434/v1`. Direct `https://ollama.com/v1` authentication has not been live-tested because no direct-cloud API key was available. These are distinct routes. The complete upload → Zep graph → simulation → report workflow was not live-tested because no Zep Cloud API key was available.
+Live verification on 2026-10-02 UTC passed text, JSON, function tools, and asynchronous CAMEL tools using `gpt-oss:20b-cloud` through the signed-in local daemon at `http://127.0.0.1:11434/v1`. Direct `https://ollama.com/v1` authentication has not been live-tested because no direct-cloud API key was available. These are distinct routes. The optional Zep-backed pipeline remains unverified because no Zep Cloud API key was available. The default local-memory pipeline was subsequently verified without a Zep key, as described below.
 
 The real OASIS probe also passed on that route: one Reddit agent, one step, one exact-content post, and one matching `create_post` SQLite trace. The probe used no HTTP mocks. The database and library logs were removed afterward. This verifies a persisted social action; it does not verify Twitter recommendations or a complete prediction workflow.
 
@@ -84,3 +84,11 @@ The modernized locked environment subsequently passed the real OASIS persisted-a
 Automated tests use the real OpenAI SDK and pinned CAMEL backend with synthetic HTTP responses to verify authentication, arbitrary model IDs, JSON requests, synchronous/asynchronous tools, provider isolation, and error redaction. They do not establish live account access, billing status, model availability, or prediction quality. The probe establishes those selected API capabilities for one model/endpoint; a full simulation additionally depends on the selected graph backend, generated profiles, and OASIS. OASIS can swallow agent failures, so inspect persisted actions when validating a complete run.
 
 Official references: [API introduction](https://docs.ollama.com/api/introduction), [authentication](https://docs.ollama.com/api/authentication), [OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility).
+
+## Verified local-memory workflow
+
+On 2026-10-02 UTC, `check_local_workflow.py` completed a synthetic document → ontology → local SQLite graph → profiles → Reddit simulation → graph-memory updates → report path through the signed-in Ollama daemon using `gpt-oss:20b-cloud`. The two-agent fixture explicitly enabled both agents in the first round. Four model-selected actions (two posts and two comments) were persisted separately from two seed posts. Memory ingestion completed before reporting.
+
+The final report contained three sections and five verified source references. It used three bounded structured repairs for missing section citations; malformed drafts were not published. A fresh process verified persisted SQLite jobs, cumulative budget usage, source text, and evidence/Markdown hashes. Earlier failed attempts and the explicit report-only retry were retained in verification evidence. Cumulative usage across those attempts was 30 model calls and 84,817 reported/reserved ledger tokens; monetary cost was unknown because no model prices were configured.
+
+This verifies one controlled Reddit workflow, provider compatibility, persistence and reference integrity. It does not establish Twitter end-to-end behavior, large-workload performance, semantic citation support or forecast accuracy. The graph retains prior simulation observations; the saved source register makes this history visible. See [running the synthetic check](live-workflow.md).

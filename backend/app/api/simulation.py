@@ -289,7 +289,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     
     检查条件：
     1. state.json 存在且 status 为 "ready"
-    2. 必要文件存在：reddit_profiles.json, twitter_profiles.csv, simulation_config.json
+    2. simulation_config.json 和已启用平台的人设文件存在
     
     注意：运行脚本(run_*.py)保留在 backend/scripts/ 目录，不再复制到模拟目录
     
@@ -312,8 +312,6 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     required_files = [
         "state.json",
         "simulation_config.json",
-        "reddit_profiles.json",
-        "twitter_profiles.csv"
     ]
     
     # 检查文件是否存在
@@ -339,6 +337,27 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         import json
         with open(state_file, 'r', encoding='utf-8') as f:
             state_data = json.load(f)
+
+        # A saved single-platform run has only that platform's profiles. Older
+        # states without flags keep the historical requirement for both files;
+        # only an explicit false disables a platform's profile requirement.
+        platform_files = []
+        if state_data.get("enable_reddit", True) is not False:
+            platform_files.append("reddit_profiles.json")
+        if state_data.get("enable_twitter", True) is not False:
+            platform_files.append("twitter_profiles.csv")
+        for filename in platform_files:
+            path = storage_path(Config.OASIS_SIMULATION_DATA_DIR, simulation_id, filename)
+            if os.path.exists(path):
+                existing_files.append(filename)
+            else:
+                missing_files.append(filename)
+        if missing_files:
+            return False, {
+                "reason": "缺少必要文件",
+                "missing_files": missing_files,
+                "existing_files": existing_files,
+            }
         
         status = state_data.get("status", "")
         config_generated = state_data.get("config_generated", False)

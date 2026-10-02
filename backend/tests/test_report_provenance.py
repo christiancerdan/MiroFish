@@ -270,3 +270,106 @@ def test_outline_fallback_cannot_swallow_terminal_job_signal(monkeypatch, termin
             raise terminal("stop at outline parse checkpoint")
     with pytest.raises(terminal):
         agent.plan_outline(progress_callback=checkpoint)
+
+
+def test_one_empty_generation_uses_one_bounded_structured_repair(report_storage, monkeypatch):
+    calls = []
+    agent = None
+    def chat(**kwargs):
+        calls.append(kwargs)
+        if len(calls) == 1:
+            return ""
+        cid = next(source["citation_id"] for source in agent.evidence_registry.sources if source["kind"] == "source_fact")
+        return json.dumps({"content": f"Source evidence: Raw source [[source:{cid}]]."})
+    agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat=chat),
+                        zep_tools=SimpleNamespace(get_evidence=lambda _: [{"source_id": "raw", "kind": "document", "text": "Raw source"}]))
+    monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
+    result = agent.generate_report(report_id="report-repair")
+    assert result.status == ReportStatus.COMPLETED
+    assert len(calls) == 2
+    assert calls[1]["response_format"] == {"type": "json_object"}
+    assert "Raw source" in calls[1]["messages"][1]["content"]
+    assert result.citation_validation["valid"] is True
+    assert result.citation_validation["verified_citation_ids"]
+    assert result.manifest["metrics"]["citation_repair_calls"] == 1
+    assert result.manifest["citation_repairs"][0]["repaired"] is True
+    assert "missing-section-citation" in result.manifest["citation_repairs"][0]["initial_error"]
+    assert "Source evidence: Raw source" in result.markdown_content
+
+
+@pytest.mark.parametrize("repair_text", ["Unsupported without citations", "Wrong [[source:still-made-up]]", ""])
+def test_one_repair_still_fails_closed_for_persistent_invalid_citations(report_storage, monkeypatch, repair_text):
+    calls = []
+    def chat(**kwargs):
+        calls.append(kwargs)
+        return json.dumps({"content": repair_text})
+    agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat=chat), zep_tools=SimpleNamespace(get_evidence=lambda _: []))
+    monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: "Wrong [[source:made-up]]")
+    result = agent.generate_report(report_id="report-repair-failed")
+    assert result.status == ReportStatus.FAILED
+    assert len(calls) == 1
+    assert result.citation_validation["valid"] is False
+    assert result.manifest["citation_repairs"][0]["repaired"] is False
+    assert not (report_storage / "report-repair-failed" / "section_01.md").exists()
+
+
+def test_repair_budget_denial_is_terminal_without_another_call(report_storage, monkeypatch):
+    from app.utils.budget import BudgetExceeded
+    calls = []
+    def chat(**kwargs):
+        calls.append(kwargs)
+        raise BudgetExceeded("calls")
+    agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat=chat), zep_tools=SimpleNamespace(get_evidence=lambda _: []))
+    monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: "")
+    with pytest.raises(BudgetExceeded):
+        agent.generate_report(report_id="report-repair-budget")
+    assert len(calls) == 1
+    assert not (report_storage / "report-repair-budget" / "section_01.md").exists()
+
+
+@pytest.mark.parametrize("sections", [
+    [], [{"title": "4. Recommendations"}], [{"title": str(i)} for i in range(6)],
+    None, "not-a-list", [{"title": ""}, {"title": "Valid"}],
+    [{"title": "Repeated"}, {"title": " repeated "}], [{"title": 1}, {"title": "Valid"}],
+])
+def test_invalid_model_outline_uses_validated_three_section_fallback_without_another_call(sections):
+    calls = []
+    def outline_response(**kwargs):
+        calls.append(kwargs)
+        return {"title": "Test", "summary": "Summary", "sections": sections}
+    agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat_json=outline_response),
+                        zep_tools=SimpleNamespace(get_simulation_context=lambda **kwargs: {}))
+    outline = agent.plan_outline()
+    assert len(outline.sections) == 3
+    assert len({section.title for section in outline.sections}) == 3
+    assert all(section.title.strip() for section in outline.sections)
+    assert len(calls) == 1
+    assert agent._outline_validation["fallback_used"] is True
+    assert agent._outline_validation["model_response_valid"] is False
+
+
+@pytest.mark.parametrize("count", [2, 3, 5])
+def test_valid_model_outline_preserves_every_section(count):
+    sections = [{"title": f"Section {i}"} for i in range(count)]
+    agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat_json=lambda **kwargs: {"title": "Test", "summary": "Summary", "sections": sections}),
+                        zep_tools=SimpleNamespace(get_simulation_context=lambda **kwargs: {}))
+    outline = agent.plan_outline()
+    assert [section.title for section in outline.sections] == [item["title"] for item in sections]
+    assert agent._outline_validation == {"model_response_valid": True, "fallback_used": False, "section_count": count}
+
+
+def test_invalid_live_style_outline_generates_three_sections_and_records_fallback(report_storage, monkeypatch):
+    response = {"title": "Conditional analysis", "summary": "An unvalidated scenario", "sections": [{"title": "4. Recommendations for Future Simulations"}]}
+    agent = ReportAgent("graph-1", "sim-1", "Fictional scenario assumption", llm_client=SimpleNamespace(model="test", chat_json=lambda **kwargs: response),
+        zep_tools=SimpleNamespace(get_evidence=lambda _: [], get_simulation_context=lambda **kwargs: {}))
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: f"Assumption [[source:{agent.evidence_registry.sources[0]['citation_id']}]].")
+    report = agent.generate_report(report_id="report-outline-fallback")
+    assert report.status == ReportStatus.COMPLETED
+    assert len(report.outline.sections) == 3
+    assert len(ReportManager.get_generated_sections(report.report_id)) == 3
+    assert report.manifest["outline_validation"]["fallback_used"] is True
+    assert report.manifest["outline_validation"]["section_count"] == 3
+    events = [json.loads(line) for line in (report_storage / report.report_id / "agent_log.jsonl").read_text().splitlines()]
+    assert next(event for event in events if event["action"] == "planning_response")["details"]["response"] == response

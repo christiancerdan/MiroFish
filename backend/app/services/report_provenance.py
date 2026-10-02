@@ -123,7 +123,7 @@ class EvidenceRegistry:
         return {"valid": not self.invalid, "scope": "reference_integrity_only",
                 "verified_citation_ids": sorted(self.verified), "invalid_citation_ids": sorted(self.invalid)}
 
-    def validate_and_render(self, content, require_citation=False):
+    def validate_and_render(self, content, require_citation=False, record=True):
         tokens = re.findall(r"\[\[source:([^\]]+)\]\]", content, flags=re.IGNORECASE)
         anchored = re.findall(r"\]\(#source-([^\s)]+)\)", content)
         endpoint_pairs = re.findall(r"\]\(/api/evidence/([^/)]+)/([^\s)]+)\)", content)
@@ -138,10 +138,12 @@ class EvidenceRegistry:
         stripped = re.sub(r"\[\[source:[^\]]+\]\]", "", content, flags=re.IGNORECASE)
         if "[[source:" in stripped.lower():
             invalid.add("malformed-citation")
-        self.invalid.update(invalid)
+        if record:
+            self.invalid.update(invalid)
         if invalid:
             raise CitationError("Unknown or malformed evidence citation: " + ", ".join(sorted(invalid)))
-        self.verified.update(mentioned)
+        if record:
+            self.verified.update(mentioned)
         def render(match):
             cid = match.group(1)
             return f"[{cid}](#source-{cid})"

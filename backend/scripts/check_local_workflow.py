@@ -19,6 +19,7 @@ from pathlib import Path
 import re
 import secrets
 import sys
+import subprocess
 import tempfile
 import time
 
@@ -54,11 +55,18 @@ def main():
     parser.add_argument("--evidence-path", required=True)
     parser.add_argument("--timeout", type=int, default=1200)
     parser.add_argument("--max-calls", type=int, default=60)
+    parser.add_argument("--resume-proof", help="Reuse a previous proof’s project and prepared simulation; no ontology/profile calls are repeated")
+    parser.add_argument("--report-only", action="store_true", help="Regenerate only the report from a completed --resume-proof simulation")
     args = parser.parse_args()
+    if args.report_only and not args.resume_proof:
+        parser.error("--report-only requires --resume-proof")
     if not 60 <= args.timeout <= 3600 or not 1 <= args.max_calls <= 150:
         parser.error("timeout must be 60..3600 and max-calls 1..150")
 
-    runtime = Path(tempfile.mkdtemp(prefix="mirofish-live-workflow-"))
+    previous = json.loads(Path(args.resume_proof).read_text()) if args.resume_proof else None
+    if previous and previous.get("synthetic_document_sha256") != digest(DOCUMENT):
+        parser.error("Resume proof does not match this synthetic fixture")
+    runtime = Path(previous["runtime_dir"]) if previous else Path(tempfile.mkdtemp(prefix="mirofish-live-workflow-"))
     evidence_path = Path(args.evidence_path).resolve()
     evidence_path.parent.mkdir(parents=True, exist_ok=True)
     owner_key = secrets.token_hex(32)
@@ -81,11 +89,36 @@ def main():
              "synthetic_document_sha256": digest(DOCUMENT), "stages": [],
              "limits": {"max_calls": args.max_calls, "max_wall_seconds": args.timeout,
                         "simulation_rounds": 1, "platform": "reddit"}}
+    if previous:
+        assert previous.get("project_id") and previous.get("simulation_id"), "Resume requires a prepared simulation"
+        proof["prior_proof"] = {"status": previous["status"], "failure": previous.get("failure"),
+                                "started_at": previous["started_at"], "stages": previous["stages"],
+                                "fixture_overrides": previous.get("fixture_overrides"),
+                                "implementation": previous.get("implementation"),
+                                "report_id": previous.get("report_id"), "report": previous.get("report"),
+                                "budget": previous.get("budget"), "jobs": previous.get("jobs"),
+                                "log_path": previous.get("log_path"),
+                                "prior_proof": previous.get("prior_proof")}
+        proof["resumed_from_persisted_project"] = True
     deadline = time.monotonic() + args.timeout
     output = sys.stdout
-    log_path = runtime / "workflow.log"
+    log_path = runtime / ("workflow-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3) + ".log")
+    source_files = sorted(list((BACKEND / "app").rglob("*.py")) + list((BACKEND / "scripts").rglob("*.py")))
+    source_inventory = "\n".join(str(path.relative_to(BACKEND)) + ":" + hashlib.sha256(path.read_bytes()).hexdigest() for path in source_files)
+    proof["implementation"] = {"python": sys.version.split()[0], "python_executable": sys.executable,
+                               "backend_python_source_sha256": digest(source_inventory),
+                               "probe_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+    try:
+        proof["implementation"]["git_head"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=BACKEND, text=True).strip()
+        changes = subprocess.check_output(["git", "--no-pager", "diff", "--no-ext-diff", "--binary", "HEAD", "--"], cwd=BACKEND.parent)
+        proof["implementation"]["working_tree_diff_sha256"] = hashlib.sha256(changes).hexdigest()
+    except (OSError, subprocess.CalledProcessError):
+        proof["implementation"]["git_metadata_available"] = False
     app = client = dispatcher = None
-    project_id = simulation_id = graph_id = report_id = None
+    project_id = previous.get("project_id") if previous else None
+    simulation_id = previous.get("simulation_id") if previous else None
+    graph_id = previous.get("graph_id") if previous else None
+    report_id = None
 
     def save():
         proof["updated_at"] = utc_now()
@@ -161,72 +194,135 @@ def main():
             client.environ_base["HTTP_AUTHORIZATION"] = "Bearer " + owner_key
             client.environ_base["HTTP_ACCEPT_LANGUAGE"] = "en"
             dispatcher = start_job_dispatcher(app)
-            mark("ontology_started")
-            created = request("post", "/api/graph/ontology/generate", data={
-                "project_name": "Synthetic local workflow proof",
-                "simulation_requirement": REQUIREMENT,
-                "additional_context": "The source has exactly two fictional individual participants, Alice and Bob, both RedditUser entities. Include KNOWS with source_targets RedditUser to RedditUser so their explicit acquaintance relationship is represented. Do not invent extra participants.",
-                "files": (io.BytesIO(DOCUMENT.encode()), "synthetic-neighborhood.txt"),
-            }, content_type="multipart/form-data")
-            project_id = created["project_id"]
-            proof["project_id"] = project_id
-            mark("ontology_completed", entity_types=len(created["ontology"]["entity_types"]), budget=budget()["usage"])
-            queued = request("post", "/api/graph/build", json={"project_id": project_id, "chunk_size": 1000, "chunk_overlap": 0})
-            result = wait_job(queued["task_id"], "graph_build")
-            graph_id = result.get("graph_id") or request("get", f"/api/graph/project/{project_id}")["graph_id"]
-            proof["graph_id"] = graph_id
-            graph_data = request("get", f"/api/graph/data/{graph_id}")
-            assert graph_data["node_count"] == 2 and graph_data["edge_count"] >= 1, "Extraction did not produce the two-person graph"
-            mark("graph_completed", nodes=graph_data["node_count"], edges=graph_data["edge_count"], budget=budget()["usage"])
-            created_sim = request("post", "/api/simulation/create", json={"project_id": project_id, "enable_twitter": False, "enable_reddit": True})
-            simulation_id = created_sim["simulation_id"]
-            proof["simulation_id"] = simulation_id
-            queued = request("post", "/api/simulation/prepare", json={"simulation_id": simulation_id, "parallel_profile_count": 1})
-            wait_job(queued["task_id"], "simulation_prepare")
-            config = request("get", f"/api/simulation/{simulation_id}/config")
-            mark("prepare_completed", budget=budget()["usage"])
-            request("post", "/api/simulation/start", json={"simulation_id": simulation_id, "platform": "reddit", "max_rounds": 1, "enable_graph_memory_update": True})
-            mark("simulation_started")
-            last = None
-            while time.monotonic() < deadline:
-                state = request("get", f"/api/simulation/{simulation_id}/run-status")
-                observed = (state.get("runner_status"), state.get("reddit_completed"), state.get("total_actions_count"))
-                if observed != last:
-                    mark("simulation_running", runner_status=observed[0], platform_complete=observed[1], actions=observed[2])
-                    last = observed
-                if state.get("runner_status") in {"failed", "interrupted"}:
-                    proof["failed_run"] = state
-                    raise RuntimeError("Simulation worker failed")
-                if state.get("reddit_completed"):
-                    break
-                time.sleep(2)
+            if not previous:
+                mark("ontology_started")
+                created = request("post", "/api/graph/ontology/generate", data={
+                    "project_name": "Synthetic local workflow proof",
+                    "simulation_requirement": REQUIREMENT,
+                    "additional_context": "The source has exactly two fictional individual participants, Alice and Bob, both RedditUser entities. Include KNOWS with source_targets RedditUser to RedditUser so their explicit acquaintance relationship is represented. Do not invent extra participants.",
+                    "files": (io.BytesIO(DOCUMENT.encode()), "synthetic-neighborhood.txt"),
+                }, content_type="multipart/form-data")
+                project_id = created["project_id"]
+                proof["project_id"] = project_id
+                mark("ontology_completed", entity_types=len(created["ontology"]["entity_types"]), budget=budget()["usage"])
+                queued = request("post", "/api/graph/build", json={"project_id": project_id, "chunk_size": 1000, "chunk_overlap": 0})
+                result = wait_job(queued["task_id"], "graph_build")
+                graph_id = result.get("graph_id") or request("get", f"/api/graph/project/{project_id}")["graph_id"]
+                proof["graph_id"] = graph_id
+                graph_data = request("get", f"/api/graph/data/{graph_id}")
+                assert graph_data["node_count"] == 2 and graph_data["edge_count"] >= 1, "Extraction did not produce the two-person graph"
+                mark("graph_completed", nodes=graph_data["node_count"], edges=graph_data["edge_count"], budget=budget()["usage"])
+                created_sim = request("post", "/api/simulation/create", json={"project_id": project_id, "enable_twitter": False, "enable_reddit": True})
+                simulation_id = created_sim["simulation_id"]
+                proof["simulation_id"] = simulation_id
+                queued = request("post", "/api/simulation/prepare", json={"simulation_id": simulation_id, "parallel_profile_count": 1})
+                wait_job(queued["task_id"], "simulation_prepare")
             else:
-                raise TimeoutError("Simulation did not complete its Reddit round")
-            request("post", "/api/simulation/close-env", json={"simulation_id": simulation_id, "timeout": 30})
-            while time.monotonic() < deadline:
+                proof.update(project_id=project_id, graph_id=graph_id, simulation_id=simulation_id)
+                from app.models.project import ProjectManager
+                expected_text = "\n\n=== synthetic-neighborhood.txt ===\n" + DOCUMENT
+                assert ProjectManager.get_extracted_text(project_id) == expected_text, "Persisted text does not match the synthetic fixture"
+                restored = request("get", f"/api/simulation/{simulation_id}")
+                assert restored.get("profiles_generated") and restored.get("config_generated"), "Prepared simulation was not persisted"
+                mark("prepared_project_reopened", project_id=project_id, simulation_id=simulation_id, budget=budget()["usage"])
+            if args.report_only:
+                assert previous.get("round_actions"), "Report-only resume needs verified autonomous actions"
                 state = request("get", f"/api/simulation/{simulation_id}/run-status")
-                updater = ZepGraphMemoryManager.get_updater(simulation_id)
-                if state.get("runner_status") in {"completed", "stopped"} and updater is None:
-                    break
-                if state.get("runner_status") in {"failed", "interrupted"}:
-                    proof["failed_run"] = state
-                    raise RuntimeError("Simulation or memory drain failed")
-                time.sleep(2)
+                assert state.get("runner_status") in {"completed", "stopped"}, "Report-only resume needs a finished simulation"
+                for key in ("fixture_overrides", "round_actions", "seed_action_count", "simulation"):
+                    proof[key] = previous[key]
+                proof["report_only"] = True
+                mark("completed_simulation_reused", budget=budget()["usage"])
             else:
-                raise TimeoutError("Simulation memory did not drain")
-            sources = ZepToolsService().get_evidence(graph_id)
-            simulated_sources = [s for s in sources if s["kind"] == "simulation"]
-            assert state.get("total_actions_count", 0) > 0, "Simulation emitted no actions"
-            assert simulated_sources, "No simulation observations reached local memory"
-            proof["simulation"] = {"status": state["runner_status"], "actions": state["total_actions_count"],
-                                   "completed_round": state["reddit_current_round"], "source_episodes": len(simulated_sources)}
-            mark("simulation_completed", **proof["simulation"], budget=budget()["usage"])
-            queued = request("post", "/api/report/generate", json={"simulation_id": simulation_id})
+                config = request("get", f"/api/simulation/{simulation_id}/config")
+                # An explicit fixture schedule ensures one bounded round exercises
+                # actual agent decisions even if generated night activity rounds to
+                # zero. Preserve every override in the proof; this is not a claim
+                # that the model-generated scheduling defaults were honored.
+                config_path = expected_simulations / simulation_id / "simulation_config.json"
+                time_config = config["time_config"]
+                schedule_keys = ("agents_per_hour_min", "agents_per_hour_max", "peak_activity_multiplier",
+                                 "off_peak_activity_multiplier", "morning_activity_multiplier", "work_activity_multiplier")
+                before = {key: time_config.get(key) for key in schedule_keys}
+                time_config.update(agents_per_hour_min=2, agents_per_hour_max=2,
+                                   peak_activity_multiplier=1, off_peak_activity_multiplier=1,
+                                   morning_activity_multiplier=1, work_activity_multiplier=1)
+                assert len(config["agent_configs"]) == 2, "Expected exactly two prepared participants"
+                for agent in config["agent_configs"]:
+                    agent["active_hours"] = [0]
+                    agent["activity_level"] = 1.0
+                posts = config.get("event_config", {}).get("initial_posts", [])
+                assigned = []
+                for index, post in enumerate(posts):
+                    assigned.append({"post_index": index, "previous_poster_agent_id": post.get("poster_agent_id"),
+                                     "poster_agent_id": index % 2})
+                    post["poster_agent_id"] = index % 2
+                proof["fixture_overrides"] = {"generated_schedule": before,
+                                              "tested_schedule": {key: time_config[key] for key in schedule_keys},
+                                              "all_agents_active_hours": [0], "all_agents_activity_level": 1.0,
+                                              "seed_poster_assignments": assigned}
+                config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+                simulation_budget_before = budget()["usage"]
+                mark("prepare_completed", budget=simulation_budget_before)
+                request("post", "/api/simulation/start", json={"simulation_id": simulation_id, "platform": "reddit", "max_rounds": 1, "enable_graph_memory_update": True, "force": bool(previous)})
+                mark("simulation_started")
+                last = None
+                while time.monotonic() < deadline:
+                    state = request("get", f"/api/simulation/{simulation_id}/run-status")
+                    observed = (state.get("runner_status"), state.get("reddit_completed"), state.get("total_actions_count"))
+                    if observed != last:
+                        mark("simulation_running", runner_status=observed[0], platform_complete=observed[1], actions=observed[2])
+                        last = observed
+                    if state.get("runner_status") in {"failed", "interrupted"}:
+                        proof["failed_run"] = state
+                        raise RuntimeError("Simulation worker failed")
+                    if state.get("reddit_completed"):
+                        break
+                    time.sleep(2)
+                else:
+                    raise TimeoutError("Simulation did not complete its Reddit round")
+                request("post", "/api/simulation/close-env", json={"simulation_id": simulation_id, "timeout": 30})
+                while time.monotonic() < deadline:
+                    state = request("get", f"/api/simulation/{simulation_id}/run-status")
+                    updater = ZepGraphMemoryManager.get_updater(simulation_id)
+                    if state.get("runner_status") in {"completed", "stopped"} and updater is None:
+                        break
+                    if state.get("runner_status") in {"failed", "interrupted"}:
+                        proof["failed_run"] = state
+                        raise RuntimeError("Simulation or memory drain failed")
+                    time.sleep(2)
+                else:
+                    raise TimeoutError("Simulation memory did not drain")
+                sources = ZepToolsService().get_evidence(graph_id)
+                simulated_sources = [s for s in sources if s["kind"] == "simulation"]
+                action_path = expected_simulations / simulation_id / "reddit" / "actions.jsonl"
+                action_records = [json.loads(line) for line in action_path.read_text().splitlines() if line.strip()]
+                autonomous = [item for item in action_records if not item.get("event_type")
+                              and item.get("round", 0) >= 1 and item.get("action_type") != "DO_NOTHING"
+                              and item.get("success") is not False]
+                seeds = [item for item in action_records if not item.get("event_type") and item.get("round") == 0]
+                assert autonomous, "No successful non-idle model-driven round-one actions were observed"
+                proof["round_actions"] = [{key: item.get(key) for key in ("round", "agent_name", "action_type", "success")}
+                                          for item in autonomous]
+                proof["seed_action_count"] = len(seeds)
+                assert state.get("total_actions_count", 0) > 0, "Simulation emitted no actions"
+                assert simulated_sources, "No simulation observations reached local memory"
+                proof["simulation"] = {"status": state["runner_status"], "actions": state["total_actions_count"],
+                                       "completed_round": state["reddit_current_round"], "source_episodes": len(simulated_sources)}
+                simulation_budget_after = budget()["usage"]
+                assert simulation_budget_after["calls"] - simulation_budget_before["calls"] >= 2, "Simulation and memory calls did not reach the shared ledger"
+                proof["simulation"]["model_calls_including_memory"] = simulation_budget_after["calls"] - simulation_budget_before["calls"]
+                mark("simulation_completed", **proof["simulation"], budget=simulation_budget_after)
+            queued = request("post", "/api/report/generate", json={"simulation_id": simulation_id, "force_regenerate": bool(previous)})
             report_id = queued["report_id"]
             proof["report_id"] = report_id
             wait_job(queued["task_id"], "report_generate")
             report = request("get", f"/api/report/{report_id}")
             assert report["status"] == "completed"
+            sections = report["outline"]["sections"]
+            assert 2 <= len(sections) <= 5, "Report needs two to five substantive sections"
+            assert all(section.get("title", "").strip() and section.get("content", "").strip() for section in sections)
+            assert len({section["title"].strip().casefold() for section in sections}) == len(sections)
             records = report["evidence"]["sources"]
             assert {"source_fact", "simulation_observation"}.issubset({s["kind"] for s in records})
             for source in records:
@@ -247,7 +343,7 @@ def main():
             assert final_budget["usage"] == persisted_budget["usage"]
             assert 0 < final_budget["usage"]["calls"] <= args.max_calls
             proof["budget"] = final_budget
-            proof["report"] = {"status": report["status"], "source_count": len(records), "cited_source_count": len(cited),
+            proof["report"] = {"status": report["status"], "section_count": len(sections), "source_count": len(records), "cited_source_count": len(cited),
                                "markdown_sha256": digest(markdown), "evidence_snapshot_sha256": evidence_hash,
                                "uncertainty": uncertainty, "manifest": manifest}
             (runtime / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

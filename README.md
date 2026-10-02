@@ -50,7 +50,7 @@ Reports include saved source evidence, citation checks, run metadata, and explic
 
 ## Verification and maintenance
 
-Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Reddit action with a saved post and matching SQLite trace were verified with the configured local Ollama cloud alias on **2026-10-02 UTC**, including the modernized simulation runtime. Direct hosted Ollama authentication and the complete Zep-backed workflow have not been live-verified. Run the capability checks for your own account and model before starting simulations; hosted model usage may incur charges.
+Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Reddit action with a saved post and matching SQLite trace were verified with the configured local Ollama cloud alias on **2026-10-02 UTC**, including the modernized simulation runtime. A complete synthetic local-memory workflow also passed: ontology and graph extraction, profiles, four model-driven Reddit actions, drained memory updates, and a three-section report with five verified source references. Fresh-process persistence checks passed. The fixture explicitly fixes a two-agent activity schedule; see [the reproducible check](./docs/live-workflow.md). Direct hosted Ollama authentication and the complete Zep-backed workflow have not been live-verified. Run the capability checks for your own account and model before starting simulations; hosted model usage may incur charges.
 
 - [Ollama Cloud and local daemon configuration](./docs/ollama-cloud.md)
 - [Private deployment and access-key setup](./docs/deployment.md)
@@ -58,6 +58,7 @@ Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Redd
 - [Durable jobs and explicit recovery](./docs/durable-jobs.md)
 - [Project usage budgets](./docs/run-budgets.md)
 - [Evidence and forecast evaluation](./docs/forecast-evaluation.md)
+- [Synthetic live workflow check](./docs/live-workflow.md)
 - [Security changes and verification boundaries](./docs/security-remediation.md)
 - [Dependency audit results and maintained OASIS source](./docs/dependency-security.md)
 - [Maintenance roadmap](./docs/ROADMAP.md)

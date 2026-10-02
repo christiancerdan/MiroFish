@@ -51,6 +51,8 @@ Every result records its input hash, scoring method, counts, baseline, limitatio
 
 New report metadata includes `evidence`, `citation_validation`, `uncertainty`, and `manifest`. Reports persist `evidence.json` and `manifest.json` beside `meta.json` and Markdown. Evidence snapshots preserve text, source ID, graph ID, SHA-256, source timestamps when available, metadata, and a report-scoped read URL. Citation IDs are assigned in application code from graph/source identity and content. The model cannot register its own sources. A changed source text produces a different citation ID.
 
+Model-planned outlines must have two to five distinct, nonempty section titles and nonempty report title/summary. Invalid structures use a fixed three-section outline covering assumptions/source evidence, observed simulation behavior, and uncertainty, without another planning call. The parsed planning response is logged, and `manifest.outline_validation` records whether a fallback was used.
+
 Report evidence kinds are:
 
 - `source_fact`: **Source evidence**—what an input document states, not a guarantee of external truth.
@@ -58,7 +60,7 @@ Report evidence kinds are:
 - `assumption`: User-provided scenario assumptions.
 - `unclassified`: Source origin was not established; it is not promoted to a fact.
 
-The model receives allowed IDs and emits `[[source:ID]]`. Unknown/malformed IDs and uncited sections fail before section persistence. Valid tokens render as Markdown source-register links. The registry retains sources separately from derived text. The API `GET /api/evidence/<report_id>/<citation_id>` returns the stored source only if it belongs to that report and its text hash matches. Links survive later graph changes or deletion; deleting the report removes its snapshot.
+The model receives allowed IDs and emits `[[source:ID]]`. Unknown/malformed IDs and uncited sections receive at most one structured correction request with stored source excerpts and application-issued IDs; persistent failures stop before section persistence. An empty generation response enters this same bounded repair immediately. The application never assigns a citation to an unsupported claim. Repair attempts and initial errors are recorded in the manifest and logs, and the corrected text passes the original validator. Valid tokens render as Markdown source-register links. The registry retains sources separately from derived text. The API `GET /api/evidence/<report_id>/<citation_id>` returns the stored source only if it belongs to that report and its text hash matches. Links survive later graph changes or deletion; deleting the report removes its snapshot.
 
 On an explicit retry, prior report files are archived under `attempt_history/<attempt-id>` before the new attempt begins. Current APIs and source URLs refer to the current attempt; archived files remain available for local audit. Assembly reads only the current outline’s section indexes and validates the assembled references before publishing the final Markdown. Durable report writes hold the job ownership barrier, so an expired or replaced worker cannot overwrite the current attempt.
 
