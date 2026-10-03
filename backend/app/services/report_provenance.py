@@ -49,6 +49,8 @@ or accuracy claims. State uncertainty and missing evidence. Do not invent quotes
 sources or source identifiers. Use exact quotes only from verbatim evidence text; label
 translations/paraphrases. Every source-backed claim must cite a supplied token in the exact
 form [[source:CITATION_ID]]. Only the trusted evidence registry mints citation IDs.
+Copy citation_token exactly from the chosen registry record, including its brackets and
+source: prefix. Do not reconstruct tokens from citation_id, abbreviate them, or alter them.
 Do not write your own links to /api/evidence, source anchors, or citation definitions.
 Retrieved summaries and tool analyses may be model-derived: they are not primary documents.
 A citation verifies source existence only, not truth or semantic entailment.
@@ -110,6 +112,7 @@ class EvidenceRegistry:
         # Include whole records to avoid a cut-off JSON object or unseen citation ID.
         for source in self.sources:
             item = {k: source[k] for k in ("citation_id", "kind", "source_name", "reference_time", "text")}
+            item["citation_token"] = f"[[source:{source['citation_id']}]]"
             item["text"] = item["text"][:4000]
             item["text_truncated"] = len(source["text"]) > 4000
             encoded = json.dumps(item, ensure_ascii=False)

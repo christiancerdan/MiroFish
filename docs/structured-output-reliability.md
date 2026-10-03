@@ -34,6 +34,14 @@ remain atomic: all repair happens before ingestion, and a failed batch does not
 publish partial graph changes. A declared ontology with no relationships stays
 edgeless; generic defaults apply only to an unconfigured legacy graph.
 
+Profile generation uses the same two-attempt validation contract with 8,192 then
+16,384 token caps. Unknown actor types receive neutral source-based instructions;
+only recognized group types receive institution-specific instructions. Profiles
+are concise, preserve fictional assumptions, and leave unknown demographics
+unset. Invalid or truncated output cannot silently become a replacement rule
+profile in LLM mode. Explicit rule-based generation remains a separate option.
+Default social counts are simulation parameters, not observed audience facts.
+
 ## Reports
 
 Reports honor `REPORT_AGENT_MAX_TOOL_CALLS` per section. They may use the evidence

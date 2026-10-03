@@ -18,6 +18,13 @@ that the three-tool minimum conflicted with a configured two-tool maximum,
 repeating otherwise usable final answers, and XML-wrapped tool payloads bypassed
 normalization applied to plain JSON payloads.
 
+The first live development attempt exposed a further profile-generation defect:
+unknown actor labels such as Reader were sent to an organization template,
+which demanded an invented institutional history. Profile generation also had
+separate permissive JSON repair and successful rule-profile fallback paths.
+The live attempt is retained as development evidence and cannot satisfy the
+reliability gate for a customer-response comparison.
+
 Ollama's [current documentation](https://docs.ollama.com/capabilities/structured-outputs)
 states that Cloud does not support structured outputs. We therefore retain
 application validation and bounded regeneration instead of assuming provider
@@ -37,6 +44,10 @@ JSON mode enforces the application's schema.
 5. Test malformed, truncated, schema-invalid, exhausted, and valid responses,
    including failed-repair atomicity. Run real development trials on the old
    pilot cases and investigate any remaining end-to-end failure.
+6. Use neutral source-based profile instructions for unknown actor types and
+   institution instructions only for positively identified groups. Generate
+   concise profiles through bounded schema validation; propagate persistent
+   generation failures instead of presenting replacement profiles as success.
 
 ## Evaluation contract
 
