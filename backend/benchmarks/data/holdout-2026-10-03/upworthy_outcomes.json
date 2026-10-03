@@ -1,0 +1,652 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_holdout_20261003_v1",
+  "inputs_sha256": "e89acb4b512a70c3562823ce4348f4d651c29da473ea4cdc9cc2153dcc21b666",
+  "inputs_canonical_sha256": "759de479a8e79fec9ad768e25404dc17318269b106a3bbc974e953c069eab2bd",
+  "selection_manifest_sha256": "ddb9c9ae7a7f87b6f4cb427c95c206bc63e8d255bb3e023a0a1233233b85d4d5",
+  "label_semantics": "Observed historical CTR ordering, not a known population winner.",
+  "uncertainty_assumption": "Independent binomial assignments; intervals omit clustering, repeated-user dependence and adaptive stopping.",
+  "difference_interval_method": "Newcombe hybrid score for independent proportions, no continuity correction; per-case 95%, not simultaneous.",
+  "cases": [
+    {
+      "case_id": "upworthy-holdout-001",
+      "split": "reserve",
+      "source_test_id": "53235c30258692548100008a",
+      "source_row_a": "88069",
+      "source_row_b": "92290",
+      "clicks_a": 56,
+      "clicks_b": 27,
+      "impressions_a": 3768,
+      "impressions_b": 3690,
+      "ctr_a": 0.014861995753715499,
+      "ctr_b": 0.007317073170731708,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.007544922582983791,
+      "newcombe95_difference": [
+        0.002801885079793307,
+        0.012490680150623185
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.011463084420224994,
+          0.019249091604509924
+        ],
+        "ctr_b": [
+          0.005033674845032778,
+          0.010625215625908211
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "split": "reserve",
+      "source_test_id": "545683a4b2bd238db2000022",
+      "source_row_a": "129868",
+      "source_row_b": "129863",
+      "clicks_a": 35,
+      "clicks_b": 40,
+      "impressions_a": 3769,
+      "impressions_b": 3866,
+      "ctr_a": 0.009286282833642877,
+      "ctr_b": 0.010346611484738748,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.001060328651095871,
+      "newcombe95_difference": [
+        -0.005592419352931091,
+        0.003463761643997469
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.006684790926040979,
+          0.012887051576923703
+        ],
+        "ctr_b": [
+          0.0076076595947688706,
+          0.014057687606882174
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "split": "reserve",
+      "source_test_id": "5419ed6f3088cfcf1f0000c0",
+      "source_row_a": "117307",
+      "source_row_b": "117302",
+      "clicks_a": 615,
+      "clicks_b": 702,
+      "impressions_a": 6579,
+      "impressions_b": 6417,
+      "ctr_a": 0.09347925216598267,
+      "ctr_b": 0.1093969144460028,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.01591766228002013,
+      "newcombe95_difference": [
+        -0.02631931869769477,
+        -0.005538302774286481
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0866803335985002,
+          0.10075262624703966
+        ],
+        "ctr_b": [
+          0.10199224475544456,
+          0.11726896389605672
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "split": "reserve",
+      "source_test_id": "543096087c2de7d7f800000d",
+      "source_row_a": "121413",
+      "source_row_b": "121414",
+      "clicks_a": 22,
+      "clicks_b": 21,
+      "impressions_a": 5134,
+      "impressions_b": 5137,
+      "ctr_a": 0.004285157771717959,
+      "ctr_b": 0.004087989098695737,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.00019716867302222232,
+      "newcombe95_difference": [
+        -0.0024011288312997567,
+        0.002807240035407921
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0028316318002791327,
+          0.006479955410836433
+        ],
+        "ctr_b": [
+          0.0026754255284214966,
+          0.006241686424533014
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "split": "reserve",
+      "source_test_id": "547f5ae1343336001b3a0000",
+      "source_row_a": "30381",
+      "source_row_b": "145375",
+      "clicks_a": 40,
+      "clicks_b": 69,
+      "impressions_a": 2983,
+      "impressions_b": 3055,
+      "ctr_a": 0.01340931947703654,
+      "ctr_b": 0.02258592471358429,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.00917660523654775,
+      "newcombe95_difference": [
+        -0.01605946314540371,
+        -0.0024603263011181136
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.00986302933222552,
+          0.018207244894447885
+        ],
+        "ctr_b": [
+          0.017886104033233388,
+          0.028484870314479188
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "split": "reserve",
+      "source_test_id": "536cee715b3374464d000031",
+      "source_row_a": "91590",
+      "source_row_b": "22211",
+      "clicks_a": 20,
+      "clicks_b": 13,
+      "impressions_a": 2153,
+      "impressions_b": 2142,
+      "ctr_a": 0.009289363678588018,
+      "ctr_b": 0.006069094304388422,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.0032202693741995954,
+      "newcombe95_difference": [
+        -0.002170444550661948,
+        0.008833040021200007
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.006021482307647454,
+          0.014305212842521588
+        ],
+        "ctr_b": [
+          0.0035502748387465635,
+          0.010356371758106081
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "split": "reserve",
+      "source_test_id": "543bee22bcd0a9205900000f",
+      "source_row_a": "27556",
+      "source_row_b": "27559",
+      "clicks_a": 84,
+      "clicks_b": 72,
+      "impressions_a": 3600,
+      "impressions_b": 3552,
+      "ctr_a": 0.023333333333333334,
+      "ctr_b": 0.02027027027027027,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.003063063063063063,
+      "newcombe95_difference": [
+        -0.003763034842540699,
+        0.009918970250699242
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.018886671142230384,
+          0.028796186381953488
+        ],
+        "ctr_b": [
+          0.016127722752780228,
+          0.025449344316381562
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "split": "reserve",
+      "source_test_id": "544733930b628c329e000049",
+      "source_row_a": "125853",
+      "source_row_b": "125857",
+      "clicks_a": 29,
+      "clicks_b": 16,
+      "impressions_a": 3099,
+      "impressions_b": 3023,
+      "ctr_a": 0.00935785737334624,
+      "ctr_b": 0.005292755540853457,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.004065101832492783,
+      "newcombe95_difference": [
+        -0.0002758523859606836,
+        0.008595685007336642
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.006523490189264649,
+          0.013407099124247483
+        ],
+        "ctr_b": [
+          0.003260558417802521,
+          0.008580649424863453
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "split": "reserve",
+      "source_test_id": "536ea8c9433873106b00000e",
+      "source_row_a": "87335",
+      "source_row_b": "22270",
+      "clicks_a": 62,
+      "clicks_b": 60,
+      "impressions_a": 2791,
+      "impressions_b": 2900,
+      "ctr_a": 0.022214260121820137,
+      "ctr_b": 0.020689655172413793,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.001524604949406344,
+      "newcombe95_difference": [
+        -0.0060722208584449155,
+        0.009201766856657748
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.017367687825778886,
+          0.02837424806014355
+        ],
+        "ctr_b": [
+          0.01610780363074834,
+          0.026539655115497586
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "split": "reserve",
+      "source_test_id": "51bfaf89b3f46d2f45002af8",
+      "source_row_a": "46495",
+      "source_row_b": "46493",
+      "clicks_a": 35,
+      "clicks_b": 35,
+      "impressions_a": 3538,
+      "impressions_b": 3502,
+      "ctr_a": 0.009892594686263426,
+      "ctr_b": 0.009994288977727013,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.00010169429146358704,
+      "newcombe95_difference": [
+        -0.004863851391965829,
+        0.0046454140067387776
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0071217587995206656,
+          0.013726565350279272
+        ],
+        "ctr_b": [
+          0.007195055843040364,
+          0.013867350910952763
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "split": "reserve",
+      "source_test_id": "54755bf46163612673010000",
+      "source_row_a": "134609",
+      "source_row_b": "132528",
+      "clicks_a": 16,
+      "clicks_b": 33,
+      "impressions_a": 4189,
+      "impressions_b": 4262,
+      "ctr_a": 0.0038195273334924802,
+      "ctr_b": 0.0077428437353355235,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.003923316401843043,
+      "newcombe95_difference": [
+        -0.007362596766053039,
+        -0.0006685875581249694
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0023524791804431797,
+          0.006195771253708731
+        ],
+        "ctr_b": [
+          0.005518720384942005,
+          0.010853538053373713
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "split": "reserve",
+      "source_test_id": "54b80e8b6466380021040000",
+      "source_row_a": "7024",
+      "source_row_b": "7023",
+      "clicks_a": 21,
+      "clicks_b": 23,
+      "impressions_a": 2854,
+      "impressions_b": 3065,
+      "ctr_a": 0.007358093903293623,
+      "ctr_b": 0.007504078303425775,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.00014598440013215228,
+      "newcombe95_difference": [
+        -0.004660072504621473,
+        0.004456038788313053
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.004817740577871569,
+          0.011222847915659096
+        ],
+        "ctr_b": [
+          0.005005620008618287,
+          0.011235511861337413
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "split": "reserve",
+      "source_test_id": "54163171f0fde2efca000024",
+      "source_row_a": "51202",
+      "source_row_b": "116108",
+      "clicks_a": 23,
+      "clicks_b": 19,
+      "impressions_a": 3289,
+      "impressions_b": 3371,
+      "ctr_a": 0.006993006993006993,
+      "ctr_b": 0.005636309700385643,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.0013566972926213504,
+      "newcombe95_difference": [
+        -0.002560887057443408,
+        0.00538203040909849
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.004664388751435215,
+          0.010471918126377376
+        ],
+        "ctr_b": [
+          0.0036113445093961393,
+          0.008786707171323472
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "split": "reserve",
+      "source_test_id": "530d3f38a916bf67dc000003",
+      "source_row_a": "83820",
+      "source_row_b": "82371",
+      "clicks_a": 94,
+      "clicks_b": 129,
+      "impressions_a": 3516,
+      "impressions_b": 3543,
+      "ctr_a": 0.026734926052332197,
+      "ctr_b": 0.03640982218458933,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.009674896132257135,
+      "newcombe95_difference": [
+        -0.017928006463789933,
+        -0.0015045893589156166
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.021897512359189426,
+          0.032605356893612
+        ],
+        "ctr_b": [
+          0.03072722115088468,
+          0.043096619542506515
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "split": "reserve",
+      "source_test_id": "5356bc9275478fe7b1000010",
+      "source_row_a": "20795",
+      "source_row_b": "20798",
+      "clicks_a": 66,
+      "clicks_b": 47,
+      "impressions_a": 2274,
+      "impressions_b": 2272,
+      "ctr_a": 0.029023746701846966,
+      "ctr_b": 0.02068661971830986,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.008337126983537106,
+      "newcombe95_difference": [
+        -0.0007634687671002113,
+        0.01759801746459859
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.022878480026784602,
+          0.03675756632519604
+        ],
+        "ctr_b": [
+          0.015592296747029383,
+          0.027399036608587606
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "split": "reserve",
+      "source_test_id": "547610383762650021710000",
+      "source_row_a": "132543",
+      "source_row_b": "30005",
+      "clicks_a": 50,
+      "clicks_b": 51,
+      "impressions_a": 3541,
+      "impressions_b": 3596,
+      "ctr_a": 0.01412030499858797,
+      "ctr_b": 0.01418242491657397,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -6.211991798600082e-05,
+      "newcombe95_difference": [
+        -0.005630847946825904,
+        0.005522161884202411
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.010727273965913647,
+          0.0185664081428598
+        ],
+        "ctr_b": [
+          0.010803612983845426,
+          0.018598087071958615
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "split": "reserve",
+      "source_test_id": "54656fb2744884951b000047",
+      "source_row_a": "149345",
+      "source_row_b": "149346",
+      "clicks_a": 5,
+      "clicks_b": 8,
+      "impressions_a": 3099,
+      "impressions_b": 2972,
+      "ctr_a": 0.0016134236850596966,
+      "ctr_b": 0.0026917900403768506,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.001078366355317154,
+      "newcombe95_difference": [
+        -0.0038481745301889828,
+        0.0014551924456207934
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0006893489196465861,
+          0.0037715489394257507
+        ],
+        "ctr_b": [
+          0.0013646067130713931,
+          0.005302905348729493
+        ]
+      },
+      "difference_interval_includes_zero": true
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "split": "reserve",
+      "source_test_id": "54aafa4d62336500240e0000",
+      "source_row_a": "1729",
+      "source_row_b": "32600",
+      "clicks_a": 11,
+      "clicks_b": 42,
+      "impressions_a": 2852,
+      "impressions_b": 2889,
+      "ctr_a": 0.0038569424964936885,
+      "ctr_b": 0.014537902388369679,
+      "observed_winner": "B",
+      "ctr_difference_a_minus_b": -0.01068095989187599,
+      "newcombe95_difference": [
+        -0.01601357526378006,
+        -0.005844413241690257
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.0021550460245112787,
+          0.006893586118872908
+        ],
+        "ctr_b": [
+          0.010773466307083871,
+          0.019591647049838182
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "split": "reserve",
+      "source_test_id": "519e6dbc11569a8c0b00684a",
+      "source_row_a": "44381",
+      "source_row_b": "44382",
+      "clicks_a": 82,
+      "clicks_b": 53,
+      "impressions_a": 6200,
+      "impressions_b": 6028,
+      "ctr_a": 0.013225806451612903,
+      "ctr_b": 0.008792302587923026,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.004433503863689877,
+      "newcombe95_difference": [
+        0.0007223673304949602,
+        0.008207789593409434
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.010668541738518776,
+          0.016385898632786194
+        ],
+        "ctr_b": [
+          0.0067285559522983615,
+          0.011481713593176332
+        ]
+      },
+      "difference_interval_includes_zero": false
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "split": "reserve",
+      "source_test_id": "53e0fdd143eda7cf9300000e",
+      "source_row_a": "24494",
+      "source_row_b": "106249",
+      "clicks_a": 57,
+      "clicks_b": 31,
+      "impressions_a": 4547,
+      "impressions_b": 4589,
+      "ctr_a": 0.012535737849131295,
+      "ctr_b": 0.006755284375680976,
+      "observed_winner": "A",
+      "ctr_difference_a_minus_b": 0.0057804534734503185,
+      "newcombe95_difference": [
+        0.0017751585440794384,
+        0.009956292824584781
+      ],
+      "binomial_intervals": {
+        "method": "Wilson score, no continuity correction",
+        "confidence_level": 0.95,
+        "ctr_a": [
+          0.00968863707715251,
+          0.01620579582871971
+        ],
+        "ctr_b": [
+          0.0047632229526966136,
+          0.009572446895920426
+        ]
+      },
+      "difference_interval_includes_zero": false
+    }
+  ]
+}

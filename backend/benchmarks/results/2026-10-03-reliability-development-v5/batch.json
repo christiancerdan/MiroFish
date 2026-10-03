@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "purpose": "development_reliability_only",
+  "created_at": "2026-10-03T19:38:48.132260+00:00",
+  "max_concurrent_trials": 2,
+  "runtime_root": "backend/uploads/benchmark-runtimes/2026-10-03-reliability-development-v5",
+  "inputs_sha256": "451bd4f61085d052128672c80de9e229e1088e0593ebc194013a67a58f141763",
+  "protocol_sha256": "b9926c14a1900c02fd514a7c03da9395f45887822529ea310d54b0d8d4dd5c38",
+  "schedule_sha256": "1ad876e607241ad0beff6dbd799f8ac7994d933a8400e7c9e4b5ea170881ae8d",
+  "implementation_source_sha256": "1ae39db576905cac8e5e1c2dc56ce71c7c16ed27675f6304076b64e68759141b",
+  "orchestration_source_sha256": {
+    "run_batch.py": "cf9261ef5c49b9100fddb31fe795bca5de7f7ae2c12e88eb3c3fae7b06e2b8f7",
+    "audit_batch.py": "0d860281f94aa2235c0c4cd892c0530f719e9c2ead6bf78a17aca081c32743b2"
+  },
+  "reporting_plan_sha256": "21358259fb087053cfe758dfd258282a869a0d4c8d1432d553ed3bf01b030c29"
+}

@@ -1,3 +1,5 @@
+import pytest
+
 from app.services.ontology_generator import OntologyGenerator
 from app.services.graph_builder import GraphBuilderService
 from app.utils.ontology import (
@@ -47,32 +49,37 @@ def test_attribute_list_is_non_empty_and_capped_for_zep():
     ]
 
 
-def test_generator_normalizes_entity_and_edge_attributes():
-    result = OntologyGenerator(llm_client=object())._validate_and_process({
-        "entity_types": [{"name": "speaker", "attributes": ["role", None]}],
-        "edge_types": [{"name": "quotes", "attributes": ["source_url", {}]}],
-    })
-
-    assert result["entity_types"][0]["attributes"] == [{
-        "name": "role",
-        "type": "text",
-        "description": "role",
-    }]
-    assert result["edge_types"][0]["attributes"] == [{
-        "name": "source_url",
-        "type": "text",
-        "description": "source_url",
-    }]
+def _complete_generator_ontology():
+    return {
+        "entity_types": [{
+            "name": "Speaker", "description": "A source participant.", "attributes": [], "examples": [],
+        }],
+        "edge_types": [{
+            "name": "QUOTES", "description": "One participant quotes another.", "attributes": [],
+            "source_targets": [{"source": "Speaker", "target": "Speaker"}],
+        }],
+        "analysis_summary": "The source describes speakers quoting one another.",
+    }
 
 
-def test_generator_adds_a_property_to_empty_custom_types():
-    result = OntologyGenerator(llm_client=object())._validate_and_process({
-        "entity_types": [{"name": "speaker", "attributes": []}],
-        "edge_types": [{"name": "quotes", "attributes": []}],
-    })
+def test_generator_preserves_valid_entity_and_edge_attributes():
+    value = _complete_generator_ontology()
+    value["entity_types"][0]["attributes"] = [
+        {"name": "role", "type": "text", "description": "Public role"},
+    ]
+    value["edge_types"][0]["attributes"] = [
+        {"name": "source_url", "type": "text", "description": "Source URL"},
+    ]
+    result = OntologyGenerator(llm_client=object())._validate_and_process(value)
 
-    assert result["entity_types"][0]["attributes"][0]["name"] == "details"
-    assert result["edge_types"][0]["attributes"][0]["name"] == "details"
+    assert result == value
+
+
+def test_generator_preserves_empty_attributes_for_graph_backend_normalization():
+    result = OntologyGenerator(llm_client=object())._validate_and_process(_complete_generator_ontology())
+
+    assert result["entity_types"][0]["attributes"] == []
+    assert result["edge_types"][0]["attributes"] == []
 
 
 def test_graph_builder_safety_net_accepts_strings_and_skips_invalid_values():
@@ -206,52 +213,15 @@ def test_graph_builder_deduplicates_and_caps_edge_source_targets_for_zep():
     ]
 
 
-def test_generator_ignores_invalid_entries_and_normalizes_edge_names():
-    source_targets = [
-        {"source": "speaker", "target": "news outlet"},
-        {"source": "speaker", "target": "news outlet"},
-        None,
-    ] + [
-        {"source": "speaker", "target": "news outlet" if index == 0 else "Person"}
-        for index in range(12)
-    ]
-
-    result = OntologyGenerator(llm_client=object())._validate_and_process({
-        "entity_types": ["speaker", None, 7, {"name": "news outlet"}],
-        "edge_types": [
-            "unusable edge",
-            None,
-            {"name": "worksFor", "source_targets": source_targets},
-            {"name": "works-for", "source_targets": []},
-        ],
-    })
-
-    assert [entity["name"] for entity in result["entity_types"][:2]] == [
-        "Speaker",
-        "NewsOutlet",
-    ]
-    assert [edge["name"] for edge in result["edge_types"]] == ["WORKS_FOR"]
-    assert result["edge_types"][0]["source_targets"] == [
-        {"source": "Speaker", "target": "NewsOutlet"},
-        {"source": "Speaker", "target": "Person"},
-    ]
+def test_generator_rejects_invalid_entries_instead_of_silently_dropping_them():
+    value = _complete_generator_ontology()
+    value["entity_types"].append(None)
+    with pytest.raises(ValueError, match="entity_types"):
+        OntologyGenerator(llm_client=object())._validate_and_process(value)
 
 
-def test_generator_caps_after_discarding_invalid_edge_endpoints():
-    invalid_first = [
-        {"source": f"Removed{index}", "target": "AlsoRemoved"}
-        for index in range(MAX_ONTOLOGY_SOURCE_TARGETS)
-    ]
-    result = OntologyGenerator(llm_client=object())._validate_and_process({
-        "entity_types": [{"name": "person"}, {"name": "organization"}],
-        "edge_types": [{
-            "name": "works_for",
-            "source_targets": invalid_first + [
-                {"source": "person", "target": "organization"}
-            ],
-        }],
-    })
-
-    assert result["edge_types"][0]["source_targets"] == [
-        {"source": "Person", "target": "Organization"}
-    ]
+def test_generator_rejects_unknown_endpoints_instead_of_silently_discarding_them():
+    value = _complete_generator_ontology()
+    value["edge_types"][0]["source_targets"].insert(0, {"source": "Removed", "target": "Speaker"})
+    with pytest.raises(ValueError, match="declared types"):
+        OntologyGenerator(llm_client=object())._validate_and_process(value)

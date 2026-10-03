@@ -42,7 +42,7 @@ has moved CAMEL to 0.2.90 but retains the older dependency pins. CAMEL 0.2.90
 supports current Pillow versions, unlike 0.2.78's `<11` constraint.
 
 `backend/vendor/camel-oasis` is a small maintained fork of the official 0.2.5
-wheel, published locally as **0.2.5+mirofish.1**. It retains the OASIS social-agent,
+wheel, published locally as **0.2.5+mirofish.2**. It retains the OASIS social-agent,
 tool-action, SQLite, graph, and recommendation implementation. Its changes are:
 
 - A runtime manifest using CAMEL 0.2.90 and patched model libraries, with actual
@@ -66,7 +66,7 @@ upstream Python source. Review any future source changes against those hashes.
 | Package | Previous maintained lock | Current simulation lock |
 | --- | --- | --- |
 | CAMEL AI | 0.2.78 | 0.2.90 |
-| OASIS | 0.2.5 | 0.2.5+mirofish.1, local maintained source |
+| OASIS | 0.2.5 | 0.2.5+mirofish.2, local maintained source |
 | Pillow | 10.3.0 | 12.3.0 |
 | Sentence Transformers | 3.0.0 | 6.1.0 |
 | Transformers | 4.57.6 | 5.18.0 |

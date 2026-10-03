@@ -77,25 +77,34 @@ Please perform actions by tool calling.
         return system_content
 
     def to_reddit_system_message(self) -> str:
-        name_string = ""
-        description_string = ""
+        description_parts = []
         if self.name is not None:
-            name_string = f"Your name is {self.name}."
-        if self.profile is None:
-            description = name_string
-        elif "other_info" not in self.profile:
-            description = name_string
-        elif "user_profile" in self.profile["other_info"]:
-            if self.profile["other_info"]["user_profile"] is not None:
-                user_profile = self.profile["other_info"]["user_profile"]
-                description_string = f"Your have profile: {user_profile}."
-                description = f"{name_string}\n{description_string}"
-                print(self.profile['other_info'])
-                description += (
-                    f"You are a {self.profile['other_info']['gender']}, "
-                    f"{self.profile['other_info']['age']} years old, with an MBTI "
-                    f"personality type of {self.profile['other_info']['mbti']} from "
-                    f"{self.profile['other_info']['country']}.")
+            description_parts.append(f"Your name is {self.name}.")
+        other_info = (self.profile or {}).get("other_info") or {}
+        user_profile = other_info.get("user_profile")
+        if user_profile is not None and str(user_profile).strip():
+            description_parts.append(f"Your profile: {user_profile}.")
+
+        # The generator requires the demographic keys, not invented values.
+        # Never turn JSON null or an absent field into a persona assumption.
+        demographic_templates = {
+            "gender": "Your gender is {}.",
+            "age": "Your age is {}.",
+            "mbti": "Your MBTI personality type is {}.",
+            "country": "Your country is {}.",
+        }
+        unknown = []
+        for field, template in demographic_templates.items():
+            value = other_info.get(field)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                unknown.append(field)
+            else:
+                description_parts.append(template.format(value))
+        if unknown:
+            description_parts.append(
+                f"Unspecified demographics: {', '.join(unknown)}. "
+                "Do not infer or invent values for these fields.")
+        description = "\n".join(description_parts)
 
         system_content = f"""
 # OBJECTIVE

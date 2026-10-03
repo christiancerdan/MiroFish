@@ -119,7 +119,9 @@ def test_document_extraction_is_durable_and_keeps_source_evidence(tmp_path):
     messages, _kwargs = llm.calls[0]
     payload = json.loads(next(message["content"] for message in messages if message["role"] == "user"))
     assert payload["document"] == "Alice works at Acme."
-    assert payload["ontology"]["entity_types"] == ONTOLOGY["entity_types"]
+    assert {item["name"] for item in payload["ontology"]["entity_types"]} == {"Person", "Company"}
+    assert payload["ontology"]["edge_types"][0]["source_targets"] == ONTOLOGY["edge_types"][0]["source_targets"]
+    assert all("attributes" not in item for item in payload["ontology"]["entity_types"])
     assert payload["existing_entities"] == []
 
     reopened = LocalGraphClient(str(tmp_path / "memory.sqlite3"), llm_client=FakeLLM())

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "tested_implementation_commit": "a78dadece2cb7cecb70ad73760f6307954c0dbf0",
+  "all_trials_match_frozen_source_and_model": true,
+  "identical_source_per_case_across_methods_and_repeats": true,
+  "source_graph_check": "Read-only recomputation of sealed graph fingerprint for each execution snapshot, including entities, edges, evidence, and ingestion receipts.",
+  "verified_execution_snapshots": 2,
+  "failure_categories": {
+    "other_report_generate": 1
+  },
+  "trials": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "stage": "assessor_completed",
+      "source_document_sha256": "e58d6810c65b35f6a3f0fcacd03136e117fc5609f2ccf52cb69cf7d0a23bec07",
+      "started_at": "2026-10-03T18:33:51.774066+00:00",
+      "finished_at": "2026-10-03T18:39:46.022119+00:00",
+      "backend_python_source_sha256": "a236651d8901e8da2483a85185c35e38ecc2604f849a70c9cc41b7142a2234b1",
+      "execution": {
+        "graph_id": "mirofish_exec_6c4e77172e3048c8ad80584017ed0436",
+        "source_graph_id": "mirofish_ee2ccb192cc74c85",
+        "execution_id": "exec_6791a12091aa4dbaa7171018bf37e762",
+        "simulation_id": "sim_c59eb2df8386",
+        "source_snapshot_sha256": "81af9d6d631aa09dcfad8c1bef54452ec002c8dae55e6dcede227d98c1be7091",
+        "snapshot_created_at": "2026-10-03T18:37:49.684077+00:00"
+      },
+      "source_graph_matches_sealed_snapshot": true,
+      "report_bound_to_execution_with_source_and_simulation_evidence": true
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "stage": "report_generate",
+      "source_document_sha256": "88a26b02a43f619bb42b8fd1a2af5f6ff5b96646677e4b67bde6e2d394aad1e3",
+      "started_at": "2026-10-03T18:33:51.774111+00:00",
+      "finished_at": "2026-10-03T18:39:50.097208+00:00",
+      "backend_python_source_sha256": "a236651d8901e8da2483a85185c35e38ecc2604f849a70c9cc41b7142a2234b1",
+      "failure_category": "other_report_generate",
+      "execution": {
+        "graph_id": "mirofish_exec_79166a2c729648e0b901c7dfa4e65b8b",
+        "source_graph_id": "mirofish_99fe27f8e5074c66",
+        "execution_id": "exec_201bb26783b74892b4c47020a6664ea0",
+        "simulation_id": "sim_904cdb9fa9cc",
+        "source_snapshot_sha256": "4cd913386ccacc0756c93486476a58835e3c4f6820c33e1f85fe2045c3f2463b",
+        "snapshot_created_at": "2026-10-03T18:37:34.920764+00:00"
+      },
+      "source_graph_matches_sealed_snapshot": true
+    }
+  ]
+}

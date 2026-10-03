@@ -11,6 +11,7 @@ import argparse
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 import hashlib
+import importlib.metadata
 import importlib.util
 import io
 import json
@@ -24,8 +25,50 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 
 BACKEND = Path(__file__).resolve().parents[1]
+SOURCE_SCOPE = "backend-app-scripts-vendor-runtime-lock-locales-v2"
+
+
+def implementation_source_sha256():
+    """Bind executed source, local runtime assets, and dependency declarations."""
+    paths = [path for directory in ("app", "scripts")
+             for path in (BACKEND / directory).rglob("*.py")]
+    vendor = BACKEND / "vendor" / "camel-oasis"
+    paths += [path for path in (vendor / "oasis").rglob("*")
+              if path.is_file() and path.suffix in {".py", ".sql"}]
+    paths += [vendor / "pyproject.toml", vendor / "UPSTREAM.json",
+              BACKEND / "pyproject.toml", BACKEND / "uv.lock"]
+    paths += list((BACKEND.parent / "locales").glob("*.json"))
+    inventory = "\n".join(str(path.relative_to(BACKEND.parent)) + ":" +
+                          hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(paths))
+    return sha256_text(SOURCE_SCOPE + "\n" + inventory)
+
+
+def verify_vendored_runtime():
+    """The simulation wheel must contain the exact frozen vendored runtime."""
+    vendor = BACKEND / "vendor" / "camel-oasis"
+    expected_version = tomllib.loads((vendor / "pyproject.toml").read_text())["project"]["version"]
+    installed = importlib.metadata.distribution("camel-oasis")
+    if installed.version != expected_version:
+        raise ValueError("Installed simulation runtime version differs from vendored source")
+    source_files = {path.relative_to(vendor) for path in (vendor / "oasis").rglob("*")
+                    if path.is_file() and path.suffix in {".py", ".sql"}}
+    installed_files = {Path(str(path)) for path in installed.files or []
+                       if str(path).startswith("oasis/") and Path(str(path)).suffix in {".py", ".sql"}}
+    if installed_files != source_files:
+        raise ValueError("Installed simulation runtime inventory differs from vendored source")
+    inventory = []
+    for path in sorted(source_files):
+        expected = hashlib.sha256((vendor / path).read_bytes()).hexdigest()
+        if hashlib.sha256(Path(installed.locate_file(path)).read_bytes()).hexdigest() != expected:
+            raise ValueError("Installed simulation runtime content differs from vendored source")
+        inventory.append(f"{path}:{expected}")
+    return {"distribution": "camel-oasis", "version": installed.version,
+            "files_verified": len(inventory), "source_sha256": sha256_text("\n".join(inventory))}
+
+
 PERSONAS = (
     {"name": "Curious Reader", "description": "A fictional curiosity-led reader who likes surprising, understandable stories."},
     {"name": "Skeptical Reader", "description": "A fictional evidence-oriented reader who distrusts exaggerated or vague claims."},
@@ -314,21 +357,21 @@ class Trial:
         from app.config import Config
         from app.utils.llm_provider import settings_from_config
         model = settings_from_config(Config)
-        actual = {"provider": model.provider, "model": model.model, "base_url": model.base_url}
+        actual = {"provider": model.provider, "model": model.model, "base_url": model.base_url,
+                  "token_limit": model.token_limit}
         expected = self.protocol.get("model", {})
-        for key in ("provider", "model", "base_url"):
+        for key in ("provider", "model", "base_url", "token_limit"):
             if key in expected and expected[key] != actual[key]:
                 raise ValueError("Configured model does not match the frozen protocol")
         self.proof["model"] = actual
-        source_files = sorted(list((BACKEND / "app").rglob("*.py")) + list((BACKEND / "scripts").rglob("*.py")))
-        inventory = "\n".join(str(path.relative_to(BACKEND)) + ":" + hashlib.sha256(path.read_bytes()).hexdigest()
-                              for path in source_files)
         self.proof["implementation"] = {"python": sys.version.split()[0],
-                                         "backend_python_source_sha256": sha256_text(inventory),
+                                         "source_scope": SOURCE_SCOPE,
+                                         "backend_python_source_sha256": implementation_source_sha256(),
                                          "runner_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
         if ("implementation_source_sha256" in expected
                 and expected["implementation_source_sha256"] != self.proof["implementation"]["backend_python_source_sha256"]):
             raise ValueError("Implementation source does not match the frozen protocol")
+        self.proof["implementation"]["vendored_runtime"] = verify_vendored_runtime()
         try:
             self.proof["implementation"]["git_head"] = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=BACKEND, text=True).strip()

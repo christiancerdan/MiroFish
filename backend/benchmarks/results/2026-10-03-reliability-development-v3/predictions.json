@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "9bcec30a78d512223204a5697492cbd455c3bee31f2a64d7565fd890771e89f7",
+  "records": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 148.80311600000005,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 70999,
+        "input_tokens": 53435,
+        "output_tokens": 17564,
+        "cost_usd": null
+      },
+      "run_id": "proj_b828f0ecd64a"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 146.88226433299997,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 77244,
+        "input_tokens": 59456,
+        "output_tokens": 17788,
+        "cost_usd": null
+      },
+      "run_id": "proj_f4c78ae59efa"
+    }
+  ]
+}

@@ -21,6 +21,15 @@
    - `sentence-transformers/paraphrase-MiniLM-L6-v2`:
      `c9a2bfebc254878aee8c3aca9e6844d5bbb102d1`
 
-The OASIS social-action implementation is unchanged. Only recommendation model
-loading source differs from the original wheel. Additional source changes must
-be recorded here and covered by a focused contract test.
+6. Preserve unknown source demographics in the Reddit system prompt in
+   `oasis/social_platform/config/user.py`. Render only supplied age, gender,
+   MBTI and country values, label missing fields unspecified, and instruct the
+   agent not to infer them. Preserve valid zero ages and arbitrary supplied
+   gender labels. Handle missing profile details safely and remove the raw
+   profile print. The upstream agent generators still receive all required
+   demographic keys; MiroFish exports unknown values as JSON null.
+
+The OASIS social-action implementation is unchanged. Recommendation model
+loading and Reddit profile-prompt construction differ from the original wheel.
+Additional source changes must be recorded here and covered by a focused
+contract test.

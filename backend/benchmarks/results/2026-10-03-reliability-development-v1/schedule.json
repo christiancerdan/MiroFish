@@ -1,0 +1,16 @@
+{
+  "max_concurrent_trials": 2,
+  "development_only": true,
+  "schedule": [
+    [
+      "upworthy-001",
+      "mirofish",
+      1
+    ],
+    [
+      "upworthy-003",
+      "mirofish",
+      1
+    ]
+  ]
+}

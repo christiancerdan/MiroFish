@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "records": [
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 197.07425108300004,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61205,
+        "input_tokens": 43674,
+        "output_tokens": 17531,
+        "cost_usd": null
+      },
+      "run_id": "proj_3bc4961b2ee9"
+    }
+  ]
+}

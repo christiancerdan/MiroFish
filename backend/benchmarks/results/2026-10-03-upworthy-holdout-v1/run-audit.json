@@ -1,0 +1,6014 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "checks": {
+    "frozen_artifacts": {
+      "status": "pass"
+    },
+    "orchestration_source": {
+      "status": "pass"
+    },
+    "implementation_source": {
+      "status": "pass"
+    },
+    "reporting_plan": {
+      "status": "pass"
+    },
+    "freeze_integrity": {
+      "status": "pass"
+    },
+    "runtime_inventory": {
+      "status": "pass"
+    },
+    "aggregate_predictions": {
+      "status": "pass"
+    }
+  },
+  "counts": {
+    "scheduled": 80,
+    "pass": 80,
+    "fail": 0,
+    "incomplete": 0
+  },
+  "trials": [
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "2ee2cf9bfc0c690c6bab5f6857822118bcbbe35606c86da055d4f9683fd38697",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "bab418e91eca123863bed3ea6dcf8bf10553564879fc7fef4b7b034630045e32"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "2ee2cf9bfc0c690c6bab5f6857822118bcbbe35606c86da055d4f9683fd38697",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "4e6c2e56ca0cdaa58c56ebb5c08a73084f81672450ff0ab107fe931c53c3da3a"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "2ee2cf9bfc0c690c6bab5f6857822118bcbbe35606c86da055d4f9683fd38697",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "2ee2cf9bfc0c690c6bab5f6857822118bcbbe35606c86da055d4f9683fd38697",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "afa007a63505addac537073579c5b3c9ababe35d9318d0bf67a2e44cef934bd2",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "d1e76590154cd5802d60fb29bf4e556f9059ce7089f8df76fac2347501be8ee9"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "afa007a63505addac537073579c5b3c9ababe35d9318d0bf67a2e44cef934bd2",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "eae6f49ac897b3d890cbe8daa4f9784df3c8c9526fbb55267b9e45427e0cd8e8"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "afa007a63505addac537073579c5b3c9ababe35d9318d0bf67a2e44cef934bd2",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "afa007a63505addac537073579c5b3c9ababe35d9318d0bf67a2e44cef934bd2",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "0b19a16eb9dfe28d960589c15f1e3a39bf25ea4d7d58a9a434642201530c52b8",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "13c8bd15f47f80d34ce7577ed936cd901f854b45bab3aed44f674a6b96780cdf"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "0b19a16eb9dfe28d960589c15f1e3a39bf25ea4d7d58a9a434642201530c52b8",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "d552c7ba34b7c58669344260f172c518c0a2c12250afc9ffbdf76eb8aa3e7a15"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "0b19a16eb9dfe28d960589c15f1e3a39bf25ea4d7d58a9a434642201530c52b8",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "0b19a16eb9dfe28d960589c15f1e3a39bf25ea4d7d58a9a434642201530c52b8",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "a40d4097450aa71c9ad3ed49d78715dfde0eb9f18c7ea5b56d87354f4f9803b1",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "30d5480b69c77097b82ec940b7b9fe335967f151fdae1e6314b95f55397e66a9"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "a40d4097450aa71c9ad3ed49d78715dfde0eb9f18c7ea5b56d87354f4f9803b1",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "completed_report_unavailable"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "5a06d535e50b52e5cd44ed7665712e4dd9668cb46e939e6b37c7a49de2cae5b8"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "a40d4097450aa71c9ad3ed49d78715dfde0eb9f18c7ea5b56d87354f4f9803b1",
+      "status": "pass",
+      "trial_status": "failed"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "a40d4097450aa71c9ad3ed49d78715dfde0eb9f18c7ea5b56d87354f4f9803b1",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "eccdefad76837035995c23f5545d2a6e7d0b56df39bb54b6170ccdadc000310b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "c2738fe26a3cdd114cefe0cf0e0ba21372074738e7fdcfd7b1ede92f5f92d831"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "eccdefad76837035995c23f5545d2a6e7d0b56df39bb54b6170ccdadc000310b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "5e8e28e2442bbfbb045203a24d54d945c0f30e20eaa75374585f7afe8d15f0f5"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "eccdefad76837035995c23f5545d2a6e7d0b56df39bb54b6170ccdadc000310b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "eccdefad76837035995c23f5545d2a6e7d0b56df39bb54b6170ccdadc000310b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "f693577bdfb6a12b84ade8b9657636224564ceb92905358a8890efc022d0bb39",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "74cb8c11a01e3dd3c1c0f5787c16bb76b7446edfc15d1bbe7dfc02e055800d31"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "f693577bdfb6a12b84ade8b9657636224564ceb92905358a8890efc022d0bb39",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "5d436caaee0c52a67d44cce97b8a4bed067e6e01a84e4322d570b2ef530ba9de"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "f693577bdfb6a12b84ade8b9657636224564ceb92905358a8890efc022d0bb39",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "f693577bdfb6a12b84ade8b9657636224564ceb92905358a8890efc022d0bb39",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "232c0232560b9913992570cd0b7445c3a1ba4fa8972b6d5f3f09fec9da2e0741",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "943feb64bef8b9b31821b75460b7ac67b5826ab36f83b23a7b13fcca24b92213"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "232c0232560b9913992570cd0b7445c3a1ba4fa8972b6d5f3f09fec9da2e0741",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "f3789c5b1cbf52d3926a4600f2800386bba8f5af8ee16275df779c046005d0a5"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "232c0232560b9913992570cd0b7445c3a1ba4fa8972b6d5f3f09fec9da2e0741",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "232c0232560b9913992570cd0b7445c3a1ba4fa8972b6d5f3f09fec9da2e0741",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "36af04902340b26c3743bd37fe9ff6f9e6c2e3b1cc05b88c05d058490e5758d7",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "c6754f4bc5293fd39cec8809390f0b8d1f499022273aa0b41d73a4f3383408f9"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "36af04902340b26c3743bd37fe9ff6f9e6c2e3b1cc05b88c05d058490e5758d7",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "196963c42888eb1804520ed2ab5e53bc32421d4788e2dafff0c7450370a761bc"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "36af04902340b26c3743bd37fe9ff6f9e6c2e3b1cc05b88c05d058490e5758d7",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "36af04902340b26c3743bd37fe9ff6f9e6c2e3b1cc05b88c05d058490e5758d7",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "83fe7a9fd53f0ec885fbb194c586b544b9d38fabb99021ee104e9d360d842dfc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "b23ec3c7ea79614dcd1cee89b85344e287308b464890b009e5edc386d1ef1469"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "83fe7a9fd53f0ec885fbb194c586b544b9d38fabb99021ee104e9d360d842dfc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "bdb8e0e2880e86e5e2dac4cc61398f9262389a7da27e25804a7b378a59b947cf"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "83fe7a9fd53f0ec885fbb194c586b544b9d38fabb99021ee104e9d360d842dfc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "83fe7a9fd53f0ec885fbb194c586b544b9d38fabb99021ee104e9d360d842dfc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "2d7d65d1c706a6b2c48c3397eb7f0be73aef93ff8e4bc14d57ce36af9b13b70b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "9938354f6c3677954b7236c5893edab53ceebc69ece528e28a1061a5f40e4481"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "2d7d65d1c706a6b2c48c3397eb7f0be73aef93ff8e4bc14d57ce36af9b13b70b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "a883cb6e18769770a8fbc4c2090316d35d347c9a52e32e4e32a9da35f2255b35"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "2d7d65d1c706a6b2c48c3397eb7f0be73aef93ff8e4bc14d57ce36af9b13b70b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "2d7d65d1c706a6b2c48c3397eb7f0be73aef93ff8e4bc14d57ce36af9b13b70b",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "920a08e0338e0554ab257159e6cc30efe923f2a56ae9c4f4e131f4bcba95145f",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "f8a7fdebd0d2fe1c34c282085cb0c37f5b22a1b471e4e60ef4b53134e3e12f29"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "920a08e0338e0554ab257159e6cc30efe923f2a56ae9c4f4e131f4bcba95145f",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "214e586ae21e47bf585fc7966c8b5bfa9d13cf786c5639e3220e8b4670c99598"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "920a08e0338e0554ab257159e6cc30efe923f2a56ae9c4f4e131f4bcba95145f",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "920a08e0338e0554ab257159e6cc30efe923f2a56ae9c4f4e131f4bcba95145f",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "9169f71817930e81cfaeaef2148849c2ebd2c92471c242d71a81d735f99dc79c",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "334edb1cf2746a2c624a6a9256efeecf0e8d30d32289947b656584d264f6fffa"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "9169f71817930e81cfaeaef2148849c2ebd2c92471c242d71a81d735f99dc79c",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "140e2368d4d260640a18d40698d912d1b6475e312d7aa0e2139ffbfa446ed745"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "9169f71817930e81cfaeaef2148849c2ebd2c92471c242d71a81d735f99dc79c",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "9169f71817930e81cfaeaef2148849c2ebd2c92471c242d71a81d735f99dc79c",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "c85f4048f4a70033e51e216c1cf4757109c84eb18e2e7e59a21b3ba7e2c48acc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "32892f762aa483d795f0b5f033d13cd6b2fa34c18229da7c59711360a244439f"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "c85f4048f4a70033e51e216c1cf4757109c84eb18e2e7e59a21b3ba7e2c48acc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "a02042114deee13fb1d1441fd155b478294a28d49e3eb54bec477b97f4d47930"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "c85f4048f4a70033e51e216c1cf4757109c84eb18e2e7e59a21b3ba7e2c48acc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "c85f4048f4a70033e51e216c1cf4757109c84eb18e2e7e59a21b3ba7e2c48acc",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "4382acd5a8e4cc36f7cd1e2af4e3a524e3c3fa007360967094e40110d912e2d3",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "014c6911e1b00f156c81d686d8aace98891f1405dc8a6a8dc3947ee7f6af599a"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "4382acd5a8e4cc36f7cd1e2af4e3a524e3c3fa007360967094e40110d912e2d3",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "565f01748470349cdd956b9e4840a1c37748d982efbbf0e87bedfc1686dedc3b"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "4382acd5a8e4cc36f7cd1e2af4e3a524e3c3fa007360967094e40110d912e2d3",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "4382acd5a8e4cc36f7cd1e2af4e3a524e3c3fa007360967094e40110d912e2d3",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "982c797b6cb2674a4ef05390bf18e8343b3a0e013b18378f55bc675c467d4b67",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "9d325bf16c2a4544076ddf951583a62d060483f28c59f41c69f1e2a08b150743"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "982c797b6cb2674a4ef05390bf18e8343b3a0e013b18378f55bc675c467d4b67",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "36d8b8312a75b4e3db8d1ae0e956d0723dc8c39a98ac5402789caa27db2b276f"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "982c797b6cb2674a4ef05390bf18e8343b3a0e013b18378f55bc675c467d4b67",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "982c797b6cb2674a4ef05390bf18e8343b3a0e013b18378f55bc675c467d4b67",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "f45396152f4f675e49a5ff33861098ca7c94c8819803a5d20d2fdb969d570daf",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "060d251c2ade04bfa941adc2921b7c0895bd506f33b21819541c2a9907e9ff45"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "f45396152f4f675e49a5ff33861098ca7c94c8819803a5d20d2fdb969d570daf",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "50a393ff95209a8337dc56cef8690a4caad04bb1b556d66cda40a26712be216e"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "f45396152f4f675e49a5ff33861098ca7c94c8819803a5d20d2fdb969d570daf",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "f45396152f4f675e49a5ff33861098ca7c94c8819803a5d20d2fdb969d570daf",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "c11de7c66a757b1c24830b15f5c98a4cd14cb8339a32cb4dfb37292f78221420",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "52fc7891e9863427401db6d99d8fea166c108e1716da24745b5c7e8d1837aab8"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "c11de7c66a757b1c24830b15f5c98a4cd14cb8339a32cb4dfb37292f78221420",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "a372c51f1fa2da72d491895d2eb02a5f34b6399dc643c287b39a18c442d48c49"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "c11de7c66a757b1c24830b15f5c98a4cd14cb8339a32cb4dfb37292f78221420",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "c11de7c66a757b1c24830b15f5c98a4cd14cb8339a32cb4dfb37292f78221420",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "b862417a7634a8ea7fff8eea8d3a2fde588a5e0e2f86360380d4dd1a30fae72e",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "4228b3c70c32de19891ce989163b15b6461672398f3c09d700d3578866e0b76f"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "b862417a7634a8ea7fff8eea8d3a2fde588a5e0e2f86360380d4dd1a30fae72e",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "03da6fbf53ef9a82d026a6c64a64ec1740fe52b3210f9145ec79df68422e0579"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "b862417a7634a8ea7fff8eea8d3a2fde588a5e0e2f86360380d4dd1a30fae72e",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "b862417a7634a8ea7fff8eea8d3a2fde588a5e0e2f86360380d4dd1a30fae72e",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "28604201a67eb4abdf56d41ad07c991633ab37c24d83b111e6d51710bfe794fd",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "e79e76b8fef90e6be76d6e49fcd0290a516dd4c1ce664c7e9b3debad65ce3edd"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "28604201a67eb4abdf56d41ad07c991633ab37c24d83b111e6d51710bfe794fd",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "completed_report_unavailable"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "7c6bbcb502df9f13a0af641039be99d17579ce74269a8cdcb35eaf1d3b6c4870"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "28604201a67eb4abdf56d41ad07c991633ab37c24d83b111e6d51710bfe794fd",
+      "status": "pass",
+      "trial_status": "failed"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "28604201a67eb4abdf56d41ad07c991633ab37c24d83b111e6d51710bfe794fd",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "acbe04d11e58e3414de4987c4922074aa9d3aff27fb32938ad02368c21fa3d47",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "cd16a493bbfc4bba01d59ceb1d275495028e7052b314bd59b8a0e088d8c33181"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "acbe04d11e58e3414de4987c4922074aa9d3aff27fb32938ad02368c21fa3d47",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "18c9553abd7df7142a7aa31134d56fa3eb8041b95eff0546703620a57562e6bd"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "acbe04d11e58e3414de4987c4922074aa9d3aff27fb32938ad02368c21fa3d47",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 2,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "execution": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        },
+        "report": {
+          "status": "not_applicable",
+          "reason": "single_model_method"
+        }
+      },
+      "source_document_sha256": "acbe04d11e58e3414de4987c4922074aa9d3aff27fb32938ad02368c21fa3d47",
+      "status": "pass",
+      "trial_status": "ok"
+    }
+  ]
+}

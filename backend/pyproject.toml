@@ -35,7 +35,7 @@ dependencies = [
 
 [project.optional-dependencies]
 simulation = [
-    "camel-oasis==0.2.5+mirofish.1",
+    "camel-oasis==0.2.5+mirofish.2",
     "camel-ai==0.2.90",
     "mcp>=1.30.0,<2",
     "pillow>=12.3.0,<13",

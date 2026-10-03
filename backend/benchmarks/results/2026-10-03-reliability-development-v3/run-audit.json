@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "purpose": "development_reliability_only",
+  "protocol_sha256": "9bcec30a78d512223204a5697492cbd455c3bee31f2a64d7565fd890771e89f7",
+  "tested_implementation_commit": "e22a30875736f335bbaa68da8cd9206c1addf6de",
+  "tested_backend_python_source_sha256": "5076cd06071cd897d45836b1caeeb3e346872bb958d599836fd1be3579576f7c",
+  "frozen_source_hash_recomputed_from_git_commit": true,
+  "audit_helper_sha256": "995e9a7a4a185e51a4d221030edd8eed3e53963eb9231fc660e4efc5ad3faf69",
+  "artifact_integrity": "pass",
+  "original_runtime_file_hashes_and_inventory_unchanged_by_audit": true,
+  "source_graph_check": "Read-only fingerprint, evidence, execution-snapshot and report-input checks using temporary copies of each stopped trial SQLite database and WAL.",
+  "usage_check": "Each record matches saved proof budgets and recomputed totals from its SQLite budget ledger.",
+  "scheduled_trials": 2,
+  "completed_trials": 2,
+  "total_usage": {
+    "calls": 37,
+    "input_tokens": 112891,
+    "output_tokens": 35352,
+    "total_tokens": 148243,
+    "cost_usd": null
+  },
+  "summed_elapsed_seconds": 295.685380333,
+  "customer_response_reliability_gate_passed": false,
+  "limitations": [
+    "Both trials reused development cases; no baseline or outcome scoring was performed.",
+    "This attempt predates immutable batch/start markers; no missing metadata was fabricated.",
+    "The frozen historical implementation hash covers backend/app and backend/scripts Python files; it does not attest the then-installed vendor package.",
+    "All six serialized Reddit profiles contain unsupported age, gender, MBTI and country defaults; the demographics fix and final reliability gate remain required.",
+    "Artifact and citation integrity checks do not establish factual accuracy, forecast calibration or predictive superiority."
+  ],
+  "trials": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "trial_status": "ok",
+      "artifact_integrity": "pass",
+      "checks": {
+        "frozen_trial_identity": {
+          "status": "pass"
+        },
+        "frozen_source_commit": {
+          "status": "pass"
+        },
+        "model_and_configuration": {
+          "status": "pass"
+        },
+        "source_document": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "976eeb005cd9864e9aaf029406be69be1501404d3e808d5fbdecf513d05a40e5"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "stage": "assessor_completed",
+      "source_document_sha256": "e58d6810c65b35f6a3f0fcacd03136e117fc5609f2ccf52cb69cf7d0a23bec07",
+      "started_at": "2026-10-03T19:25:39.577088+00:00",
+      "finished_at": "2026-10-03T19:28:08.380679+00:00",
+      "serialized_demographic_defaults_present": true
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "trial_status": "ok",
+      "artifact_integrity": "pass",
+      "checks": {
+        "frozen_trial_identity": {
+          "status": "pass"
+        },
+        "frozen_source_commit": {
+          "status": "pass"
+        },
+        "model_and_configuration": {
+          "status": "pass"
+        },
+        "source_document": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "5b26cd23d7832ac9cf281fb6f34fb5162409a752d0691d9ccf4b502b8cbca1c5"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "stage": "assessor_completed",
+      "source_document_sha256": "88a26b02a43f619bb42b8fd1a2af5f6ff5b96646677e4b67bde6e2d394aad1e3",
+      "started_at": "2026-10-03T19:25:35.588020+00:00",
+      "finished_at": "2026-10-03T19:28:02.470762+00:00",
+      "serialized_demographic_defaults_present": true
+    }
+  ]
+}
