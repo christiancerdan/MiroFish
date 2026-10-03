@@ -609,6 +609,7 @@ const sendToReportAgent = async (message) => {
     }))
   
   const res = await chatWithReport({
+    report_id: props.reportId,
     simulation_id: props.simulationId,
     message: message,
     chat_history: historyForApi

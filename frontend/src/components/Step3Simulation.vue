@@ -312,7 +312,7 @@ const props = defineProps({
   systemLogs: Array
 })
 
-const emit = defineEmits(['go-back', 'next-step', 'add-log', 'update-status'])
+const emit = defineEmits(['go-back', 'next-step', 'add-log', 'update-status', 'update-run'])
 
 const router = useRouter()
 
@@ -323,6 +323,10 @@ const isStarting = ref(false)
 const isStopping = ref(false)
 const startError = ref(null)
 const runStatus = ref({})
+const setRunStatus = (data) => {
+  runStatus.value = data
+  emit('update-run', { ...data, simulation_id: props.simulationId })
+}
 const allActions = ref([]) // 所有动作（增量累积）
 const actionIds = ref(new Set()) // 用于去重的动作ID集合
 const scrollContainer = ref(null)
@@ -369,7 +373,7 @@ const addLog = (msg) => {
 // 重置所有状态（用于重新启动模拟）
 const resetAllState = () => {
   phase.value = 0
-  runStatus.value = {}
+  setRunStatus({})
   allActions.value = []
   actionIds.value = new Set()
   prevTwitterRound.value = 0
@@ -419,7 +423,7 @@ const doStartSimulation = async () => {
       addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
       
       phase.value = 1
-      runStatus.value = res.data
+      setRunStatus(res.data)
       
       startStatusPolling()
       startDetailPolling()
@@ -498,7 +502,7 @@ const fetchRunStatus = async () => {
     if (res.success && res.data) {
       const data = res.data
       
-      runStatus.value = data
+      setRunStatus(data)
       
       // 分别检测各平台的轮次变化并输出日志
       if (data.twitter_current_round > prevTwitterRound.value) {
@@ -698,6 +702,7 @@ onMounted(async () => {
         await doStartSimulation()
       } else if (result.data?.runner_status) {
         // Reopening a saved run must never force-restart external work.
+        setRunStatus(result.data)
         phase.value = 1
         startStatusPolling()
         startDetailPolling()

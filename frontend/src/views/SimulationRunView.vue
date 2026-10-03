@@ -40,7 +40,9 @@
       <!-- Left Panel: Graph -->
       <div class="panel-wrapper left" :style="leftPanelStyle">
         <GraphPanel 
+          :key="selectedGraphId"
           :graphData="graphData"
+          :contextLabel="selectedExecutionId ? `Run ${selectedExecutionId}` : 'Waiting for run graph'"
           :loading="graphLoading"
           :currentPhase="3"
           :isSimulating="isSimulating"
@@ -52,6 +54,7 @@
       <!-- Right Panel: Step3 开始模拟 -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step3Simulation
+          :key="currentSimulationId"
           :simulationId="currentSimulationId"
           :maxRounds="maxRounds"
           :minutesPerRound="minutesPerRound"
@@ -62,6 +65,7 @@
           @next-step="handleNextStep"
           @add-log="addLog"
           @update-status="updateStatus"
+          @update-run="updateRun"
         />
       </div>
     </main>
@@ -96,8 +100,11 @@ const currentSimulationId = ref(route.params.simulationId)
 const maxRounds = ref(route.query.maxRounds ? parseInt(route.query.maxRounds) : null)
 const minutesPerRound = ref(30) // 默认每轮30分钟
 const projectData = ref(null)
+const selectedGraphId = ref(null)
+const selectedExecutionId = ref(null)
 const graphData = ref(null)
 const graphLoading = ref(false)
+let graphRequestId = 0
 const systemLogs = ref([])
 const currentStatus = ref('processing') // processing | completed | error
 
@@ -138,6 +145,19 @@ const addLog = (msg) => {
 
 const updateStatus = (status) => {
   currentStatus.value = status
+  if (status === 'completed' || status === 'error') refreshGraph()
+}
+
+const updateRun = (state) => {
+  if (state.simulation_id !== currentSimulationId.value) return
+  selectedExecutionId.value = state.execution_id || null
+  const graphId = state.execution_graph_id || null
+  if (graphId !== selectedGraphId.value) {
+    selectedGraphId.value = graphId
+    graphData.value = null
+    graphLoading.value = false
+    if (graphId) loadGraph(graphId)
+  }
 }
 
 // --- Layout Methods ---
@@ -205,17 +225,20 @@ const handleNextStep = () => {
 
 // --- Data Logic ---
 const loadSimulationData = async () => {
+  const simulationId = currentSimulationId.value
   try {
-    addLog(t('log.loadingSimData', { id: currentSimulationId.value }))
+    addLog(t('log.loadingSimData', { id: simulationId }))
     
     // 获取 simulation 信息
-    const simRes = await getSimulation(currentSimulationId.value)
+    const simRes = await getSimulation(simulationId)
+    if (simulationId !== currentSimulationId.value) return
     if (simRes.success && simRes.data) {
       const simData = simRes.data
       
       // 获取 simulation config 以获取 minutes_per_round
       try {
-        const configRes = await getSimulationConfig(currentSimulationId.value)
+        const configRes = await getSimulationConfig(simulationId)
+        if (simulationId !== currentSimulationId.value) return
         if (configRes.success && configRes.data?.time_config?.minutes_per_round) {
           minutesPerRound.value = configRes.data.time_config.minutes_per_round
           addLog(t('log.timeConfig', { minutes: minutesPerRound.value }))
@@ -227,14 +250,12 @@ const loadSimulationData = async () => {
       // 获取 project 信息
       if (simData.project_id) {
         const projRes = await getProject(simData.project_id)
+        if (simulationId !== currentSimulationId.value) return
         if (projRes.success && projRes.data) {
           projectData.value = projRes.data
           addLog(t('log.projectLoadSuccess', { id: projRes.data.project_id }))
           
-          // 获取 graph 数据
-          if (projRes.data.graph_id) {
-            await loadGraph(projRes.data.graph_id)
-          }
+          // Graph selection comes only from the selected run's status event.
         }
       }
     } else {
@@ -246,6 +267,8 @@ const loadSimulationData = async () => {
 }
 
 const loadGraph = async (graphId) => {
+  const requestId = ++graphRequestId
+  const isCurrent = () => requestId === graphRequestId && graphId === selectedGraphId.value
   // 当正在模拟时，自动刷新不显示全屏 loading，以免闪烁
   // 手动刷新或初始加载时显示 loading
   if (!isSimulating.value) {
@@ -254,22 +277,22 @@ const loadGraph = async (graphId) => {
   
   try {
     const res = await getGraphData(graphId)
-    if (res.success) {
+    if (res.success && isCurrent()) {
       graphData.value = res.data
       if (!isSimulating.value) {
         addLog(t('log.graphDataLoadSuccess'))
       }
     }
   } catch (err) {
-    addLog(t('log.graphLoadFailed', { error: err.message }))
+    if (isCurrent()) addLog(t('log.graphLoadFailed', { error: err.message }))
   } finally {
-    graphLoading.value = false
+    if (isCurrent()) graphLoading.value = false
   }
 }
 
 const refreshGraph = () => {
-  if (projectData.value?.graph_id) {
-    loadGraph(projectData.value.graph_id)
+  if (selectedGraphId.value) {
+    loadGraph(selectedGraphId.value)
   }
 }
 
@@ -298,6 +321,21 @@ watch(isSimulating, (newValue) => {
     stopGraphRefresh()
   }
 }, { immediate: true })
+
+watch(() => route.params.simulationId, (newId) => {
+  if (newId && newId !== currentSimulationId.value) {
+    currentSimulationId.value = newId
+    projectData.value = null
+    selectedGraphId.value = null
+    selectedExecutionId.value = null
+    graphData.value = null
+    graphLoading.value = false
+    minutesPerRound.value = 30
+    maxRounds.value = route.query.maxRounds ? parseInt(route.query.maxRounds) : null
+    currentStatus.value = 'processing'
+    loadSimulationData()
+  }
+})
 
 onMounted(() => {
   addLog(t('log.simRunViewInit'))
@@ -449,4 +487,3 @@ onUnmounted(() => {
   border-right: 1px solid #EAEAEA;
 }
 </style>
-

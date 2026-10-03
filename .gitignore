@@ -59,3 +59,11 @@ backend/uploads/
 
 # Docker 数据
 data/
+
+# Versioned public benchmark fixtures; application data remains ignored.
+!backend/benchmarks/data/
+backend/benchmarks/data/*
+!backend/benchmarks/data/upworthy_inputs.json
+!backend/benchmarks/data/upworthy_outcomes.json
+!backend/benchmarks/data/upworthy_selection_manifest.json
+!backend/benchmarks/data/prepare_upworthy.py

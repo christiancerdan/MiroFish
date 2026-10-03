@@ -1,7 +1,10 @@
 <template>
   <div class="graph-panel">
     <div class="panel-header">
-      <span class="panel-title">{{ $t('graph.panelTitle') }}</span>
+      <div class="panel-heading">
+        <span class="panel-title">{{ $t('graph.panelTitle') }}</span>
+        <span v-if="contextLabel" class="graph-context" :title="contextLabel">{{ contextLabel }}</span>
+      </div>
       <!-- 顶部工具栏 (Internal Top Right) -->
       <div class="header-tools">
         <button class="tool-btn" @click="$emit('refresh')" :disabled="loading" :title="$t('graph.refreshGraph')">
@@ -243,7 +246,8 @@ const props = defineProps({
   graphData: Object,
   loading: Boolean,
   currentPhase: Number,
-  isSimulating: Boolean
+  isSimulating: Boolean,
+  contextLabel: String
 })
 
 const emit = defineEmits(['refresh', 'toggle-maximize'])
@@ -836,6 +840,22 @@ onUnmounted(() => {
   align-items: center;
   background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0));
   pointer-events: none;
+}
+
+.panel-heading {
+  min-width: 0;
+  margin-right: 12px;
+}
+
+.graph-context {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #666;
+  font-size: 11px;
+  margin-top: 3px;
+  pointer-events: auto;
 }
 
 .panel-title {

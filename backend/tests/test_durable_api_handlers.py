@@ -29,6 +29,7 @@ RESTARTED_WORKER = textwrap.dedent('''
     socket.socket.connect = forbidden_network
 
     from app.api import report as report_api
+    from app.api import simulation as simulation_api
     from app.config import Config
     from app.models.project import ProjectManager
     from app.models.task import TaskManager, TaskStatus
@@ -48,6 +49,9 @@ RESTARTED_WORKER = textwrap.dedent('''
     SimulationManager.SIMULATION_DATA_DIR = settings['simulations']
     SimulationRunner.RUN_STATE_DIR = settings['simulations']
     ReportManager.REPORTS_DIR = settings['reports']
+    def clean_source(graph_id):
+        assert graph_id == 'graph-restart'
+    simulation_api.assert_clean_simulation_source = clean_source
 
     def record_provider_call(kind):
         assert current_budget().run_id == settings['project_id']
@@ -71,19 +75,23 @@ RESTARTED_WORKER = textwrap.dedent('''
         return state
 
     class Agent:
-        def __init__(self, graph_id, simulation_id, simulation_requirement):
-            assert graph_id == 'graph-restart'
+        def __init__(self, graph_id, simulation_id, simulation_requirement, **binding):
+            assert graph_id == 'execution-graph-restart'
             assert simulation_requirement == 'Analyze this scenario'
+            assert binding['execution_id'] == 'execution-restart'
+            assert binding['source_graph_id'] == 'graph-restart'
+            assert binding['source_snapshot_sha256'] == 'snapshot-restart'
             self.simulation_id = simulation_id
 
         def generate_report(self, progress_callback, report_id):
             assert report_id == settings['report_id']
             readers = get_graph_readers('graph-restart')
             assert len(readers) == 1 and readers[0].startswith(report_id + ':')
+            assert get_graph_readers('execution-graph-restart') == readers
             record_provider_call('report')
             progress_callback('analysis', 100, 'Finished report')
             return Report(report_id=report_id, simulation_id=self.simulation_id,
-                          graph_id='graph-restart', simulation_requirement='Analyze this scenario',
+                          graph_id='execution-graph-restart', simulation_requirement='Analyze this scenario',
                           status=ReportStatus.COMPLETED, markdown_content='Persisted report')
 
     SimulationManager.prepare_simulation = prepare
@@ -100,6 +108,7 @@ RESTARTED_WORKER = textwrap.dedent('''
             time.sleep(0.01)
         assert task.status == TaskStatus.COMPLETED, task.to_dict()
         assert get_graph_readers('graph-restart') == []
+        assert get_graph_readers('execution-graph-restart') == []
     finally:
         dispatcher.stop(wait=True)
 ''')
@@ -118,6 +127,7 @@ def test_named_handler_survives_process_restart(tmp_path, monkeypatch, kind):
     monkeypatch.setattr(SimulationRunner, '_run_states', {})
     monkeypatch.setattr(ReportManager, 'REPORTS_DIR', str(reports))
     monkeypatch.setattr(Config, 'OASIS_SIMULATION_DATA_DIR', str(simulations))
+    monkeypatch.setattr(simulation_api, 'assert_clean_simulation_source', lambda _graph_id: None)
     monkeypatch.setattr(simulation_api, 'ZepEntityReader', lambda: SimpleNamespace(
         filter_defined_entities=lambda **_kwargs: SimpleNamespace(filtered_count=1, entity_types=['Person']),
     ))
@@ -132,6 +142,8 @@ def test_named_handler_survives_process_restart(tmp_path, monkeypatch, kind):
         SimulationRunner._save_run_state(SimulationRunState(
             state.simulation_id, runner_status=RunnerStatus.COMPLETED,
             started_at='2026-01-01T00:00:00', completed_at='2026-01-01T00:01:00',
+            execution_id='execution-restart', source_graph_id=project.graph_id,
+            execution_graph_id='execution-graph-restart', source_snapshot_sha256='snapshot-restart',
         ))
     jobs_path = str(tmp_path / 'jobs.sqlite3')
     app = Flask(__name__)

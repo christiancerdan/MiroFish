@@ -29,6 +29,18 @@ MAX_EXTRACTION_EDGES = 400
 MAX_EXISTING_ENTITIES = 200
 
 
+class SourceGraphNotCleanError(ValueError):
+    """The stored graph cannot establish a document-only source baseline."""
+
+
+class SourceGraphSealedError(ValueError):
+    """An execution already depends on this immutable source graph."""
+
+
+class GraphSnapshotConflictError(ValueError):
+    """An execution or graph identity belongs to a different snapshot."""
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -119,12 +131,20 @@ CREATE TABLE IF NOT EXISTS edge_sources(
  edge_uuid TEXT NOT NULL REFERENCES edges ON DELETE CASCADE,
  episode_uuid TEXT NOT NULL REFERENCES episodes ON DELETE CASCADE,
  PRIMARY KEY(edge_uuid,episode_uuid));
+CREATE TABLE IF NOT EXISTS graph_source_seals(
+ graph_id TEXT PRIMARY KEY REFERENCES graphs ON DELETE CASCADE,
+ source_snapshot_sha256 TEXT NOT NULL, sealed_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS graph_execution_snapshots(
+ graph_id TEXT PRIMARY KEY REFERENCES graphs ON DELETE CASCADE,
+ source_graph_id TEXT NOT NULL, execution_id TEXT NOT NULL UNIQUE,
+ simulation_id TEXT NOT NULL, source_snapshot_sha256 TEXT NOT NULL,
+ snapshot_created_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS entities_graph ON entities(graph_id,uuid);
 CREATE INDEX IF NOT EXISTS edges_graph ON edges(graph_id,uuid);
 CREATE INDEX IF NOT EXISTS episodes_graph ON episodes(graph_id,uuid);
 CREATE INDEX IF NOT EXISTS edges_source ON edges(source_node_uuid);
 CREATE INDEX IF NOT EXISTS edges_target ON edges(target_node_uuid);
-PRAGMA user_version=1;
+PRAGMA user_version=2;
 """
 
 
@@ -138,7 +158,7 @@ class LocalGraphClient:
         self._llm_client = llm_client
         with self._connect() as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1):
+            if version not in (0, 1, 2):
                 raise ValueError(f"Unsupported local graph database version: {version}")
             conn.execute("PRAGMA journal_mode=WAL")
             conn.executescript(_SCHEMA)
@@ -167,6 +187,20 @@ class LocalGraphClient:
         if row is None:
             _missing("graph", graph_id)
         return row
+
+    def _assert_writable(self, conn, graph_id):
+        if conn.execute("SELECT 1 FROM graph_source_seals WHERE graph_id=?", (graph_id,)).fetchone():
+            raise SourceGraphSealedError(
+                "Source graph is sealed by an execution snapshot. Rebuild a new source graph from uploaded documents to change it."
+            )
+
+    def _assert_ingestion_allowed(self, conn, graph_id, metadata):
+        self._assert_writable(conn, graph_id)
+        snapshot = conn.execute("SELECT execution_id,simulation_id FROM graph_execution_snapshots WHERE graph_id=?", (graph_id,)).fetchone()
+        if snapshot and (metadata.get("execution_id") != snapshot["execution_id"]
+                         or metadata.get("simulation_id") != snapshot["simulation_id"]
+                         or not (metadata.get("source") == "mirofish_simulation" or metadata.get("kind") == "simulation")):
+            raise GraphSnapshotConflictError("Execution graph ingestion requires matching execution_id and simulation_id simulation metadata")
 
     def _extract(self, graph_id, text, ontology):
         # Keep model context bounded. These are hints for stable names, never
@@ -198,6 +232,9 @@ class LocalGraphClient:
         return _validate_extraction(result, ontology, text)
 
     def _ingest(self, conn, graph_id, episode_uuid, data, metadata, reference_time, extraction):
+        # Recheck after extraction: a clone may have sealed this graph while
+        # the model request was in flight, outside the SQLite transaction.
+        self._assert_ingestion_allowed(conn, graph_id, metadata)
         if conn.execute("SELECT 1 FROM episodes WHERE uuid=?", (episode_uuid,)).fetchone():
             return
         self._graph(conn, graph_id)
@@ -325,8 +362,154 @@ class _Graph:
     def get(self, graph_id):
         with self.client._connect() as conn:
             row = dict(self.client._graph(conn, graph_id))
+            snapshot = conn.execute("SELECT * FROM graph_execution_snapshots WHERE graph_id=?", (graph_id,)).fetchone()
+            if snapshot:
+                row.update(dict(snapshot))
+            seal = conn.execute("SELECT * FROM graph_source_seals WHERE graph_id=?", (graph_id,)).fetchone()
+            if seal:
+                row.update(dict(seal))
         row["ontology"] = json.loads(row["ontology"])
         return _obj(**row)
+
+    def _clean_source(self, conn, graph_id):
+        """Validate complete native provenance, not model-derived summaries."""
+        def reject(reason):
+            raise SourceGraphNotCleanError(
+                f"Source graph is not a verified document-only baseline ({reason}). "
+                "Rebuild the source graph from uploaded documents before preparing or starting a simulation."
+            )
+
+        graph = dict(self.client._graph(conn, graph_id))
+        if conn.execute("SELECT 1 FROM graph_execution_snapshots WHERE graph_id=?", (graph_id,)).fetchone():
+            reject("execution graphs cannot be used as sources")
+        tables = ("documents", "episodes", "entities", "edges", "batches")
+        rows = {table: [dict(r) for r in conn.execute(f"SELECT * FROM {table} WHERE graph_id=? ORDER BY 1", (graph_id,))]
+                for table in tables}
+        episodes = {r["uuid"]: r for r in rows["episodes"]}
+        documents = {r["uuid"]: r for r in rows["documents"]}
+        if not episodes or set(episodes) != set(documents):
+            reject("missing document evidence or non-document episodes")
+        receipts = {}
+        batch_items = []
+        try:
+            for batch in rows["batches"]:
+                metadata = json.loads(batch["metadata"])
+                items = [dict(r) for r in conn.execute("SELECT * FROM batch_items WHERE batch_id=? ORDER BY sequence_index", (batch["batch_id"],))]
+                if (batch["status"] != "succeeded" or not items or not isinstance(metadata, dict) or metadata.get("graph_id") != graph_id
+                        or metadata.get("mirofish_operation_id") != batch["operation_id"]
+                        or type(metadata.get("chunk_count")) is not int or metadata["chunk_count"] != len(items)
+                        or [r["sequence_index"] for r in items] != list(range(len(items)))):
+                    reject("source batch is incomplete or has unknown provenance")
+                for item in items:
+                    item_metadata = json.loads(item["metadata"])
+                    if (not isinstance(item_metadata, dict) or not isinstance(batch["operation_id"], str)
+                            or not batch["operation_id"] or item_metadata.get("mirofish_operation_id") != batch["operation_id"]
+                            or type(item_metadata.get("chunk_index")) is not int
+                            or item_metadata["chunk_index"] != item["sequence_index"]
+                            or item_metadata.get("chunk_sha256") != hashlib.sha256(item["data"].encode()).hexdigest()
+                            or item["episode_uuid"] in receipts):
+                        reject("source chunk does not match its build receipt")
+                    receipts[item["episode_uuid"]] = item
+                batch_items.extend(items)
+            if set(receipts) != set(episodes):
+                reject("evidence lacks matching successful GraphBuilder receipts")
+            for source_id, episode in episodes.items():
+                document, receipt = documents[source_id], receipts[source_id]
+                metadata = json.loads(episode["metadata"])
+                if (episode["kind"] != "document" or episode["document_uuid"] != source_id
+                        or not isinstance(metadata, dict)
+                        or metadata.get("kind", "document") != "document"
+                        or metadata.get("source", "mirofish_document") != "mirofish_document"
+                        or any(key in metadata for key in ("simulation_id", "execution_id", "source_graph_id"))):
+                    reject("simulation or unknown-origin evidence is present")
+                if (episode["text"] != document["text"] or episode["text"] != receipt["data"]
+                        or episode["metadata"] != document["metadata"] or episode["metadata"] != receipt["metadata"]
+                        or episode["reference_time"] != receipt["reference_time"]
+                        or document["source_hash"] != hashlib.sha256(episode["text"].encode()).hexdigest()):
+                    reject("document content, hash, or receipt mismatch")
+        except (TypeError, KeyError, json.JSONDecodeError) as error:
+            reject(f"invalid stored provenance: {type(error).__name__}")
+        nodes = {r["uuid"] for r in rows["entities"]}
+        for edge in rows["edges"]:
+            if edge["source_node_uuid"] not in nodes or edge["target_node_uuid"] not in nodes:
+                reject("edge endpoint belongs to another graph")
+        for table, owner_table, owner_key in (("entity_sources", "entities", "entity_uuid"), ("edge_sources", "edges", "edge_uuid")):
+            links = [dict(r) for r in conn.execute(
+                f"SELECT s.* FROM {table} s JOIN {owner_table} o ON o.uuid=s.{owner_key} WHERE o.graph_id=? ORDER BY 1,2", (graph_id,))]
+            if ({r[owner_key] for r in links} != {r["uuid"] for r in rows[owner_table]}
+                    or any(r["episode_uuid"] not in episodes for r in links)):
+                reject("entity or edge evidence is missing or belongs to another graph")
+            rows[table] = links
+        # Include provenance receipts and source timestamps in the fingerprint.
+        # No execution-specific IDs or seal timestamps enter this baseline hash.
+        rows["batch_items"] = batch_items
+        snapshot_hash = hashlib.sha256(_json({"graph": graph, **rows}).encode()).hexdigest()
+        seal = conn.execute("SELECT source_snapshot_sha256 FROM graph_source_seals WHERE graph_id=?", (graph_id,)).fetchone()
+        if seal and seal[0] != snapshot_hash:
+            reject("sealed baseline has changed")
+        return graph, rows, snapshot_hash
+
+    def assert_clean_source(self, source_graph_id):
+        """Read/check a baseline before paid profile generation; no writes or LLM."""
+        with self.client._connect() as conn:
+            conn.execute("BEGIN")  # All validation reads see the same snapshot.
+            graph, _, snapshot_hash = self._clean_source(conn, source_graph_id)
+        graph["ontology"] = json.loads(graph["ontology"])
+        return _obj(**graph, source_snapshot_sha256=snapshot_hash)
+
+    def clone_for_execution(self, *, source_graph_id, graph_id, execution_id, simulation_id):
+        """Copy a verified baseline atomically; retries never reset run memory."""
+        for field, value in (("source_graph_id", source_graph_id), ("graph_id", graph_id),
+                             ("execution_id", execution_id), ("simulation_id", simulation_id)):
+            _text(value, field, maximum=200)
+        if source_graph_id == graph_id:
+            raise GraphSnapshotConflictError("Execution graph must differ from its source graph")
+        identity = {"source_graph_id": source_graph_id, "graph_id": graph_id,
+                    "execution_id": execution_id, "simulation_id": simulation_id}
+        with self.client._connect(write=True) as conn:
+            existing = conn.execute("SELECT * FROM graph_execution_snapshots WHERE graph_id=? OR execution_id=?", (graph_id, execution_id)).fetchall()
+            if existing:
+                if len(existing) != 1 or any(existing[0][key] != value for key, value in identity.items()):
+                    raise GraphSnapshotConflictError("Execution or target graph is already bound to a different snapshot")
+                # A finished execution remains readable/replayable after its
+                # original source is deleted. Its independent copy is retained.
+            else:
+                if conn.execute("SELECT 1 FROM graphs WHERE graph_id=?", (graph_id,)).fetchone():
+                    raise GraphSnapshotConflictError("Target graph already exists without this execution snapshot")
+                source, rows, snapshot_hash = self._clean_source(conn, source_graph_id)
+                now = _now()
+                conn.execute("INSERT OR IGNORE INTO graph_source_seals VALUES(?,?,?)", (source_graph_id, snapshot_hash, now))
+                conn.execute("INSERT INTO graphs VALUES(?,?,?,?,?,?)", (
+                    graph_id, source["name"], source["description"], source["ontology"], now, now))
+                maps = {table: {row["uuid"]: _id("snapshot", table, graph_id, row["uuid"]) for row in rows[table]}
+                        for table in ("documents", "episodes", "entities", "edges")}
+                # Use the ingestion identity for nodes/edges so subsequent
+                # simulation updates merge into the copied baseline correctly.
+                maps["entities"] = {r["uuid"]: _id("entity", graph_id, r["canonical_name"], r["entity_type"]) for r in rows["entities"]}
+                maps["edges"] = {r["uuid"]: _id("edge", graph_id, maps["entities"][r["source_node_uuid"]],
+                    maps["entities"][r["target_node_uuid"]], r["name"], _key(r["fact"])) for r in rows["edges"]}
+                for table in ("documents", "episodes", "entities", "edges"):
+                    for original in rows[table]:
+                        row = dict(original)
+                        row.update(uuid=maps[table][original["uuid"]], graph_id=graph_id)
+                        if table in {"documents", "episodes"}:
+                            metadata = json.loads(row["metadata"])
+                            metadata.update(source_graph_id=source_graph_id,
+                                            source_document_id=original["uuid"], source_episode_id=original["uuid"])
+                            row["metadata"] = _json(metadata)
+                        if table == "episodes":
+                            row["document_uuid"] = maps["documents"][original["document_uuid"]]
+                        elif table == "edges":
+                            row["source_node_uuid"] = maps["entities"][original["source_node_uuid"]]
+                            row["target_node_uuid"] = maps["entities"][original["target_node_uuid"]]
+                        columns = ",".join(row)
+                        conn.execute(f"INSERT INTO {table}({columns}) VALUES({','.join('?' for _ in row)})", list(row.values()))
+                for table, owner_table, owner_key in (("entity_sources", "entities", "entity_uuid"), ("edge_sources", "edges", "edge_uuid")):
+                    conn.executemany(f"INSERT INTO {table} VALUES(?,?)", [
+                        (maps[owner_table][r[owner_key]], maps["episodes"][r["episode_uuid"]]) for r in rows[table]])
+                conn.execute("INSERT INTO graph_execution_snapshots VALUES(?,?,?,?,?,?)", (
+                    graph_id, source_graph_id, execution_id, simulation_id, snapshot_hash, now))
+        return self.get(graph_id)
 
     def delete(self, graph_id):
         with self.client._connect(write=True) as conn:
@@ -363,6 +546,7 @@ class _Graph:
                     raise ValueError("Ontology endpoint must be a declared entity type or Entity")
         _json(normalized)
         with self.client._connect(write=True) as conn:
+            self.client._assert_writable(conn, graph_id)
             current = self.client._graph(conn, graph_id)
             if current["ontology"] != _json(normalized) and conn.execute("SELECT 1 FROM episodes WHERE graph_id=? LIMIT 1", (graph_id,)).fetchone():
                 raise ValueError("Cannot replace ontology after graph ingestion")
@@ -388,6 +572,7 @@ class _Graph:
         episode_uuid = _id("episode", graph_id, data, metadata, reference)
         with self.client._connect() as conn:
             graph = self.client._graph(conn, graph_id)
+            self.client._assert_ingestion_allowed(conn, graph_id, metadata)
             exists = conn.execute("SELECT 1 FROM episodes WHERE uuid=?", (episode_uuid,)).fetchone()
         if not exists:
             ontology = json.loads(graph["ontology"])
@@ -530,6 +715,7 @@ class _Batch:
         batch_id = _id("batch", graph_id, operation)
         with self.client._connect(write=True) as conn:
             self.client._graph(conn, graph_id)
+            self.client._assert_writable(conn, graph_id)
             old = conn.execute("SELECT metadata FROM batches WHERE batch_id=?", (batch_id,)).fetchone()
             if old and old["metadata"] != _json(metadata):
                 raise ValueError("Batch operation already exists with different metadata")
@@ -543,6 +729,7 @@ class _Batch:
         result = []
         with self.client._connect(write=True) as conn:
             batch = self._row(conn, batch_id)
+            self.client._assert_writable(conn, batch["graph_id"])
             next_index = conn.execute("SELECT COALESCE(MAX(sequence_index)+1,0) FROM batch_items WHERE batch_id=?", (batch_id,)).fetchone()[0]
             for item in items:
                 get = item.get if isinstance(item, dict) else lambda k, default=None: getattr(item, k, default)
@@ -582,6 +769,8 @@ class _Batch:
                 return self.get(batch_id=batch_id)
             graph = self.client._graph(conn, batch["graph_id"])
             items = conn.execute("SELECT * FROM batch_items WHERE batch_id=? ORDER BY sequence_index", (batch_id,)).fetchall()
+            for row in items:
+                self.client._assert_ingestion_allowed(conn, batch["graph_id"], json.loads(row["metadata"]))
         if not items or [r["sequence_index"] for r in items] != list(range(len(items))):
             raise ValueError("Batch must contain contiguous items starting at zero")
         expected = json.loads(batch["metadata"]).get("chunk_count")

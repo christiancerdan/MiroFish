@@ -19,6 +19,8 @@ from ..services.simulation_runner import (
     SimulationRunner,
     RunnerStatus,
     SimulationStopPending,
+    SimulationIsolationError,
+    assert_clean_simulation_source,
 )
 from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
 from ..utils.logger import get_logger
@@ -451,6 +453,11 @@ def run_prepare_job(task_id, parameters):
                 }
             ):
                 raise ValueError("Simulation or graph ingestion is active; preparation cannot start")
+            if get_graph_readers(graph_id):
+                raise SimulationIsolationError("A report or preparation is reading this graph; wait before preparing again.")
+            assert_clean_simulation_source(graph_id)
+            with task_manager.publication_guard():
+                SimulationRunner.invalidate_prepared_run(simulation_id)
             register_graph_reader(graph_id, reader_id)
             reader_registered = True
         document_text = ProjectManager.get_extracted_text(parameters["project_id"]) or ""
@@ -623,6 +630,11 @@ def prepare_simulation():
         if type(parallel_profile_count) is not int or not 1 <= parallel_profile_count <= 32:
             return jsonify({"success": False, "error": "parallel_profile_count must be an integer between 1 and 32"}), 400
 
+        # 检查是否强制重新生成
+        force_regenerate = data.get('force_regenerate', False)
+        if not isinstance(force_regenerate, bool):
+            return jsonify({"success": False, "error": "force_regenerate must be a JSON boolean"}), 400
+
         with _prepare_lock:
             if simulation_id in _prepare_claims:
                 return jsonify({"success": False, "error": "Simulation preparation is already in progress"}), 409
@@ -638,10 +650,16 @@ def prepare_simulation():
                 "error": t('api.simulationNotFound', id=simulation_id)
             }), 404
         
-        # 检查是否强制重新生成
-        force_regenerate = data.get('force_regenerate', False)
-        if not isinstance(force_regenerate, bool):
-            return jsonify({"success": False, "error": "force_regenerate must be a JSON boolean"}), 400
+        # Preparation profiles must never inherit earlier simulated observations,
+        # including the cached "already prepared" response path.
+        project = ProjectManager.get_project(state.project_id)
+        if not project:
+            return jsonify({"success": False, "error": t('api.projectNotFound', id=state.project_id)}), 404
+        if not state.graph_id or state.graph_id != project.graph_id or project.status != ProjectStatus.GRAPH_COMPLETED:
+            return jsonify({"success": False, "error": "The source graph changed or is incomplete; rebuild and prepare this simulation again."}), 409
+        with graph_lifecycle_lock(state.graph_id):
+            assert_clean_simulation_source(state.graph_id)
+
         logger.info(f"开始处理 /prepare 请求: simulation_id={simulation_id}, force_regenerate={force_regenerate}")
         
         # 检查是否已经准备完成（避免重复生成）
@@ -747,6 +765,9 @@ def prepare_simulation():
             }
         })
         
+    except SimulationIsolationError as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
+
     except ValueError as e:
         return jsonify({
             "success": False,
@@ -1683,12 +1704,12 @@ def start_simulation():
         # acquire a lease between the check and destructive forced-rerun cleanup.
         project = ProjectManager.get_project(state.project_id)
         current_project_graph = project.graph_id if project else None
-        graph_id = current_project_graph if enable_graph_memory_update else None
-        if enable_graph_memory_update and not graph_id:
+        graph_id = current_project_graph
+        if not graph_id or project.status != ProjectStatus.GRAPH_COMPLETED:
             return jsonify({
                 "success": False,
-                "error": t('api.graphIdRequiredForMemory'),
-            }), 400
+                "error": "A completed source graph is required for every simulation execution.",
+            }), 409
         reader_graph_id = current_project_graph or state.graph_id
         graph_guard = graph_lifecycle_lock(reader_graph_id) if reader_graph_id else nullcontext()
         with graph_guard:
@@ -1757,19 +1778,9 @@ def start_simulation():
                                 "error": "Previous simulation did not reach STOPPED",
                             }), 409
 
-                    # 如果是强制模式，清理运行日志
-                    if force:
-                        logger.info(f"强制模式：清理模拟日志 {simulation_id}")
-                        cleanup_result = SimulationRunner.cleanup_simulation_logs(simulation_id)
-                        if not cleanup_result.get("success"):
-                            return jsonify({
-                                "success": False,
-                                "error": (
-                                    "Failed to clean previous simulation logs: "
-                                    f"{cleanup_result.get('errors')}"
-                                ),
-                            }), 500
-                        force_restarted = True
+                    # The runner clears prior artifacts after validating and cloning
+                    # the source. Force only authorizes stopping an active run.
+                    force_restarted = force
 
                     # 进程不存在或已结束，重置状态为 ready
                     logger.info(f"模拟 {simulation_id} 准备工作已完成，重置状态为 ready（原状态: {state.status.value}）")
@@ -1782,44 +1793,44 @@ def start_simulation():
                         "error": t('api.simNotReady', status=state.status.value)
                     }), 400
 
-            if enable_graph_memory_update:
-                # Re-read both references under the same per-graph lock used
-                # by reset/delete. Keep the lock through updater creation in
-                # start_simulation so check -> claim is atomic.
-                refreshed_state = manager.get_simulation(simulation_id)
-                refreshed_project = (
-                    ProjectManager.get_project(refreshed_state.project_id)
-                    if refreshed_state
-                    else None
-                )
-                current_graph_id = (
-                    refreshed_project.graph_id if refreshed_project else None
-                )
-                if current_graph_id != graph_id:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "The project graph changed while the simulation "
-                            "was starting; retry after refreshing the project"
-                        ),
-                    }), 409
-                if (
-                    refreshed_state.graph_id
-                    and refreshed_state.graph_id != current_graph_id
-                ):
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "The simulation references an older graph; "
-                            "prepare it again before enabling graph memory"
-                        ),
-                    }), 409
-                state = refreshed_state
-                logger.info(
-                    "启用图谱记忆更新: simulation_id=%s, graph_id=%s",
-                    simulation_id,
-                    graph_id,
-                )
+            # Re-read both references under the same per-graph lock used
+            # by reset/delete. Keep the lock through updater creation in
+            # start_simulation so check -> claim is atomic.
+            refreshed_state = manager.get_simulation(simulation_id)
+            refreshed_project = (
+                ProjectManager.get_project(refreshed_state.project_id)
+                if refreshed_state
+                else None
+            )
+            current_graph_id = (
+                refreshed_project.graph_id if refreshed_project else None
+            )
+            if current_graph_id != graph_id:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "The project graph changed while the simulation "
+                        "was starting; retry after refreshing the project"
+                    ),
+                }), 409
+            if (
+                refreshed_state is None
+                or refreshed_state.graph_id != current_graph_id
+            ):
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "The simulation references an older graph; "
+                        "prepare it again before starting"
+                    ),
+                }), 409
+            assert_clean_simulation_source(current_graph_id)
+            state = refreshed_state
+            logger.info(
+                "启用图谱记忆更新: simulation_id=%s, graph_id=%s",
+                simulation_id,
+                graph_id,
+            )
 
             # 启动模拟。启用图谱写入时仍持有 graph_guard，直到 updater
             # claim 与进程资源全部发布完成。
@@ -1836,14 +1847,16 @@ def start_simulation():
             response_data['max_rounds_applied'] = max_rounds
         response_data['graph_memory_update_enabled'] = enable_graph_memory_update
         response_data['force_restarted'] = force_restarted
-        if enable_graph_memory_update:
-            response_data['graph_id'] = graph_id
+        response_data['graph_id'] = run_state.execution_graph_id
         
         return jsonify({
             "success": True,
             "data": response_data
         })
         
+    except SimulationIsolationError as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
+
     except ValueError as e:
         return jsonify({
             "success": False,

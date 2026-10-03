@@ -23,6 +23,7 @@ def storage(tmp_path, monkeypatch):
     projects.mkdir()
     monkeypatch.setattr(SimulationManager, "SIMULATION_DATA_DIR", str(simulations))
     monkeypatch.setattr(Config, "OASIS_SIMULATION_DATA_DIR", str(simulations))
+    monkeypatch.setattr(simulation_api.SimulationRunner, "RUN_STATE_DIR", str(simulations))
     monkeypatch.setattr(ProjectManager, "PROJECTS_DIR", str(projects))
     return simulations, projects
 
@@ -132,6 +133,7 @@ def prepared_inputs(storage, monkeypatch):
     project.status = ProjectStatus.GRAPH_COMPLETED
     ProjectManager.save_project(project)
     state = SimulationManager().create_simulation(project.project_id, "graph-test")
+    monkeypatch.setattr(simulation_api, "assert_clean_simulation_source", lambda _: None)
     monkeypatch.setattr(simulation_api, "ZepEntityReader", lambda: SimpleNamespace(
         filter_defined_entities=lambda **kwargs: SimpleNamespace(filtered_count=1, entity_types=["Person"])
     ))

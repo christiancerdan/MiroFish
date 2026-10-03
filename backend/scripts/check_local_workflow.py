@@ -229,6 +229,9 @@ def main():
                 assert previous.get("round_actions"), "Report-only resume needs verified autonomous actions"
                 state = request("get", f"/api/simulation/{simulation_id}/run-status")
                 assert state.get("runner_status") in {"completed", "stopped"}, "Report-only resume needs a finished simulation"
+                assert state.get("execution_id") and state.get("execution_graph_id"), "Legacy runs must be rerun with independent execution memory before generating a report"
+                proof["execution_id"] = state["execution_id"]
+                proof["execution_graph_id"] = state["execution_graph_id"]
                 for key in ("fixture_overrides", "round_actions", "seed_action_count", "simulation"):
                     proof[key] = previous[key]
                 proof["report_only"] = True
@@ -293,7 +296,13 @@ def main():
                     time.sleep(2)
                 else:
                     raise TimeoutError("Simulation memory did not drain")
-                sources = ZepToolsService().get_evidence(graph_id)
+                execution_graph_id = state.get("execution_graph_id")
+                assert state.get("execution_id") and execution_graph_id and execution_graph_id != graph_id, "Simulation did not bind independent execution memory"
+                proof["execution_id"] = state["execution_id"]
+                proof["execution_graph_id"] = execution_graph_id
+                original_sources = ZepToolsService().get_evidence(graph_id)
+                assert all(source["kind"] != "simulation" for source in original_sources), "Simulation contaminated the original document graph"
+                sources = ZepToolsService().get_evidence(execution_graph_id)
                 simulated_sources = [s for s in sources if s["kind"] == "simulation"]
                 action_path = expected_simulations / simulation_id / "reddit" / "actions.jsonl"
                 action_records = [json.loads(line) for line in action_path.read_text().splitlines() if line.strip()]
@@ -332,6 +341,7 @@ def main():
             uncertainty = report["uncertainty"]
             assert uncertainty["calibrated"] is False and uncertainty["limitations"]
             manifest = report["manifest"]
+            assert manifest.get("execution_id") == proof["execution_id"], "Report belongs to a different execution"
             evidence_hash = digest(json.dumps(report["evidence"], ensure_ascii=False, sort_keys=True, separators=(",", ":")))
             assert manifest["input_hashes"]["evidence_snapshot"] == evidence_hash
             markdown = report["markdown_content"]

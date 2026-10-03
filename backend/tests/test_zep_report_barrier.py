@@ -163,7 +163,8 @@ def test_report_reader_lease_blocks_graph_start_and_delete(monkeypatch, enable_g
         status=ProjectStatus.GRAPH_COMPLETED,
         simulation_requirement="mock requirement",
     )
-    run_state = SimpleNamespace(runner_status=RunnerStatus.COMPLETED)
+    run_state = SimpleNamespace(runner_status=RunnerStatus.COMPLETED, execution_id="execution-1",
+                                source_graph_id="graph-1", execution_graph_id="execution-graph-1")
     queued_jobs = []
     runner_calls = []
     failed_tasks = []
@@ -288,7 +289,7 @@ def test_report_reader_lease_blocks_graph_start_and_delete(monkeypatch, enable_g
         queued_job = queued_jobs[0]
         assert queued_job["handler"] == "report_generate"
         assert queued_job["parameters"]["project_id"] == "proj-1"
-        assert queued_job["dedupe_key"] == "report_generate:sim-1"
+        assert queued_job["dedupe_key"] == "report_generate:sim-1:execution-1"
         with app.test_request_context(
             "/api/report/generate", method="POST", json={"simulation_id": "sim-1"},
         ):
@@ -314,9 +315,11 @@ def test_report_job_revalidates_queued_inputs_before_provider_call(monkeypatch, 
     )
     run = SimpleNamespace(
         runner_status=RunnerStatus.COMPLETED, started_at="first-run", completed_at="finished",
+        execution_id="execution-1", source_graph_id="graph-1", execution_graph_id="execution-graph-1",
     )
     parameters = {
-        "simulation_id": "sim-1", "project_id": "proj-1", "graph_id": "graph-1",
+        "simulation_id": "sim-1", "project_id": "proj-1", "graph_id": "execution-graph-1",
+        "execution_id": "execution-1", "source_graph_id": "graph-1", "execution_graph_id": "execution-graph-1",
         "report_id": "report-1", "simulation_requirement": "original requirement",
         "run_started_at": "first-run", "run_completed_at": "finished", "locale": "en",
     }
@@ -353,7 +356,8 @@ def test_report_job_preserves_failure_type_and_releases_reader(monkeypatch):
     error.code = "budget_exceeded"
     failures = []
     parameters = {
-        "simulation_id": "sim-1", "project_id": "proj-1", "graph_id": "graph-1",
+        "simulation_id": "sim-1", "project_id": "proj-1", "graph_id": "execution-graph-1",
+        "execution_id": "execution-1", "source_graph_id": "graph-1", "execution_graph_id": "execution-graph-1",
         "report_id": "report-1", "simulation_requirement": "requirement",
     }
     monkeypatch.setattr(report_api, "TaskManager", lambda: SimpleNamespace(
@@ -367,7 +371,9 @@ def test_report_job_preserves_failure_type_and_releases_reader(monkeypatch):
     monkeypatch.setattr(report_api.ProjectManager, "get_project", lambda _project_id: SimpleNamespace(
         graph_id="graph-1", status=ProjectStatus.GRAPH_COMPLETED, simulation_requirement="requirement",
     ))
-    monkeypatch.setattr(report_api.SimulationRunner, "get_run_state", lambda _simulation_id: SimpleNamespace(runner_status=RunnerStatus.COMPLETED))
+    monkeypatch.setattr(report_api.SimulationRunner, "get_run_state", lambda _simulation_id: SimpleNamespace(
+        runner_status=RunnerStatus.COMPLETED, execution_id="execution-1", source_graph_id="graph-1",
+        execution_graph_id="execution-graph-1"))
     monkeypatch.setattr(report_api.ZepGraphMemoryManager, "get_updater", lambda _simulation_id: None)
     def fail_provider(**_kwargs):
         readers = get_graph_readers("graph-1")
@@ -394,6 +400,7 @@ def test_report_enqueue_idempotency_preserves_report_id_after_restart(monkeypatc
     ))
     monkeypatch.setattr(report_api.SimulationRunner, "get_run_state", lambda _simulation_id: SimpleNamespace(
         runner_status=RunnerStatus.COMPLETED, started_at="first-run", completed_at="finished",
+        execution_id="execution-1", source_graph_id="graph-1", execution_graph_id="execution-graph-1",
     ))
     monkeypatch.setattr(report_api.ZepGraphMemoryManager, "get_updater", lambda _simulation_id: None)
     monkeypatch.setattr(report_api.ReportManager, "get_report_by_simulation", lambda _simulation_id: None)

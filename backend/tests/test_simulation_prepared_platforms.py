@@ -109,6 +109,7 @@ def test_completed_reddit_only_simulation_can_force_restart(prepared_simulation,
         calls.append('start')
         return SimulationRunState(state.simulation_id, runner_status=RunnerStatus.RUNNING)
 
+    monkeypatch.setattr(simulation_api, 'assert_clean_simulation_source', lambda _: None)
     monkeypatch.setattr(simulation_api.SimulationRunner, 'cleanup_simulation_logs', cleanup)
     monkeypatch.setattr(simulation_api.SimulationRunner, 'start_simulation', start)
     app = Flask(__name__)
@@ -119,4 +120,4 @@ def test_completed_reddit_only_simulation_can_force_restart(prepared_simulation,
     assert response.status_code == 200, response.get_json()
     assert response.json['data']['force_restarted'] is True
     assert response.json['data']['runner_status'] == 'running'
-    assert calls == ['cleanup', 'start']
+    assert calls == ['start']  # Artifact cleanup is owned by the runner after the source clone succeeds.

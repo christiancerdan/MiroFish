@@ -40,7 +40,9 @@
       <!-- Left Panel: Graph -->
       <div class="panel-wrapper left" :style="leftPanelStyle">
         <GraphPanel 
+          :key="selectedGraphId"
           :graphData="graphData"
+          :contextLabel="selectedExecutionId ? `Run ${selectedExecutionId}` : `Report ${currentReportId}`"
           :loading="graphLoading"
           :currentPhase="5"
           :isSimulating="false"
@@ -52,6 +54,7 @@
       <!-- Right Panel: Step5 深度互动 -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step5Interaction
+          :key="currentReportId"
           :reportId="currentReportId"
           :simulationId="simulationId"
           :systemLogs="systemLogs"
@@ -69,8 +72,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import GraphPanel from '../components/GraphPanel.vue'
 import Step5Interaction from '../components/Step5Interaction.vue'
-import { getProject, getGraphData } from '../api/graph'
-import { getSimulation } from '../api/simulation'
+import { getGraphData } from '../api/graph'
 import { getReport } from '../api/report'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 
@@ -89,9 +91,11 @@ const viewMode = ref('workbench')
 // Data State
 const currentReportId = ref(route.params.reportId)
 const simulationId = ref(null)
-const projectData = ref(null)
+const selectedGraphId = ref(null)
+const selectedExecutionId = ref(null)
 const graphData = ref(null)
 const graphLoading = ref(false)
+let graphRequestId = 0
 const systemLogs = ref([])
 const currentStatus = ref('ready') // ready | processing | completed | error
 
@@ -144,63 +148,54 @@ const toggleMaximize = (target) => {
 
 // --- Data Logic ---
 const loadReportData = async () => {
+  const reportId = currentReportId.value
+  selectedGraphId.value = null
+  selectedExecutionId.value = null
+  simulationId.value = null
+  graphData.value = null
+  graphLoading.value = false
   try {
-    addLog(t('log.loadReportData', { id: currentReportId.value }))
-
-    // 获取 report 信息以获取 simulation_id
-    const reportRes = await getReport(currentReportId.value)
+    addLog(t('log.loadReportData', { id: reportId }))
+    const reportRes = await getReport(reportId)
+    // Navigation may finish a newer request before this one returns.
+    if (reportId !== currentReportId.value) return
     if (reportRes.success && reportRes.data) {
       const reportData = reportRes.data
       simulationId.value = reportData.simulation_id
-
-      if (simulationId.value) {
-        // 获取 simulation 信息
-        const simRes = await getSimulation(simulationId.value)
-        if (simRes.success && simRes.data) {
-          const simData = simRes.data
-
-          // 获取 project 信息
-          if (simData.project_id) {
-            const projRes = await getProject(simData.project_id)
-            if (projRes.success && projRes.data) {
-              projectData.value = projRes.data
-              addLog(t('log.projectLoadSuccess', { id: projRes.data.project_id }))
-
-              // 获取 graph 数据
-              if (projRes.data.graph_id) {
-                await loadGraph(projRes.data.graph_id)
-              }
-            }
-          }
-        }
-      }
+      // A saved report owns its graph, including legacy reports. Never resolve
+      // through the simulation's latest run or the project's source graph.
+      selectedGraphId.value = reportData.graph_id || null
+      selectedExecutionId.value = reportData.manifest?.execution_id || null
+      if (selectedGraphId.value) await loadGraph(selectedGraphId.value)
     } else {
       addLog(t('log.getReportInfoFailed', { error: reportRes.error || t('common.unknownError') }))
     }
   } catch (err) {
-    addLog(t('log.loadException', { error: err.message }))
+    if (reportId === currentReportId.value) addLog(t('log.loadException', { error: err.message }))
   }
 }
 
 const loadGraph = async (graphId) => {
+  const requestId = ++graphRequestId
+  const isCurrent = () => requestId === graphRequestId && graphId === selectedGraphId.value
   graphLoading.value = true
   
   try {
     const res = await getGraphData(graphId)
-    if (res.success) {
+    if (res.success && isCurrent()) {
       graphData.value = res.data
       addLog(t('log.graphDataLoadSuccess'))
     }
   } catch (err) {
-    addLog(t('log.graphLoadFailed', { error: err.message }))
+    if (isCurrent()) addLog(t('log.graphLoadFailed', { error: err.message }))
   } finally {
-    graphLoading.value = false
+    if (isCurrent()) graphLoading.value = false
   }
 }
 
 const refreshGraph = () => {
-  if (projectData.value?.graph_id) {
-    loadGraph(projectData.value.graph_id)
+  if (selectedGraphId.value) {
+    loadGraph(selectedGraphId.value)
   }
 }
 

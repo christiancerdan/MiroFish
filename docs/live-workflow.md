@@ -25,9 +25,9 @@ backend/.venv-simulation/bin/python backend/scripts/check_local_workflow.py \
   --evidence-path /tmp/mirofish-workflow-resumed.json
 ```
 
-Resuming reopens persisted state in a new process and reruns the simulation/report stages with the same cumulative project budget. It avoids repeating ontology, graph and profile generation. It is an explicit retry with possible repeated provider effects; it is not continuation of a crashed simulation process or an exactly-once guarantee. Do not use this fixture script to resume a real user project.
+Resuming reopens persisted state in a new process and reruns the simulation/report stages with the same cumulative project budget and a fresh execution graph. It avoids repeating ontology, graph and profile generation. Legacy fixtures whose source graph already contains simulation observations require a fresh fixture rather than resume. This is an explicit retry with possible repeated provider effects; it is not continuation of a crashed simulation process or an exactly-once guarantee. Do not use this fixture script to resume a real user project.
 
-Add `--report-only` with `--resume-proof` to reuse a completed simulation and regenerate only the report. This mode requires previously verified model-driven actions, retains the same project budget, and checks that the resulting outline has 2–5 nonempty unique section titles. It does not rerun ingestion, preparation, or simulation.
+Add `--report-only` with `--resume-proof` to reuse a completed simulation and regenerate only the report. This mode requires previously verified model-driven actions and an independent execution binding, retains the same project budget, and checks that the resulting outline has 2–5 nonempty unique section titles. It does not rerun ingestion, preparation, or simulation.
 
 ## Recorded result
 

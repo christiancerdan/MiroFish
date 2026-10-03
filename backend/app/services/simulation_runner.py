@@ -12,18 +12,22 @@ import threading
 import subprocess
 import signal
 import atexit
+import uuid
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass, field
 from contextlib import nullcontext
+from functools import wraps
 from datetime import datetime
 from enum import Enum
 from queue import Queue
+from zep_cloud.errors.not_found_error import NotFoundError
 
 from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.locale import get_locale, set_locale
 from ..utils.storage import atomic_write_json, storage_path, validate_storage_id
 from ..utils.zep import (
+    get_zep_client,
     ZEP_HTTP_REQUEST_TIMEOUT_SECONDS,
     ZEP_INGESTION_WAIT_TIMEOUT_SECONDS,
 )
@@ -54,6 +58,41 @@ class RunnerStatus(str, Enum):
 
 class SimulationStopPending(TimeoutError):
     """The monitor still owns a bounded graph-ingestion finalization."""
+
+
+class SimulationIsolationError(ValueError):
+    """An execution cannot safely read an independent source snapshot."""
+
+    code = "execution_isolation_unavailable"
+
+
+def assert_clean_simulation_source(graph_id: str):
+    """Reject unsupported backends and contaminated legacy preparation inputs."""
+    if str(Config.GRAPH_BACKEND).strip().lower() != "local":
+        raise SimulationIsolationError(
+            "Independent simulation executions require GRAPH_BACKEND=local; "
+            "Zep Cloud execution snapshots are not supported. Rebuild the source graph locally."
+        )
+    if not graph_id:
+        raise SimulationIsolationError("A completed source graph is required before preparing or starting a simulation.")
+    try:
+        return get_zep_client().graph.assert_clean_source(graph_id)
+    except (ValueError, NotFoundError) as error:
+        raise SimulationIsolationError(f"Cannot isolate this source graph; rebuild it from original documents. {error}") from error
+
+
+def _execution_command(method):
+    """Keep an IPC request bound to the execution observed before lock wait."""
+    @wraps(method)
+    def locked(cls, simulation_id, *args, **kwargs):
+        initial = cls.get_run_state(simulation_id)
+        execution_id = initial.execution_id if initial else None
+        with cls._finalization_lock(simulation_id):
+            current = cls.get_run_state(simulation_id)
+            if (current.execution_id if current else None) != execution_id:
+                raise SimulationIsolationError("The simulation execution changed before this command could be sent; refresh and retry.")
+            return method(cls, simulation_id, *args, **kwargs)
+    return locked
 
 
 @dataclass
@@ -154,6 +193,10 @@ class SimulationRunState:
     error_code: Optional[str] = None
     budget_run_id: Optional[str] = None
     worker_runtime_dir: Optional[str] = None
+    execution_id: Optional[str] = None
+    source_graph_id: Optional[str] = None
+    execution_graph_id: Optional[str] = None
+    source_snapshot_sha256: Optional[str] = None
     
     # 进程ID（用于停止）
     process_pid: Optional[int] = None
@@ -198,6 +241,10 @@ class SimulationRunState:
             "error": self.error,
             "error_code": self.error_code,
             "budget_run_id": self.budget_run_id,
+            "execution_id": self.execution_id,
+            "source_graph_id": self.source_graph_id,
+            "execution_graph_id": self.execution_graph_id,
+            "source_snapshot_sha256": self.source_snapshot_sha256,
             "process_pid": self.process_pid,
         }
     
@@ -354,6 +401,10 @@ class SimulationRunner:
                 error_code=data.get("error_code"),
                 budget_run_id=data.get("budget_run_id"),
                 worker_runtime_dir=data.get("worker_runtime_dir"),
+                execution_id=data.get("execution_id"),
+                source_graph_id=data.get("source_graph_id"),
+                execution_graph_id=data.get("execution_graph_id"),
+                source_snapshot_sha256=data.get("source_snapshot_sha256"),
                 process_pid=data.get("process_pid"),
             )
             
@@ -392,13 +443,34 @@ class SimulationRunner:
         cls._run_states[state.simulation_id] = state
     
     @classmethod
+    def invalidate_prepared_run(cls, simulation_id: str) -> None:
+        """Re-preparation changes model inputs, so require a new execution."""
+        with cls._finalization_lock(simulation_id):
+            state = cls.get_run_state(simulation_id)
+            if state and state.runner_status in {
+                RunnerStatus.STARTING, RunnerStatus.RUNNING,
+                RunnerStatus.PAUSED, RunnerStatus.STOPPING,
+            }:
+                raise SimulationIsolationError("An active execution cannot be re-prepared.")
+            if ZepGraphMemoryManager.get_updater(simulation_id) is not None:
+                raise SimulationIsolationError("Graph ingestion must finish before re-preparation.")
+            if state and state.execution_id:
+                archive_path = storage_path(cls.RUN_STATE_DIR, simulation_id, "executions", state.execution_id, "run_state.json")
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+                atomic_write_json(archive_path, state.to_detail_dict())
+            state_path = storage_path(cls.RUN_STATE_DIR, simulation_id, "run_state.json")
+            if os.path.exists(state_path):
+                os.remove(state_path)
+            cls._run_states.pop(simulation_id, None)
+
+    @classmethod
     def start_simulation(
         cls,
         simulation_id: str,
         platform: str = "parallel",  # twitter / reddit / parallel
         max_rounds: int = None,  # 最大模拟轮数（可选，用于截断过长的模拟）
         enable_graph_memory_update: bool = False,  # 是否将活动更新到Zep图谱
-        graph_id: str = None  # Zep图谱ID（启用图谱更新时必需）
+        graph_id: str = None  # Source graph; required for every isolated execution.
     ) -> SimulationRunState:
         """
         启动模拟
@@ -408,7 +480,7 @@ class SimulationRunner:
             platform: 运行平台 (twitter/reddit/parallel)
             max_rounds: 最大模拟轮数（可选，用于截断过长的模拟）
             enable_graph_memory_update: 是否将Agent活动动态更新到Zep图谱
-            graph_id: Zep图谱ID（启用图谱更新时必需）
+            graph_id: Original document graph, required even when memory updates are disabled.
             
         Returns:
             SimulationRunState
@@ -422,6 +494,14 @@ class SimulationRunner:
         
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
+
+        if str(Config.GRAPH_BACKEND).strip().lower() != "local":
+            raise SimulationIsolationError(
+                "Independent simulation executions require GRAPH_BACKEND=local; "
+                "Zep Cloud execution snapshots are not supported. Rebuild the source graph locally."
+            )
+        if not graph_id:
+            raise SimulationIsolationError("A completed source graph is required for every simulation execution.")
         
         # 初始化运行状态
         time_config = config.get("time_config", {})
@@ -443,6 +523,9 @@ class SimulationRunner:
             total_simulation_hours=total_hours,
             started_at=datetime.now().isoformat(),
             budget_run_id=config.get("project_id"),
+            execution_id=f"exec_{uuid.uuid4().hex}",
+            source_graph_id=graph_id,
+            execution_graph_id=f"mirofish_exec_{uuid.uuid4().hex}",
         )
         
         # Atomically claim this simulation ID. The expensive updater/process
@@ -460,20 +543,46 @@ class SimulationRunner:
                 existing and existing.runner_status in active_statuses
             ) or ZepGraphMemoryManager.get_updater(simulation_id) is not None:
                 raise ValueError(f"模拟已在运行或结束处理中: {simulation_id}")
+            # Clone before replacing any prior state or logs. Invalid legacy
+            # graphs therefore leave the previous execution recoverable.
+            try:
+                snapshot = get_zep_client().graph.clone_for_execution(
+                    source_graph_id=graph_id,
+                    graph_id=state.execution_graph_id,
+                    execution_id=state.execution_id,
+                    simulation_id=simulation_id,
+                )
+            except (ValueError, NotFoundError) as error:
+                raise SimulationIsolationError(f"Cannot isolate this source graph; rebuild it from original documents. {error}") from error
+            state.source_snapshot_sha256 = snapshot.source_snapshot_sha256
+            if existing and existing.execution_id:
+                archive_path = storage_path(
+                    cls.RUN_STATE_DIR, simulation_id, "executions",
+                    existing.execution_id, "run_state.json",
+                )
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+                atomic_write_json(archive_path, existing.to_detail_dict())
+            # Each launch starts with empty logs, both platform databases and
+            # IPC queues, including an ordinary rerun without the force flag.
+            cleanup = cls.cleanup_simulation_logs(simulation_id)
+            if not cleanup.get("success"):
+                raise SimulationIsolationError(
+                    f"Cannot clear previous execution artifacts: {cleanup.get('errors')}"
+                )
             cls._save_run_state(state)
         
         # 如果启用图谱记忆更新，创建更新器
         if enable_graph_memory_update:
-            if not graph_id:
-                raise ValueError("启用图谱记忆更新时必须提供 graph_id")
-            
             try:
                 from ..utils.budget import BudgetContext
                 budget_context = BudgetContext(state.budget_run_id) if state.budget_run_id else nullcontext()
                 with budget_context:
-                    ZepGraphMemoryManager.create_updater(simulation_id, graph_id)
+                    ZepGraphMemoryManager.create_updater(
+                        simulation_id, state.execution_graph_id,
+                        execution_id=state.execution_id,
+                    )
                 cls._graph_memory_enabled[simulation_id] = True
-                logger.info(f"已启用图谱记忆更新: simulation_id={simulation_id}, graph_id={graph_id}")
+                logger.info(f"已启用图谱记忆更新: simulation_id={simulation_id}, graph_id={state.execution_graph_id}")
             except Exception as e:
                 logger.error(f"创建图谱记忆更新器失败: {e}")
                 cls._graph_memory_enabled[simulation_id] = False
@@ -582,7 +691,7 @@ class SimulationRunner:
 
             monitor_thread = threading.Thread(
                 target=cls._monitor_simulation,
-                args=(simulation_id, current_locale),
+                args=(simulation_id, current_locale, state.execution_id),
                 daemon=True
             )
 
@@ -647,7 +756,7 @@ class SimulationRunner:
         return state
     
     @classmethod
-    def _monitor_simulation(cls, simulation_id: str, locale: str = 'zh'):
+    def _monitor_simulation(cls, simulation_id: str, locale: str = 'zh', execution_id: str | None = None):
         """监控模拟进程，解析动作日志"""
         set_locale(locale)
         
@@ -660,6 +769,9 @@ class SimulationRunner:
         
         if not process or not state:
             return
+        if execution_id is not None and state.execution_id != execution_id:
+            return
+        execution_id = state.execution_id
         
         twitter_position = 0
         reddit_position = 0
@@ -719,6 +831,9 @@ class SimulationRunner:
             with cls._finalization_lock(simulation_id):
                 latest_state = cls.get_run_state(simulation_id)
                 if latest_state is not None:
+                    if latest_state.execution_id != execution_id:
+                        logger.warning("Ignoring obsolete monitor finalization for execution %s", execution_id)
+                        return
                     state = latest_state
 
                 if state.runner_status not in {
@@ -801,24 +916,24 @@ class SimulationRunner:
                         logger.error(f"模拟失败: {simulation_id}, error={state.error}")
                 cls._manual_stop_requests.discard(simulation_id)
             
-            # 清理进程资源
-            cls._processes.pop(simulation_id, None)
-            cls._action_queues.pop(simulation_id, None)
-            cls._monitor_threads.pop(simulation_id, None)
+                # 清理进程资源
+                cls._processes.pop(simulation_id, None)
+                cls._action_queues.pop(simulation_id, None)
+                cls._monitor_threads.pop(simulation_id, None)
             
-            # 关闭日志文件句柄
-            if simulation_id in cls._stdout_files:
-                try:
-                    cls._stdout_files[simulation_id].close()
-                except Exception:
-                    pass
-                cls._stdout_files.pop(simulation_id, None)
-            if simulation_id in cls._stderr_files and cls._stderr_files[simulation_id]:
-                try:
-                    cls._stderr_files[simulation_id].close()
-                except Exception:
-                    pass
-                cls._stderr_files.pop(simulation_id, None)
+                # 关闭日志文件句柄
+                if simulation_id in cls._stdout_files:
+                    try:
+                        cls._stdout_files[simulation_id].close()
+                    except Exception:
+                        pass
+                    cls._stdout_files.pop(simulation_id, None)
+                if simulation_id in cls._stderr_files and cls._stderr_files[simulation_id]:
+                    try:
+                        cls._stderr_files[simulation_id].close()
+                    except Exception:
+                        pass
+                    cls._stderr_files.pop(simulation_id, None)
     
     @classmethod
     def _read_action_log(
@@ -1458,7 +1573,12 @@ class SimulationRunner:
             "twitter_simulation.db",  # Twitter 平台数据库
             "reddit_simulation.db",   # Reddit 平台数据库
             "env_status.json",        # 环境状态文件
+            "actions.jsonl",          # Legacy single-platform action log.
         ]
+        for platform in ("twitter", "reddit"):
+            files_to_delete.extend(
+                f"{platform}_simulation.db{suffix}" for suffix in ("-wal", "-shm", "-journal")
+            )
         
         # 要删除的目录列表（包含动作日志）
         dirs_to_clean = ["twitter", "reddit"]
@@ -1484,6 +1604,16 @@ class SimulationRunner:
                         cleaned_files.append(f"{dir_name}/actions.jsonl")
                     except Exception as e:
                         errors.append(f"删除 {dir_name}/actions.jsonl 失败: {str(e)}")
+
+        # A stale close/interview command must never reach a new execution.
+        for dir_name in ("ipc_commands", "ipc_responses"):
+            dir_path = storage_path(cls.RUN_STATE_DIR, simulation_id, dir_name)
+            if os.path.isdir(dir_path):
+                try:
+                    shutil.rmtree(dir_path)
+                    cleaned_files.append(dir_name)
+                except OSError as error:
+                    errors.append(f"Cannot remove {dir_name}: {error}")
         
         # 清理内存中的运行状态
         if simulation_id in cls._run_states:
@@ -1752,6 +1882,7 @@ class SimulationRunner:
             BudgetStore().check(state.budget_run_id)
 
     @classmethod
+    @_execution_command
     def interview_agent(
         cls,
         simulation_id: str,
@@ -1822,6 +1953,7 @@ class SimulationRunner:
             }
     
     @classmethod
+    @_execution_command
     def interview_agents_batch(
         cls,
         simulation_id: str,

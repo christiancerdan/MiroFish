@@ -29,6 +29,9 @@ def job(tmp_path, monkeypatch):
     monkeypatch.setattr(SimulationRunner, '_run_states', {})
     monkeypatch.setattr(ReportManager, 'REPORTS_DIR', str(reports))
     monkeypatch.setattr(Config, 'OASIS_SIMULATION_DATA_DIR', str(simulations))
+    # Graph-source validation has its own isolation tests. This fixture exercises
+    # publication fencing after a valid, already prepared document graph.
+    monkeypatch.setattr(simulation_api, 'assert_clean_simulation_source', lambda _graph_id: None)
     project = ProjectManager.create_project('Publication ownership')
     project.graph_id = 'graph-owned'
     project.status = ProjectStatus.GRAPH_COMPLETED
@@ -39,10 +42,14 @@ def job(tmp_path, monkeypatch):
     SimulationRunner._save_run_state(SimulationRunState(
         state.simulation_id, runner_status=RunnerStatus.COMPLETED,
         started_at='2026-01-01T00:00:00', completed_at='2026-01-01T00:01:00',
+        execution_id='execution-owned', source_graph_id=project.graph_id,
+        execution_graph_id='execution-graph-owned', source_snapshot_sha256='snapshot-owned',
     ))
     parameters = {
         'project_id': project.project_id, 'simulation_id': state.simulation_id,
         'graph_id': project.graph_id, 'simulation_requirement': project.simulation_requirement,
+        'execution_id': 'execution-owned', 'source_graph_id': project.graph_id,
+        'execution_graph_id': 'execution-graph-owned', 'source_snapshot_sha256': 'snapshot-owned',
         'run_started_at': '2026-01-01T00:00:00', 'run_completed_at': '2026-01-01T00:01:00',
         'locale': 'en',
     }
@@ -54,6 +61,8 @@ def job(tmp_path, monkeypatch):
 
 
 def _claim(job, kind):
+    if kind in {'report', 'report_generate'}:
+        job.parameters['graph_id'] = job.parameters['execution_graph_id']
     task_id = job.manager.enqueue(kind, kind, job.parameters, metadata={'report_id': job.report_id})
     assert job.manager.claim_next('old-owner').task_id == task_id
     return task_id
@@ -72,7 +81,7 @@ def _replace(job, task_id):
 def _report(job, content):
     return Report(
         report_id=job.report_id, simulation_id=job.simulation.simulation_id,
-        graph_id=job.project.graph_id, simulation_requirement=job.project.simulation_requirement,
+        graph_id=job.parameters['execution_graph_id'], simulation_requirement=job.project.simulation_requirement,
         status=ReportStatus.COMPLETED, markdown_content=content,
     )
 
@@ -108,6 +117,7 @@ def test_stale_report_api_preserves_replacement_artifact(job, monkeypatch, outco
     assert job.manager.get_task(task_id).result == {'owner': 'replacement'}
     assert job.manager.get_task(task_id).status == TaskStatus.COMPLETED
     assert get_graph_readers(job.project.graph_id) == []
+    assert get_graph_readers(job.parameters['execution_graph_id']) == []
 
 
 @pytest.mark.parametrize('outcome', ['return', 'raise'])
@@ -179,6 +189,7 @@ def test_stale_report_cleanup_preserves_replacement_reader_lease(job, monkeypatc
         with job.manager.execution(task_id, 'old-owner'), pytest.raises(JobLeaseLost):
             report_api.run_report_job(task_id, job.parameters)
         assert get_graph_readers(job.project.graph_id) == replacement_readers
+        assert get_graph_readers(job.parameters['execution_graph_id']) == replacement_readers
     finally:
         finish_replacement.set()
         for thread in threads:
@@ -186,6 +197,7 @@ def test_stale_report_cleanup_preserves_replacement_reader_lease(job, monkeypatc
             assert not thread.is_alive()
     assert errors == []
     assert get_graph_readers(job.project.graph_id) == []
+    assert get_graph_readers(job.parameters['execution_graph_id']) == []
     assert ReportManager.get_report(job.report_id).markdown_content == 'Replacement report'
     assert job.manager.get_task(task_id).status == TaskStatus.COMPLETED
 
@@ -210,3 +222,4 @@ def test_api_handler_propagates_job_cancellation_before_publication(job, monkeyp
     assert not (job.reports / job.report_id).exists()
     assert job.manager.get_task(task_id).status == TaskStatus.PROCESSING
     assert get_graph_readers(job.project.graph_id) == []
+    assert get_graph_readers(job.parameters['execution_graph_id']) == []
