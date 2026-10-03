@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "purpose": "fresh_holdout_comparison",
+  "created_at": "2026-10-03T19:42:30.759151+00:00",
+  "max_concurrent_trials": 2,
+  "runtime_root": "backend/uploads/benchmark-runtimes/2026-10-03-upworthy-holdout-v1",
+  "inputs_sha256": "759de479a8e79fec9ad768e25404dc17318269b106a3bbc974e953c069eab2bd",
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "schedule_sha256": "7a834d576869eb0f447ddda5f97560d766c020f6f585abbe12fce31969a4dbea",
+  "implementation_source_sha256": "1ae39db576905cac8e5e1c2dc56ce71c7c16ed27675f6304076b64e68759141b",
+  "orchestration_source_sha256": {
+    "run_batch.py": "cf9261ef5c49b9100fddb31fe795bca5de7f7ae2c12e88eb3c3fae7b06e2b8f7",
+    "audit_batch.py": "0d860281f94aa2235c0c4cd892c0530f719e9c2ead6bf78a17aca081c32743b2"
+  },
+  "reporting_plan_sha256": "21358259fb087053cfe758dfd258282a869a0d4c8d1432d553ed3bf01b030c29"
+}

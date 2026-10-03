@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "dataset_id": "upworthy_headline_holdout_20261003_v1",
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "verification": "Independent standard-library arithmetic; no application or scorer imports.",
+  "checker_file_sha256": "6af63ed60fb58adcf4429debc3dc70ac0583ff7a00eb22e580ec6cd0c475d20b",
+  "artifact_file_sha256": {
+    "inputs": "e89acb4b512a70c3562823ce4348f4d651c29da473ea4cdc9cc2153dcc21b666",
+    "outcomes": "753708244db2aa7c25584e0a99f0c6124bafb21ba8c5dc48cccf82d06016c8ce",
+    "protocol": "9f11d06374844c7d072ecda008fd00a50b7be7acdf29b25abdf5a0b584ea4691",
+    "predictions": "626444157e5dad65893dc56f51a2088ae30aa66cfe96d422ab4bceb30695b12f",
+    "scores": "60cadf5e6ec1eadca38c01824c31b785374fe07bcf45ffe7176b31d7a1490869",
+    "manifest": "ddb9c9ae7a7f87b6f4cb427c95c206bc63e8d255bb3e023a0a1233233b85d4d5"
+  },
+  "numeric_tolerance": 1e-12,
+  "checks": [
+    "Frozen input/protocol/provenance hashes",
+    "Raw-count winner/CTR and tie checks",
+    "All eighty unique terminal records",
+    "Case-level repeat means and variability",
+    "Paired, per-method and failure-adjusted metrics",
+    "Paired case bootstrap, 5000 samples, seed 20261003",
+    "All scheduled usage, including failures and unknown costs",
+    "Fixed 0.5 reference",
+    "Case rows, exclusions and failure inventory"
+  ],
+  "counts": {
+    "scheduled_cases": 20,
+    "scored_cases": 20,
+    "excluded_ties": 0,
+    "observed_orderings_with_difference_interval_including_zero": 12,
+    "scheduled_records": 80,
+    "observed_records": 80,
+    "successful_records": 78,
+    "failed_records": 2,
+    "missing_records": 0,
+    "complete_paired_cases": 18
+  },
+  "paired_comparison": {
+    "paired_cases": 18,
+    "positive_improvement_favors": "mirofish",
+    "improvement": {
+      "brier_score": 0.033620833333333364,
+      "log_loss": 0.055327262334366606,
+      "directional_accuracy": 0.19444444444444445
+    },
+    "uncertainty": {
+      "method": "paired_case_bootstrap_percentile",
+      "unit": "case",
+      "level": 0.95,
+      "resamples": 5000,
+      "seed": 20261003,
+      "intervals": {
+        "brier_score": {
+          "lower": -0.07285482638888885,
+          "upper": 0.13715190972222221
+        },
+        "log_loss": {
+          "lower": -0.18976875416787886,
+          "upper": 0.2898961716029314
+        },
+        "directional_accuracy": {
+          "lower": -0.027777777777777776,
+          "upper": 0.4166666666666667
+        }
+      }
+    }
+  },
+  "failure_adjusted_comparison": {
+    "paired_cases": 20,
+    "positive_improvement_favors": "mirofish",
+    "improvement": {
+      "brier_score": -0.01936624999999998,
+      "log_loss": -0.06094281030049111,
+      "directional_accuracy": 0.075
+    },
+    "uncertainty": {
+      "method": "paired_case_bootstrap_percentile",
+      "unit": "case",
+      "level": 0.95,
+      "resamples": 5000,
+      "seed": 20261003,
+      "intervals": {
+        "brier_score": {
+          "lower": -0.14045909374999996,
+          "upper": 0.09677334374999998
+        },
+        "log_loss": {
+          "lower": -0.33626867677797556,
+          "upper": 0.20338724500745714
+        },
+        "directional_accuracy": {
+          "lower": -0.175,
+          "upper": 0.325
+        }
+      }
+    }
+  },
+  "limitations": [
+    "This checks arithmetic and artifact identity, not label authenticity, independence, calibration or predictive usefulness.",
+    "The pipeline integrity audit is a separate prerequisite.",
+    "Wilson/Newcombe intervals are checked for internal consistency, not independently recomputed."
+  ]
+}

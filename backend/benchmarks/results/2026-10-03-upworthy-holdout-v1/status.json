@@ -1,0 +1,579 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "schedule_sha256": "7a834d576869eb0f447ddda5f97560d766c020f6f585abbe12fce31969a4dbea",
+  "purpose": "fresh_holdout_comparison",
+  "updated_at": "2026-10-03T20:41:50.070552+00:00",
+  "scheduled": 80,
+  "counts": {
+    "ok": 78,
+    "failed": 2,
+    "invalid": 0,
+    "incomplete": 0,
+    "unstarted": 0
+  },
+  "all_slots_terminal": true,
+  "freeze_violation": false,
+  "slots": [
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-001-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-001-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-001-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-001-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-002-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-002-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-002-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-002-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-003-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-003-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-003-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-003-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-004-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-004-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-004-mirofish-2",
+      "state": "failed"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-004-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-005-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-005-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-005-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-005-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-006-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-006-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-006-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-006-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-007-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-007-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-007-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-007-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-008-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-008-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-008-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-008-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-009-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-009-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-009-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-009-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-010-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-010-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-010-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-010-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-011-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-011-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-011-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-011-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-012-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-012-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-012-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-012-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-013-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-013-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-013-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-013-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-014-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-014-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-014-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-014-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-015-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-015-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-015-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-015-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-016-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-016-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-016-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-016-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-017-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-017-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-017-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-017-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-018-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-018-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-018-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-018-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-019-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-019-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-019-mirofish-2",
+      "state": "failed"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-019-single_model-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 1,
+      "slot": "upworthy-holdout-020-single_model-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-holdout-020-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 2,
+      "slot": "upworthy-holdout-020-mirofish-2",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 2,
+      "slot": "upworthy-holdout-020-single_model-2",
+      "state": "ok"
+    }
+  ]
+}

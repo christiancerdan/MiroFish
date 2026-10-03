@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "records": [
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 7.05954550000024,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1088,
+        "input_tokens": 529,
+        "output_tokens": 559,
+        "cost_usd": null
+      },
+      "run_id": "bench_b900adf5a0bf2aa65ca7"
+    }
+  ]
+}

@@ -1,0 +1,1366 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "b9e3d81ae2a9cea569d0b8000dc4d05148f60e7a177e7c80aff251d3c4cba2a0",
+  "records": [
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.38,
+      "error": null,
+      "elapsed_seconds": 9.547786208000161,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1347,
+        "input_tokens": 533,
+        "output_tokens": 814,
+        "cost_usd": null
+      },
+      "run_id": "bench_98269ab3ccf573ee39ed"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 131.46323879200008,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 50926,
+        "input_tokens": 40028,
+        "output_tokens": 10898,
+        "cost_usd": null
+      },
+      "run_id": "proj_cfcf2aa0c8a7"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 165.7608896669999,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 59228,
+        "input_tokens": 44030,
+        "output_tokens": 15198,
+        "cost_usd": null
+      },
+      "run_id": "proj_80ff5a4a5318"
+    },
+    {
+      "case_id": "upworthy-holdout-001",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 4.774516292000044,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 892,
+        "input_tokens": 533,
+        "output_tokens": 359,
+        "cost_usd": null
+      },
+      "run_id": "bench_13caf3b28ed218aa4c2b"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 6.938817582999945,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1074,
+        "input_tokens": 533,
+        "output_tokens": 541,
+        "cost_usd": null
+      },
+      "run_id": "bench_4b155dc96065f8c87106"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 159.99327449999964,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 54266,
+        "input_tokens": 41001,
+        "output_tokens": 13265,
+        "cost_usd": null
+      },
+      "run_id": "proj_66d1fb20eacf"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 185.8094799999999,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 57213,
+        "input_tokens": 42980,
+        "output_tokens": 14233,
+        "cost_usd": null
+      },
+      "run_id": "proj_7e782d3bef71"
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 9.434322625000277,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1229,
+        "input_tokens": 533,
+        "output_tokens": 696,
+        "cost_usd": null
+      },
+      "run_id": "bench_3b35b5a8ec222f30832a"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 4.952766667000105,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 873,
+        "input_tokens": 527,
+        "output_tokens": 346,
+        "cost_usd": null
+      },
+      "run_id": "bench_bc789137f6b426186aea"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.2,
+      "error": null,
+      "elapsed_seconds": 163.97241295799995,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 52366,
+        "input_tokens": 39938,
+        "output_tokens": 12428,
+        "cost_usd": null
+      },
+      "run_id": "proj_8daf91d27146"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.5,
+      "error": null,
+      "elapsed_seconds": 166.7535244999999,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 57676,
+        "input_tokens": 45318,
+        "output_tokens": 12358,
+        "cost_usd": null
+      },
+      "run_id": "proj_de27a69104f2"
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 4.5134894170000734,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 837,
+        "input_tokens": 527,
+        "output_tokens": 310,
+        "cost_usd": null
+      },
+      "run_id": "bench_21fd2c35110cbe9f28db"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.85,
+      "error": null,
+      "elapsed_seconds": 6.478332125000179,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 973,
+        "input_tokens": 534,
+        "output_tokens": 439,
+        "cost_usd": null
+      },
+      "run_id": "bench_221daa44234d7d0ca1a1"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 204.3668375000002,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61656,
+        "input_tokens": 44039,
+        "output_tokens": 17617,
+        "cost_usd": null
+      },
+      "run_id": "proj_f3c75a578e77"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 197.07425108300004,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61205,
+        "input_tokens": 43674,
+        "output_tokens": 17531,
+        "cost_usd": null
+      },
+      "run_id": "proj_3bc4961b2ee9"
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 4.523521125000116,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 826,
+        "input_tokens": 534,
+        "output_tokens": 292,
+        "cost_usd": null
+      },
+      "run_id": "bench_199e5d42bf534e50cd21"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.2,
+      "error": null,
+      "elapsed_seconds": 6.789910749999763,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1178,
+        "input_tokens": 534,
+        "output_tokens": 644,
+        "cost_usd": null
+      },
+      "run_id": "bench_d672199368caaefa0bd7"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 133.0083838749997,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 52414,
+        "input_tokens": 40337,
+        "output_tokens": 12077,
+        "cost_usd": null
+      },
+      "run_id": "proj_2cc6cc4f91b9"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 140.4171162499997,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 70372,
+        "input_tokens": 53586,
+        "output_tokens": 16786,
+        "cost_usd": null
+      },
+      "run_id": "proj_bacb8fecc6af"
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 6.332385540999894,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1148,
+        "input_tokens": 534,
+        "output_tokens": 614,
+        "cost_usd": null
+      },
+      "run_id": "bench_fa01cb42c427c9a01597"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.3,
+      "error": null,
+      "elapsed_seconds": 3.979170874999909,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 873,
+        "input_tokens": 529,
+        "output_tokens": 344,
+        "cost_usd": null
+      },
+      "run_id": "bench_aad8d5420acdf045e443"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 139.26126945800024,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 55473,
+        "input_tokens": 42728,
+        "output_tokens": 12745,
+        "cost_usd": null
+      },
+      "run_id": "proj_28e199e8a874"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 158.33349454199924,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 62375,
+        "input_tokens": 47099,
+        "output_tokens": 15276,
+        "cost_usd": null
+      },
+      "run_id": "proj_e3a448bdc2cd"
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.45,
+      "error": null,
+      "elapsed_seconds": 5.262330333999671,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1052,
+        "input_tokens": 529,
+        "output_tokens": 523,
+        "cost_usd": null
+      },
+      "run_id": "bench_10f030098c79ed7d22b8"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 3.628318125000078,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 843,
+        "input_tokens": 538,
+        "output_tokens": 305,
+        "cost_usd": null
+      },
+      "run_id": "bench_4ab16ae04fa95935c8c5"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 154.3129837080005,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 53816,
+        "input_tokens": 41029,
+        "output_tokens": 12787,
+        "cost_usd": null
+      },
+      "run_id": "proj_3c5cf80b9b4a"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.5,
+      "error": null,
+      "elapsed_seconds": 184.07307437500003,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 56437,
+        "input_tokens": 41926,
+        "output_tokens": 14511,
+        "cost_usd": null
+      },
+      "run_id": "proj_bae44c0b5c5e"
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 6.1320230829996945,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 949,
+        "input_tokens": 538,
+        "output_tokens": 411,
+        "cost_usd": null
+      },
+      "run_id": "bench_2a290fecf56833a9fc09"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.72,
+      "error": null,
+      "elapsed_seconds": 7.59640329100057,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1071,
+        "input_tokens": 527,
+        "output_tokens": 544,
+        "cost_usd": null
+      },
+      "run_id": "bench_90e09f6495965362ea78"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 180.44120162499985,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 56183,
+        "input_tokens": 41210,
+        "output_tokens": 14973,
+        "cost_usd": null
+      },
+      "run_id": "proj_567fe7a35b7e"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 162.7945684590004,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 57020,
+        "input_tokens": 43452,
+        "output_tokens": 13568,
+        "cost_usd": null
+      },
+      "run_id": "proj_77b47d446b53"
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.68,
+      "error": null,
+      "elapsed_seconds": 7.862788542000089,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1006,
+        "input_tokens": 527,
+        "output_tokens": 479,
+        "cost_usd": null
+      },
+      "run_id": "bench_f3e893843320133e518c"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.2,
+      "error": null,
+      "elapsed_seconds": 5.103518916999747,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 980,
+        "input_tokens": 533,
+        "output_tokens": 447,
+        "cost_usd": null
+      },
+      "run_id": "bench_937abb88472785c2d78d"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 216.60223016600048,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61566,
+        "input_tokens": 44110,
+        "output_tokens": 17456,
+        "cost_usd": null
+      },
+      "run_id": "proj_71911845e7b3"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.48,
+      "error": null,
+      "elapsed_seconds": 192.2911792090008,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 80566,
+        "input_tokens": 61457,
+        "output_tokens": 19109,
+        "cost_usd": null
+      },
+      "run_id": "proj_22d40f00c7c2"
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 4.4891740000002756,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 865,
+        "input_tokens": 533,
+        "output_tokens": 332,
+        "cost_usd": null
+      },
+      "run_id": "bench_3a2ebe6fd0356428b3d1"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 3.94502462499986,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 793,
+        "input_tokens": 534,
+        "output_tokens": 259,
+        "cost_usd": null
+      },
+      "run_id": "bench_1602d42c9dda94cd8954"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 204.22893825000028,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 55950,
+        "input_tokens": 41348,
+        "output_tokens": 14602,
+        "cost_usd": null
+      },
+      "run_id": "proj_78e10e676da1"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.8,
+      "error": null,
+      "elapsed_seconds": 172.67297804100053,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 52974,
+        "input_tokens": 40623,
+        "output_tokens": 12351,
+        "cost_usd": null
+      },
+      "run_id": "proj_89c8108122eb"
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 9.051981749999868,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1342,
+        "input_tokens": 534,
+        "output_tokens": 808,
+        "cost_usd": null
+      },
+      "run_id": "bench_9a33b75c2941ea079b85"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.3,
+      "error": null,
+      "elapsed_seconds": 8.186928749999424,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1207,
+        "input_tokens": 533,
+        "output_tokens": 674,
+        "cost_usd": null
+      },
+      "run_id": "bench_168ce9db5f64f7fb330e"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.1,
+      "error": null,
+      "elapsed_seconds": 192.7816480829997,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 62960,
+        "input_tokens": 47433,
+        "output_tokens": 15527,
+        "cost_usd": null
+      },
+      "run_id": "proj_7b09dbf2b1ae"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.3,
+      "error": null,
+      "elapsed_seconds": 182.74258287500015,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 78465,
+        "input_tokens": 60691,
+        "output_tokens": 17774,
+        "cost_usd": null
+      },
+      "run_id": "proj_2ba091eb10a9"
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 9.526639167000212,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1248,
+        "input_tokens": 533,
+        "output_tokens": 715,
+        "cost_usd": null
+      },
+      "run_id": "bench_c194de62b9397dc1502f"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 7.05954550000024,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1088,
+        "input_tokens": 529,
+        "output_tokens": 559,
+        "cost_usd": null
+      },
+      "run_id": "bench_b900adf5a0bf2aa65ca7"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 169.99227283399978,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 54887,
+        "input_tokens": 41118,
+        "output_tokens": 13769,
+        "cost_usd": null
+      },
+      "run_id": "proj_af9933329d38"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 172.2844582910002,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 57294,
+        "input_tokens": 43124,
+        "output_tokens": 14170,
+        "cost_usd": null
+      },
+      "run_id": "proj_cc8d9bb42860"
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 4.70414641699972,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 848,
+        "input_tokens": 529,
+        "output_tokens": 319,
+        "cost_usd": null
+      },
+      "run_id": "bench_e9cc866d8654be4763cc"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 5.730266541999299,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1035,
+        "input_tokens": 539,
+        "output_tokens": 496,
+        "cost_usd": null
+      },
+      "run_id": "bench_e0b05302a610a1994096"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.2,
+      "error": null,
+      "elapsed_seconds": 189.595081167,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 63785,
+        "input_tokens": 47931,
+        "output_tokens": 15854,
+        "cost_usd": null
+      },
+      "run_id": "proj_7d3c1c40095e"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 178.6455766250001,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 58481,
+        "input_tokens": 43541,
+        "output_tokens": 14940,
+        "cost_usd": null
+      },
+      "run_id": "proj_b77c20a01c3a"
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 5.4143730830001005,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 963,
+        "input_tokens": 539,
+        "output_tokens": 424,
+        "cost_usd": null
+      },
+      "run_id": "bench_1f3ed075539adb4ecf3d"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 4.6603070829996796,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 878,
+        "input_tokens": 519,
+        "output_tokens": 359,
+        "cost_usd": null
+      },
+      "run_id": "bench_e73deb1a3647d79afb51"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.2,
+      "error": null,
+      "elapsed_seconds": 146.8768867079998,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 53192,
+        "input_tokens": 40223,
+        "output_tokens": 12969,
+        "cost_usd": null
+      },
+      "run_id": "proj_bf9236398633"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 196.30201950000082,
+      "usage": {
+        "calls": 20,
+        "total_tokens": 66238,
+        "input_tokens": 48631,
+        "output_tokens": 17607,
+        "cost_usd": null
+      },
+      "run_id": "proj_8346c2ec1f9d"
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.3,
+      "error": null,
+      "elapsed_seconds": 3.13900058299987,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 733,
+        "input_tokens": 519,
+        "output_tokens": 214,
+        "cost_usd": null
+      },
+      "run_id": "bench_46d364f5f9e8e2a53f6d"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 9.37233812500017,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1370,
+        "input_tokens": 531,
+        "output_tokens": 839,
+        "cost_usd": null
+      },
+      "run_id": "bench_bb578471361a33d26e77"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.68,
+      "error": null,
+      "elapsed_seconds": 161.29162616600024,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 56283,
+        "input_tokens": 41976,
+        "output_tokens": 14307,
+        "cost_usd": null
+      },
+      "run_id": "proj_9df7d6b25e18"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 145.68949529200017,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61228,
+        "input_tokens": 48084,
+        "output_tokens": 13144,
+        "cost_usd": null
+      },
+      "run_id": "proj_6c0f624bd811"
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 6.1661747080006535,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1025,
+        "input_tokens": 531,
+        "output_tokens": 494,
+        "cost_usd": null
+      },
+      "run_id": "bench_dcf24613a90be540c70d"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 3.9664245419999133,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 895,
+        "input_tokens": 533,
+        "output_tokens": 362,
+        "cost_usd": null
+      },
+      "run_id": "bench_69e5b05c1aa96baa6474"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.58,
+      "error": null,
+      "elapsed_seconds": 183.20509649999985,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 61810,
+        "input_tokens": 45591,
+        "output_tokens": 16219,
+        "cost_usd": null
+      },
+      "run_id": "proj_6d724ad603a9"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 131.42804075000004,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 51424,
+        "input_tokens": 40257,
+        "output_tokens": 11167,
+        "cost_usd": null
+      },
+      "run_id": "proj_b01f0b07373d"
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 4.584069499999714,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 858,
+        "input_tokens": 533,
+        "output_tokens": 325,
+        "cost_usd": null
+      },
+      "run_id": "bench_455b66fba5720eb7ff8c"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.75,
+      "error": null,
+      "elapsed_seconds": 3.3078961669998534,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 797,
+        "input_tokens": 521,
+        "output_tokens": 276,
+        "cost_usd": null
+      },
+      "run_id": "bench_e323519a57ae65db3a4d"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 194.59918020900022,
+      "usage": {
+        "calls": 20,
+        "total_tokens": 60327,
+        "input_tokens": 44186,
+        "output_tokens": 16141,
+        "cost_usd": null
+      },
+      "run_id": "proj_6e4e61a3b28c"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 201.61049308300062,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 58949,
+        "input_tokens": 40938,
+        "output_tokens": 18011,
+        "cost_usd": null
+      },
+      "run_id": "proj_16ff5c4ec377"
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.8,
+      "error": null,
+      "elapsed_seconds": 4.70309483300025,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 832,
+        "input_tokens": 521,
+        "output_tokens": 311,
+        "cost_usd": null
+      },
+      "run_id": "bench_3066eb9d43a5823b67b2"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.75,
+      "error": null,
+      "elapsed_seconds": 3.9134388749998834,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 751,
+        "input_tokens": 521,
+        "output_tokens": 230,
+        "cost_usd": null
+      },
+      "run_id": "bench_693e6068f34ead885b79"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.15,
+      "error": null,
+      "elapsed_seconds": 140.35685441700025,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 52382,
+        "input_tokens": 40460,
+        "output_tokens": 11922,
+        "cost_usd": null
+      },
+      "run_id": "proj_073ba65e8df1"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 189.23949699999957,
+      "usage": {
+        "calls": 21,
+        "total_tokens": 68903,
+        "input_tokens": 52833,
+        "output_tokens": 16070,
+        "cost_usd": null
+      },
+      "run_id": "proj_3f4c8b56ffaa"
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 3.8876379999992423,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 834,
+        "input_tokens": 521,
+        "output_tokens": 313,
+        "cost_usd": null
+      },
+      "run_id": "bench_eafe4dbad9fc9b12d384"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.75,
+      "error": null,
+      "elapsed_seconds": 7.55825512499996,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1124,
+        "input_tokens": 525,
+        "output_tokens": 599,
+        "cost_usd": null
+      },
+      "run_id": "bench_84c4f2cc893a9a1abc24"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 178.55162941599974,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 72382,
+        "input_tokens": 54355,
+        "output_tokens": 18027,
+        "cost_usd": null
+      },
+      "run_id": "proj_d11904aabd85"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 144.69924883299973,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 53305,
+        "input_tokens": 41069,
+        "output_tokens": 12236,
+        "cost_usd": null
+      },
+      "run_id": "proj_89ec6824d6d6"
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 6.36043433299983,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1146,
+        "input_tokens": 525,
+        "output_tokens": 621,
+        "cost_usd": null
+      },
+      "run_id": "bench_6a3a5d845f1b7030697b"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 4.307278375000351,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 872,
+        "input_tokens": 526,
+        "output_tokens": 346,
+        "cost_usd": null
+      },
+      "run_id": "bench_055175cfdd9e96359d91"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 151.68241337499967,
+      "usage": {
+        "calls": 18,
+        "total_tokens": 72216,
+        "input_tokens": 55272,
+        "output_tokens": 16944,
+        "cost_usd": null
+      },
+      "run_id": "proj_f4a941816e63"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.25,
+      "error": null,
+      "elapsed_seconds": 159.28935700000056,
+      "usage": {
+        "calls": 19,
+        "total_tokens": 58784,
+        "input_tokens": 44560,
+        "output_tokens": 14224,
+        "cost_usd": null
+      },
+      "run_id": "proj_6f1ab283f0b0"
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.35,
+      "error": null,
+      "elapsed_seconds": 4.924292832999527,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 956,
+        "input_tokens": 526,
+        "output_tokens": 430,
+        "cost_usd": null
+      },
+      "run_id": "bench_20beff8d7f9498261ed1"
+    }
+  ]
+}
