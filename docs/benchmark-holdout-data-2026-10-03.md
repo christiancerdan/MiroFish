@@ -21,6 +21,14 @@ The planned schedule is **20 cases × 2 repeats × 2 methods = 80 trial slots**.
 
 Each scheduled trial must produce a final success or failure record. Preserve failures and their measured or conservative usage, and do not replace cases or restart only unfavourable trials. The outcome-release helper validates the frozen input/protocol identities, all 20 case IDs, two repeats, both methods, and all 80 final records before accessing labels. Missing slots block release. This is a reproducibility guard, not an authenticated access-control boundary.
 
+The primary accuracy comparison is paired Brier improvement (single-model loss minus
+MiroFish loss; positive favors MiroFish), with the existing case-level bootstrap
+interval. Report directional accuracy and log loss alongside it. Completion rates,
+all scheduled usage, and the full-cohort failure sensitivity are required: a
+successful-subset result alone cannot establish an operational advantage. An
+interval spanning zero is inconclusive on this sample. These reporting choices
+are fixed before holdout generation and outcome release.
+
 To reproduce the **input-only** freeze, from the repository root:
 
 ```sh

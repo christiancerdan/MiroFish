@@ -77,7 +77,7 @@ def test_recognized_actor_types_retain_supported_kind_without_invented_history(m
     prompt = calls[0]['messages'][1]['content']
     assert f'Known actor kind: {kind}' in prompt
     assert 'Do not add personal or organizational history' in prompt
-    assert 'Unknown optional details must be null or omitted' in prompt
+    assert 'Omit unknown optional fields or use null only for these demographic fields' in prompt
 
 
 def test_profile_preserves_name_type_uuid_and_unknown_demographics(monkeypatch):
@@ -135,10 +135,36 @@ def test_provider_error_is_terminal_and_does_not_invent_profile(monkeypatch):
     assert 'PRIVATE_ERROR_SENTINEL' not in str(error.value)
 
 
+def test_extra_source_identity_keys_are_rejected_and_regenerated_with_exact_schema(monkeypatch):
+    # Observed gpt-oss cloud output copied the source object's identity fields
+    # into the result on both attempts when the prompt only said "retain name".
+    extra_source_keys = dict(valid_profile(), entity_name='Busy Reader', role='Reader')
+    instance, calls = generator(monkeypatch, response(extra_source_keys), response(valid_profile()))
+    assert generate(instance) == valid_profile()
+    assert len(calls) == 2
+    for prompt in (calls[0]['messages'][1]['content'], calls[1]['messages'][-1]['content']):
+        assert 'No other keys are permitted' in prompt
+        assert 'entity_name, entity_type, name, role' in prompt
+        assert 'inside bio/persona text' in prompt
+        assert 'interested_topics must be an array, never null' in prompt
+
+
+def test_related_people_are_context_and_never_a_source_of_target_demographics(monkeypatch):
+    instance, calls = generator(monkeypatch, response(valid_profile()))
+    instance._generate_profile_with_llm(
+        'Skeptical Reader', 'Reader', 'A fictional evidence-oriented reader.', {},
+        'Curious Reader likes surprising stories. Busy Reader values quickly understood benefits.',
+    )
+    prompt = calls[0]['messages'][1]['content']
+    assert 'entity_summary and entity_attributes describe the target entity' in prompt
+    assert 'Do not transfer another entity\'s preferences or attributes to the target' in prompt
+
+
 @pytest.mark.parametrize('field,value', [
     ('bio', ''), ('bio', 'x' * 281), ('persona', None), ('persona', 'x' * 1201),
     ('age', True), ('age', -1), ('age', '30'), ('gender', {}),
     ('interested_topics', 'science'), ('interested_topics', [None]), ('extra', 'not permitted'),
+    ('interested_topics', None), ('entity_name', 'Busy Reader'), ('role', 'Reader'),
 ])
 def test_strict_profile_fields_reject_structurally_invalid_response(field, value):
     invalid = valid_profile()

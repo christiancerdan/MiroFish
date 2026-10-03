@@ -1,0 +1,119 @@
+{
+  "scope": "Private isolated probes using explicitly fictional source personas; these do not establish end-to-end reliability or explain lost earlier runtime logs.",
+  "allowed_keys": [
+    "age",
+    "bio",
+    "country",
+    "gender",
+    "interested_topics",
+    "mbti",
+    "persona",
+    "profession"
+  ],
+  "probes": [
+    {
+      "phase": "before_prompt_fix",
+      "targets": 2,
+      "valid_profiles": 0,
+      "usage": {
+        "calls": 4,
+        "tokens": 5695,
+        "input_tokens": 1982,
+        "output_tokens": 3713,
+        "wall_seconds": 44.237733364105225,
+        "estimated_cost_usd": null
+      },
+      "responses": [
+        {
+          "finish_reason": "stop",
+          "emitted_keys": [
+            "bio",
+            "entity_name",
+            "interested_topics",
+            "persona",
+            "role"
+          ],
+          "extra_keys": [
+            "entity_name",
+            "role"
+          ]
+        },
+        {
+          "finish_reason": "stop",
+          "emitted_keys": [
+            "age",
+            "bio",
+            "country",
+            "entity_name",
+            "entity_type",
+            "gender",
+            "interested_topics",
+            "mbti",
+            "persona",
+            "profession"
+          ],
+          "extra_keys": [
+            "entity_name",
+            "entity_type"
+          ]
+        },
+        {
+          "finish_reason": "stop",
+          "emitted_keys": [
+            "bio",
+            "entity_name",
+            "interested_topics",
+            "persona",
+            "role"
+          ],
+          "extra_keys": [
+            "entity_name",
+            "role"
+          ]
+        },
+        {
+          "finish_reason": "stop",
+          "emitted_keys": [
+            "age",
+            "bio",
+            "country",
+            "entity_name",
+            "entity_type",
+            "gender",
+            "interested_topics",
+            "mbti",
+            "persona",
+            "profession"
+          ],
+          "extra_keys": [
+            "entity_name",
+            "entity_type"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "after_prompt_fix",
+      "targets": 1,
+      "valid_profiles": 1,
+      "usage": {
+        "calls": 1,
+        "tokens": 1349,
+        "input_tokens": 601,
+        "output_tokens": 748,
+        "wall_seconds": 8.086522102355957,
+        "estimated_cost_usd": null
+      },
+      "responses": [
+        {
+          "finish_reason": "stop",
+          "emitted_keys": [
+            "bio",
+            "persona"
+          ],
+          "extra_keys": []
+        }
+      ]
+    }
+  ]
+}
