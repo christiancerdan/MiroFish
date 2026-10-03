@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "study_id": "example-fictional-scheduler",
+  "example_only": true,
+  "product_context": "FICTIONAL EXAMPLE: MeetingSprout is an invented meeting scheduler. This is a schema demonstration, not an approved customer study.",
+  "model": {"provider": "openai_compatible", "name": "gpt-oss:20b-cloud"},
+  "method_configuration": {
+    "single_model": "Illustrative only: one fresh model conversation using the shared packet, with output probability_a and an explanation; no customer outcomes.",
+    "mirofish": "Illustrative only: one isolated simulation using the same packet and fictional assumptions, then an assessed probability_a; record the real source revision, rounds, budget, and settings when designing an actual study."
+  },
+  "fictional_persona_assumptions": [
+    "A fictional visitor who wants to reduce meeting coordination work; no age, gender, country, or personality type assumed.",
+    "A fictional visitor concerned about calendar permissions; this concern is an assumption to investigate."
+  ],
+  "repeats": 2,
+  "forecast_deadline": "2030-01-01T12:00:00Z",
+  "launch_at": "2030-01-02T12:00:00Z",
+  "observation_ends_at": "2030-01-09T12:00:00Z",
+  "randomization": {
+    "unit": "unique_visitor",
+    "allocation_a": 0.5,
+    "allocation_b": 0.5,
+    "assignment": "persistent"
+  },
+  "stopping_rule": "fixed_window_no_early_stopping",
+  "cases": [{
+    "case_id": "copy-test-1",
+    "experiment_id": "fictional-event-system-test-1",
+    "audience": "Illustrative first-time visitors seeking a team meeting scheduler.",
+    "channel": "Illustrative owned landing page; the headline is the only varying content.",
+    "eligibility": "First eligible unique visitor assignment within the fixed window; exclude previously assigned visitors.",
+    "exclusions": ["Known internal staff", "Declared automated traffic filter applied identically to both arms"],
+    "variant_a": {"id": "copy-a", "text": "Find a meeting time together"},
+    "variant_b": {"id": "copy-b", "text": "Spend less time arranging meetings"},
+    "response": {
+      "event_id": "start-trial",
+      "definition": "At least one completed trial registration in the same session as first exposure, counted once per eligible unique visitor; sessions ending after the fixed observation window are not counted."
+    },
+    "minimum_unique_visitors_per_arm": 100,
+    "sample_size_rationale": "Illustrative schema value only. It is not a powered sample-size calculation; set a real minimum and rationale before freezing."
+  }]
+}

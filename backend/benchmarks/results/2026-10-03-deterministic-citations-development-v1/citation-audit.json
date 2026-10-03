@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-10-03T21:16:36.764512+00:00",
+  "status": "pass",
+  "scope": {
+    "original_artifacts_read_only": true,
+    "original_artifacts_unchanged_during_audit": true,
+    "validation": "stored_report_reference_integrity_and_structured_output_metadata",
+    "outcomes_read": false,
+    "provider_calls": 0,
+    "accuracy_scored": false
+  },
+  "limitations": [
+    "Reference integrity only; citation existence does not establish semantic support or factual correctness.",
+    "Two old pilot cases used for development reliability; no holdout or prospective accuracy claim.",
+    "Recorded schema and renderer versions plus rendered output were inspected; raw intermediate model output was not independently replayed.",
+    "One case used the documented outline fallback after invalid JSON."
+  ],
+  "bindings": {
+    "protocol_sha256": "548d675ef646ef36a4a5cd3f7f02d7bfdf8ef2f26587508d53ac308401eca60b",
+    "protocol_hash_matches": true,
+    "inputs_sha256": "451bd4f61085d052128672c80de9e229e1088e0593ebc194013a67a58f141763",
+    "schedule_sha256": "1ad876e607241ad0beff6dbd799f8ac7994d933a8400e7c9e4b5ea170881ae8d",
+    "implementation_source_sha256": "755d23f97613108ab425ac800c3aca38dff5a3ae9897d4f0e915f8901b42a9ff",
+    "git_head_at_freeze": "adba5ce5e9a0aab9a78f939b4d8f5c90ef464ce3",
+    "orchestration_source_sha256": {
+      "run_batch.py": "cf9261ef5c49b9100fddb31fe795bca5de7f7ae2c12e88eb3c3fae7b06e2b8f7",
+      "audit_batch.py": "0d860281f94aa2235c0c4cd892c0530f719e9c2ead6bf78a17aca081c32743b2"
+    },
+    "run_audit_sha256": "94d85b7c922c9be88027936ccf5aeb3ca37972ef4f83d3a0df55126e4f189172"
+  },
+  "counts": {
+    "reports": 2,
+    "pass": 2,
+    "sections": 6,
+    "rendered_citation_links": 39,
+    "unknown_citation_links": 0,
+    "raw_citation_tokens": 0,
+    "citation_repair_calls": 0
+  },
+  "reports": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "report_id": "report_4b0140e6ad77",
+      "status": "pass",
+      "manifest_sha256": "05730393cada874bb6b23f533614e62ace2b7eaef63e61ac4555b956bfeb59be",
+      "evidence_snapshot_sha256": "aa8c080074c4b344b076ecab86f8a0669c4fa88e3141d821fc8695b86952f805",
+      "report_metadata_sha256": "f1e927ec4699394962f48a4c21294d64085f7c48b02a20c17062aa16c5f71f96",
+      "report_markdown_sha256": "da9165e7e4d87870b9d9ff50324b26d431c2b2389ed920dd8d0ebccdb3e7b1c3",
+      "evidence_content_hashes": [
+        {
+          "citation_id": "e-e7a667394dbaa3b8ceac0b69",
+          "content_sha256": "74e4fa8ae8140832872a4ce74d826794ece295bcdce594ff3d6d4404e462622c",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-59ef6e9b553858aec232c859",
+          "content_sha256": "9edfad23e67fab7d9388b1599a3e847a7cf30b2cc99138d6a5a45a4c52aa81db",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-928eeb094c80a20d4e60ec7b",
+          "content_sha256": "99b696cbc7eb13f7daf862522c0bb96299de9e5701d3e32833aa62a85ee9e648",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-087accd5f76cf6068e1d5ea1",
+          "content_sha256": "06ad670bc8f40a33a08ef44265abd95f3e73c893b19fef969f48e4a90b0fea9b",
+          "content_hash_matches": true
+        }
+      ],
+      "manifest_matches_report": true,
+      "evidence_matches_report": true,
+      "execution_bindings_match": true,
+      "source_graph_unchanged": true,
+      "section_count": 3,
+      "section_output": {
+        "schema_version": 1,
+        "renderer_version": 1,
+        "format": "paragraphs_with_source_ids"
+      },
+      "final_citation_validation": {
+        "valid": true,
+        "scope": "reference_integrity_only",
+        "verified_citation_ids": [
+          "e-087accd5f76cf6068e1d5ea1",
+          "e-59ef6e9b553858aec232c859",
+          "e-928eeb094c80a20d4e60ec7b",
+          "e-e7a667394dbaa3b8ceac0b69"
+        ],
+        "invalid_citation_ids": []
+      },
+      "sections": [
+        {
+          "section": "section_01",
+          "content_sha256": "ebe6c2eea74691c68c327f0773a6f2ef5ce246893b235c06799bfb92132d830d",
+          "nonempty": true,
+          "rendered_citation_link_count": 5,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        },
+        {
+          "section": "section_02",
+          "content_sha256": "7a5f4808690ee32c7d7e4312c12995ee2cd20e89f47b437e2ec4663c372930b3",
+          "nonempty": true,
+          "rendered_citation_link_count": 5,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        },
+        {
+          "section": "section_03",
+          "content_sha256": "d2fcbb43f1ccc913adf4acb9c71f26276ad58d6a16b69463483393aae90b02f1",
+          "nonempty": true,
+          "rendered_citation_link_count": 7,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        }
+      ],
+      "section_rendered_citation_link_count": 17,
+      "section_unknown_citation_link_count": 0,
+      "section_raw_citation_token_count": 0,
+      "full_report_citation_counts": {
+        "rendered_citation_link_count": 17,
+        "unknown_citation_link_count": 0,
+        "evidence_endpoint_link_count": 4,
+        "unknown_or_wrong_report_endpoint_link_count": 0,
+        "raw_citation_token_count": 0
+      },
+      "citation_repair_call_count": 0,
+      "citation_repair_attempt_count": 0,
+      "outline_validation": {
+        "model_response_valid": false,
+        "fallback_used": true,
+        "section_count": 3,
+        "validation_error": "LLM returned invalid JSON (line 1, column 1456)"
+      }
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "report_id": "report_1c18040f4a07",
+      "status": "pass",
+      "manifest_sha256": "de447e1a7c761709dcbd9de84479f96c3b1e2b4e6b4b69b4d12df913c1d451d8",
+      "evidence_snapshot_sha256": "747d3d55fb8091b03cd3793f169a7ec99da1ebf4dfe0e5af25a1d761eeeb73ac",
+      "report_metadata_sha256": "5de802377a4e04b381f62073217279191c9dcf50b8b4bda2e4bd85351b3dd3ff",
+      "report_markdown_sha256": "3c4b06abb836fd8b3ddb1f76aa52212aafed84291bed8e3c80021cc0deccc6f9",
+      "evidence_content_hashes": [
+        {
+          "citation_id": "e-74465ed4b05415c05253e1d6",
+          "content_sha256": "1eb181d67dc3fb4b6fa154d0c8a9c3a0189bb504fc21484f79c46c29b632017e",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-c2be97dcedc10b897fd2a7e5",
+          "content_sha256": "d44754b23f1a5bbf2a31ce4ef83dbd1fe7835bf2fca00bdf9e1de63bc2dd211d",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-cad9d0d061dd4766619dc905",
+          "content_sha256": "ceb88e4d3b41ccfa9226cc330e0acfa594ae90aa8104129bda5f9eedf7b46929",
+          "content_hash_matches": true
+        },
+        {
+          "citation_id": "e-cf816e06df0510644e51f686",
+          "content_sha256": "06ad670bc8f40a33a08ef44265abd95f3e73c893b19fef969f48e4a90b0fea9b",
+          "content_hash_matches": true
+        }
+      ],
+      "manifest_matches_report": true,
+      "evidence_matches_report": true,
+      "execution_bindings_match": true,
+      "source_graph_unchanged": true,
+      "section_count": 3,
+      "section_output": {
+        "schema_version": 1,
+        "renderer_version": 1,
+        "format": "paragraphs_with_source_ids"
+      },
+      "final_citation_validation": {
+        "valid": true,
+        "scope": "reference_integrity_only",
+        "verified_citation_ids": [
+          "e-74465ed4b05415c05253e1d6",
+          "e-c2be97dcedc10b897fd2a7e5",
+          "e-cad9d0d061dd4766619dc905",
+          "e-cf816e06df0510644e51f686"
+        ],
+        "invalid_citation_ids": []
+      },
+      "sections": [
+        {
+          "section": "section_01",
+          "content_sha256": "c851a6b72d93127e394fc36ea2c322af0a6d564dba98dc56a4e995f7176b023b",
+          "nonempty": true,
+          "rendered_citation_link_count": 7,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        },
+        {
+          "section": "section_02",
+          "content_sha256": "fe9fbd591452a7f1a3e0116c6b7e611ac2df90e96c107f3cd85943e580142830",
+          "nonempty": true,
+          "rendered_citation_link_count": 8,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        },
+        {
+          "section": "section_03",
+          "content_sha256": "75cbc14b74d9b4eb25e75242649e8bc2b31ba92eba32e8bdc5d79af9c43d9847",
+          "nonempty": true,
+          "rendered_citation_link_count": 7,
+          "unknown_citation_link_count": 0,
+          "evidence_endpoint_link_count": 0,
+          "unknown_or_wrong_report_endpoint_link_count": 0,
+          "raw_citation_token_count": 0
+        }
+      ],
+      "section_rendered_citation_link_count": 22,
+      "section_unknown_citation_link_count": 0,
+      "section_raw_citation_token_count": 0,
+      "full_report_citation_counts": {
+        "rendered_citation_link_count": 22,
+        "unknown_citation_link_count": 0,
+        "evidence_endpoint_link_count": 4,
+        "unknown_or_wrong_report_endpoint_link_count": 0,
+        "raw_citation_token_count": 0
+      },
+      "citation_repair_call_count": 0,
+      "citation_repair_attempt_count": 0,
+      "outline_validation": {
+        "model_response_valid": true,
+        "fallback_used": false,
+        "section_count": 3
+      }
+    }
+  ]
+}

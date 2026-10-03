@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "548d675ef646ef36a4a5cd3f7f02d7bfdf8ef2f26587508d53ac308401eca60b",
+  "schedule_sha256": "1ad876e607241ad0beff6dbd799f8ac7994d933a8400e7c9e4b5ea170881ae8d",
+  "purpose": "development_reliability_only",
+  "updated_at": "2026-10-03T21:14:35.792679+00:00",
+  "scheduled": 2,
+  "counts": {
+    "ok": 2,
+    "failed": 0,
+    "invalid": 0,
+    "incomplete": 0,
+    "unstarted": 0
+  },
+  "all_slots_terminal": true,
+  "freeze_violation": false,
+  "slots": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-001-mirofish-1",
+      "state": "ok"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "slot": "upworthy-003-mirofish-1",
+      "state": "ok"
+    }
+  ]
+}

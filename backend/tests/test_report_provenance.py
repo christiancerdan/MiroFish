@@ -8,6 +8,10 @@ from app.services.report_agent import Report, ReportAgent, ReportManager, Report
 from app.config import Config
 
 
+def section_json(text, *source_ids):
+    return json.dumps({"paragraphs": [{"text": text, "source_ids": list(source_ids)}]})
+
+
 def test_source_identity_is_stable_and_content_is_snapshotted():
     records = [{"source_id": "episode-1", "kind": "document", "text": "Document says X.", "reference_time": None}]
     first = EvidenceRegistry("graph-1", "report-1")
@@ -83,7 +87,7 @@ def test_generation_fails_closed_on_invented_source(report_storage, monkeypatch)
     tools = SimpleNamespace(get_evidence=lambda graph_id: [{"source_id": "original", "kind": "document", "text": "Raw source"}])
     agent = ReportAgent("graph-1", "sim-1", "Test", llm_client=SimpleNamespace(model="test-model"), zep_tools=tools)
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Test", "Summary", [ReportSection("Analysis")]))
-    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: "Invented claim [[source:not-real]].")
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: section_json("Invented claim.", "not-real"))
     result = agent.generate_report(report_id="report-bad")
     assert result.status == ReportStatus.FAILED
     assert "citation" in result.error.lower()
@@ -97,7 +101,7 @@ def test_successful_report_persists_limits_and_source_links(report_storage, monk
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Test", "Summary", [ReportSection("Analysis")]))
     def generate(**kwargs):
         cid = next(s["citation_id"] for s in agent.evidence_registry.sources if s["kind"] == "source_fact")
-        return f"Source evidence: Raw source [[source:{cid}]]."
+        return section_json("Source evidence: Raw source.", cid)
     monkeypatch.setattr(agent, "_generate_section_react", generate)
     report = agent.generate_report(report_id="report-ok")
     assert report.status == ReportStatus.COMPLETED
@@ -228,7 +232,7 @@ def test_retry_archives_old_sections_and_validates_current_assembled_citations(r
     tools = SimpleNamespace(get_evidence=lambda _: [])
     agent = ReportAgent("graph-1", "sim-1", "Current assumptions", llm_client=SimpleNamespace(model="test"), zep_tools=tools)
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One"), ReportSection("Two")]))
-    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: f"Assumption [[source:{agent.evidence_registry.sources[0]['citation_id']}]].")
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: section_json("Assumption.", agent.evidence_registry.sources[0]["citation_id"]))
     report = agent.generate_report(report_id="report-retry")
     assert report.status == ReportStatus.COMPLETED
     assert "STALE" not in report.markdown_content
@@ -249,7 +253,7 @@ def test_assembly_ignores_files_beyond_current_outline(report_storage):
 def test_actual_assembled_report_is_validated_before_publication(report_storage, monkeypatch):
     agent = ReportAgent("graph-1", "sim-1", "Assumption", llm_client=SimpleNamespace(model="test"), zep_tools=SimpleNamespace(get_evidence=lambda _: []))
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
-    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: f"Assumption [[source:{agent.evidence_registry.sources[0]['citation_id']}]].")
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: section_json("Assumption.", agent.evidence_registry.sources[0]["citation_id"]))
     monkeypatch.setattr(ReportManager, "assemble_full_report", classmethod(lambda cls, *args: "Unregistered [[source:from-stale-file]]"))
     result = agent.generate_report(report_id="report-validation")
     assert result.status == ReportStatus.FAILED
@@ -280,7 +284,7 @@ def test_one_empty_generation_uses_one_bounded_structured_repair(report_storage,
         if len(calls) == 1:
             return ""
         cid = next(source["citation_id"] for source in agent.evidence_registry.sources if source["kind"] == "source_fact")
-        return json.dumps({"content": f"Source evidence: Raw source [[source:{cid}]]."})
+        return section_json("Source evidence: Raw source.", cid)
     agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat=chat),
                         zep_tools=SimpleNamespace(get_evidence=lambda _: [{"source_id": "raw", "kind": "document", "text": "Raw source"}]))
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
@@ -293,19 +297,21 @@ def test_one_empty_generation_uses_one_bounded_structured_repair(report_storage,
     assert result.citation_validation["verified_citation_ids"]
     assert result.manifest["metrics"]["citation_repair_calls"] == 1
     assert result.manifest["citation_repairs"][0]["repaired"] is True
-    assert "missing-section-citation" in result.manifest["citation_repairs"][0]["initial_error"]
+    assert "invalid-section-json" in result.manifest["citation_repairs"][0]["initial_error"]
     assert "Source evidence: Raw source" in result.markdown_content
 
 
-@pytest.mark.parametrize("repair_text", ["Unsupported without citations", "Wrong [[source:still-made-up]]", ""])
+@pytest.mark.parametrize("repair_text", [
+    section_json("Unsupported without citations"), section_json("Wrong", "still-made-up"), "",
+])
 def test_one_repair_still_fails_closed_for_persistent_invalid_citations(report_storage, monkeypatch, repair_text):
     calls = []
     def chat(**kwargs):
         calls.append(kwargs)
-        return json.dumps({"content": repair_text})
+        return repair_text
     agent = ReportAgent("graph-1", "sim-1", "Scenario", llm_client=SimpleNamespace(model="test", chat=chat), zep_tools=SimpleNamespace(get_evidence=lambda _: []))
     monkeypatch.setattr(agent, "plan_outline", lambda **kwargs: ReportOutline("Current", "Summary", [ReportSection("One")]))
-    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: "Wrong [[source:made-up]]")
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: section_json("Wrong", "made-up"))
     result = agent.generate_report(report_id="report-repair-failed")
     assert result.status == ReportStatus.FAILED
     assert len(calls) == 1
@@ -364,7 +370,7 @@ def test_invalid_live_style_outline_generates_three_sections_and_records_fallbac
     response = {"title": "Conditional analysis", "summary": "An unvalidated scenario", "sections": [{"title": "4. Recommendations for Future Simulations"}]}
     agent = ReportAgent("graph-1", "sim-1", "Fictional scenario assumption", llm_client=SimpleNamespace(model="test", chat_json=lambda **kwargs: response),
         zep_tools=SimpleNamespace(get_evidence=lambda _: [], get_simulation_context=lambda **kwargs: {}))
-    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: f"Assumption [[source:{agent.evidence_registry.sources[0]['citation_id']}]].")
+    monkeypatch.setattr(agent, "_generate_section_react", lambda **kwargs: section_json("Assumption.", agent.evidence_registry.sources[0]["citation_id"]))
     report = agent.generate_report(report_id="report-outline-fallback")
     assert report.status == ReportStatus.COMPLETED
     assert len(report.outline.sections) == 3

@@ -22,7 +22,7 @@ def generate(agent):
 
 def cited_answer(agent):
     source = agent.evidence_registry.add_episode({'source_id': 'input', 'kind': 'document', 'text': 'Original evidence'})
-    return f"Source evidence: Original evidence [[source:{source['citation_id']}]]."
+    return json.dumps({'paragraphs': [{'text': 'Source evidence: Original evidence.', 'source_ids': [source['citation_id']]}]})
 
 
 def test_evidence_complete_first_answer_needs_no_forced_tools(agent):
@@ -33,7 +33,7 @@ def test_evidence_complete_first_answer_needs_no_forced_tools(agent):
     assert content == expected
     assert len(calls) == 1
     assert agent._report_metrics['tool_calls'] == 0
-    assert agent.evidence_registry.validate_and_render(content, require_citation=True)[1]['valid']
+    assert agent.evidence_registry.render_structured_section(content, require_citation=True)[1]['valid']
 
 
 def test_configured_two_tool_cap_stops_third_execution_and_requests_final(agent):
@@ -83,7 +83,7 @@ def test_repeated_bad_tool_format_is_bounded_and_uses_existing_citation_repair(a
     def chat(**kwargs):
         calls.append(kwargs)
         if kwargs.get('response_format') == {'type': 'json_object'}:
-            return json.dumps({'content': expected})
+            return expected
         return '<tool_call>{"name": []}</tool_call>'
     agent.llm.chat = chat
     agent._execute_tool = lambda *args, **kwargs: pytest.fail('Malformed tool must not execute')
@@ -100,11 +100,11 @@ def test_direct_final_answer_with_forged_citation_still_fails_closed(agent):
     def chat(**kwargs):
         calls.append(kwargs)
         if kwargs.get('response_format'):
-            return json.dumps({'content': 'Forged [[source:not-in-registry]].'})
-        return 'Final Answer: Forged [[source:not-in-registry]].'
+            return json.dumps({'paragraphs': [{'text': 'Forged', 'source_ids': ['e-000000000000000000000000']}]})
+        return 'Final Answer: ' + json.dumps({'paragraphs': [{'text': 'Forged', 'source_ids': ['e-000000000000000000000000']}]})
     agent.llm.chat = chat
     draft = generate(agent)
-    with pytest.raises(CitationError, match='not-in-registry'):
+    with pytest.raises(CitationError, match='e-000000000000000000000000'):
         agent._validate_or_repair_section(draft, 'Findings', 1)
     assert len(calls) == 2
 
@@ -128,21 +128,27 @@ def test_tool_cap_forced_final_removes_fabricated_tool_results(agent):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize('valid_body', [False, True])
-def test_citation_repair_removes_fake_tool_blocks_before_validation(agent, valid_body):
+def test_citation_repair_rejects_fake_tool_blocks_inside_structured_paragraph(agent):
+    expected = json.loads(cited_answer(agent))
+    expected['paragraphs'][0]['text'] = '<tool_result>FABRICATED</tool_result> Source evidence.'
+    calls = []
+    agent.llm.chat = lambda **kwargs: calls.append(kwargs) or json.dumps(expected)
+    with pytest.raises(CitationError):
+        agent._validate_or_repair_section('', 'Findings', 1)
+    assert len(calls) == 1
+    assert not agent.evidence_registry.verified
+
+
+def test_mixed_xml_tool_and_final_envelope_still_requires_format_correction(agent):
     expected = cited_answer(agent)
     calls = []
     def chat(**kwargs):
         calls.append(kwargs)
-        outside = expected if valid_body else 'Unsupported body without a citation.'
-        return json.dumps({'content': f'<tool_result>FABRICATED {expected}</tool_result>\n{outside}'})
+        if len(calls) == 1:
+            return '<tool_call>{"name":"quick_search","parameters":{"query":"evidence"}}</tool_call>\nFinal Answer: ' + expected
+        return 'Final Answer: ' + expected
     agent.llm.chat = chat
-    if valid_body:
-        rendered = agent._validate_or_repair_section('', 'Findings', 1)
-        assert 'FABRICATED' not in rendered
-        assert 'Original evidence' in rendered
-    else:
-        # A valid source token hidden inside fake tool output cannot satisfy the citation requirement.
-        with pytest.raises(CitationError, match='missing-section-citation'):
-            agent._validate_or_repair_section('', 'Findings', 1)
-    assert len(calls) == 1
+    agent._execute_tool = lambda *args, **kwargs: pytest.fail('Conflicting response must not execute its tool')
+    assert generate(agent) == expected
+    assert len(calls) == 2
+    assert 'never both' in calls[1]['messages'][-1]['content']
