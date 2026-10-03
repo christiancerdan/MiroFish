@@ -4,6 +4,8 @@ This benchmark asks whether the additional MiroFish pipeline improves an audienc
 
 This is a retrospective replay. Model training may include the public headlines or their results. A correct prediction of observed CTR ordering does not establish the true population preference, calibration, product demand, or prospective forecasting ability.
 
+The [first recorded pilot](benchmark-pilot-2026-10-02.md) found reliability failures in all 12 MiroFish trials and a baseline Brier score worse than the fixed 50/50 reference. It includes the aborted harness attempt, the corrected protocol, every trial, and a separate source-preservation audit.
+
 ## Methods
 
 Both methods receive the same headlines, audience description, unavailable-image disclosure, and three explicitly fictional reader personas. They use the same configured base model; the runner disables the application's optional boost model.
@@ -20,6 +22,8 @@ The final assessor uses the same prompt, temperature, output limit, and strict s
 `backend/app/services/comparative_benchmark.py` is a standard-library-only module. Its `build_protocol` function validates inputs and freezes the case list, repeat count, aggregation, tie and failure policies, bootstrap seed, model metadata, and runner configuration. Import `backend/scripts/run_comparative_benchmark.py` with `importlib.util` to obtain `benchmark_configuration()`; its prompt hashes and limits must match the protocol exactly.
 
 The committed pilot protocol is in `backend/benchmarks/results/2026-10-02-upworthy-pilot-v2/protocol.json`. Reproducing it requires its specified model and runner configuration. A different model, prompt, source, or resource limit requires a new protocol; do not overwrite an existing result.
+
+The example below assumes the recorded source checkout, commit `3e3edb8`, with its dependencies installed. Later revisions also reject a mismatched `model.implementation_source_sha256` before making provider calls. To benchmark the current revision, build a fresh protocol with its source inventory hash; do not reuse the historical protocol against changed code. Scoring saved predictions works independently of the generation checkout.
 
 Each live invocation runs one trial in a fresh Python process and empty data directory:
 

@@ -1,5 +1,6 @@
 """The live runner must keep input isolation and prediction failures explicit."""
 import importlib.util
+import io
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -185,3 +186,26 @@ def test_actual_fixture_names_match():
     value['nodes'][1]['uuid'] = '654b1f22-1a1c-5dbe-8620-e72eb720b91d'
     value['nodes'][2]['uuid'] = '69d8c8f0-6401-5f96-92cc-a6d83a5ef931'
     assert len(runner.select_participant_types(value)) == 3
+
+
+@pytest.mark.parametrize("method", ["single_model", "mirofish"])
+def test_frozen_source_mismatch_blocks_model_and_pipeline_before_calls(tmp_path, monkeypatch, method):
+    from app.utils import llm_client, llm_provider
+
+    monkeypatch.setattr(llm_provider, "settings_from_config", lambda _: SimpleNamespace(
+        provider="openai_compatible", model="test-model", base_url="http://localhost:11434/v1"))
+    args = SimpleNamespace(method=method, timeout=900, max_calls=35, case_id="test", repeat=1)
+    trial = runner.Trial(args, runner.build_source_document(case()),
+                         {"model": {"implementation_source_sha256": "0" * 64}}, tmp_path, io.StringIO())
+    attempted = []
+
+    def forbidden():
+        attempted.append("paid_work")
+        raise AssertionError("A source mismatch must stop before model or pipeline initialization")
+
+    monkeypatch.setattr(llm_client, "LLMClient", forbidden)
+    monkeypatch.setattr(trial, "mirofish_report", forbidden)
+    monkeypatch.setattr(trial, "mark", lambda *_args, **_kwargs: None)
+    with pytest.raises(ValueError, match="source.*frozen protocol"):
+        trial.run()
+    assert attempted == []

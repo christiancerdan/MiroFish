@@ -94,6 +94,7 @@
             <button 
               class="tab-pill"
               :class="{ active: activeTab === 'chat' && chatTarget === 'report_agent' }"
+              :disabled="isSending"
               @click="selectReportAgentChat"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,10 +102,11 @@
               </svg>
               <span>{{ $t('step5.chatWithReportAgent') }}</span>
             </button>
-            <div class="agent-dropdown" v-if="profiles.length > 0">
+            <div class="agent-dropdown" v-if="canInterviewLive && profiles.length > 0">
               <button 
                 class="tab-pill agent-pill"
                 :class="{ active: activeTab === 'chat' && chatTarget === 'agent' }"
+                :disabled="isSending"
                 @click="toggleAgentDropdown"
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -135,6 +137,7 @@
             <div class="tab-divider"></div>
             <button
               class="tab-pill survey-pill"
+              :disabled="isSending || !canInterviewLive"
               :class="{ active: activeTab === 'survey' }"
               @click="selectSurveyTab"
             >
@@ -145,6 +148,11 @@
               <span>{{ $t('step5.sendSurvey') }}</span>
             </button>
           </div>
+        </div>
+
+        <div v-if="liveInterviewNotice" class="live-interview-notice" role="status">
+          <span>{{ liveInterviewNotice }}</span>
+          <button :disabled="checkingLiveExecution" @click="loadProfiles">Check current execution</button>
         </div>
 
         <!-- Chat Mode -->
@@ -218,7 +226,7 @@
           </div>
 
           <!-- Agent Profile Card -->
-          <div v-if="chatTarget === 'agent' && selectedAgent" class="agent-profile-card">
+          <div v-if="canInterviewLive && chatTarget === 'agent' && selectedAgent" class="agent-profile-card">
             <div class="profile-card-header">
               <div class="profile-card-avatar">{{ (selectedAgent.username || 'A')[0] }}</div>
               <div class="profile-card-info">
@@ -295,14 +303,14 @@
               class="chat-input"
               :placeholder="$t('step5.chatInputPlaceholder')"
               @keydown.enter.exact.prevent="sendMessage"
-              :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
+              :disabled="isSending || (chatTarget === 'agent' && (!canInterviewLive || !selectedAgent))"
               rows="1"
               ref="chatInputRef"
             ></textarea>
             <button 
               class="send-btn"
               @click="sendMessage"
-              :disabled="!chatInput.trim() || isSending || (!selectedAgent && chatTarget === 'agent')"
+              :disabled="!chatInput.trim() || isSending || (chatTarget === 'agent' && (!canInterviewLive || !selectedAgent))"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -330,6 +338,7 @@
                 >
                   <input 
                     type="checkbox" 
+                    :disabled="!canInterviewLive"
                     :checked="selectedAgents.has(idx)"
                     @change="toggleAgentSelection(idx)"
                   >
@@ -346,7 +355,7 @@
                 </label>
               </div>
               <div class="selection-actions">
-                <button class="action-link" @click="selectAllAgents">{{ $t('step5.selectAll') }}</button>
+                <button class="action-link" :disabled="!canInterviewLive" @click="selectAllAgents">{{ $t('step5.selectAll') }}</button>
                 <span class="action-divider">|</span>
                 <button class="action-link" @click="clearAgentSelection">{{ $t('step5.clearSelection') }}</button>
               </div>
@@ -359,6 +368,7 @@
               <textarea 
                 v-model="surveyQuestion"
                 class="survey-input"
+                :disabled="!canInterviewLive"
                 :placeholder="$t('step5.surveyInputPlaceholder')"
                 rows="3"
               ></textarea>
@@ -366,7 +376,7 @@
 
             <button 
               class="survey-submit-btn"
-              :disabled="selectedAgents.size === 0 || !surveyQuestion.trim() || isSurveying"
+              :disabled="!canInterviewLive || selectedAgents.size === 0 || !surveyQuestion.trim() || isSurveying"
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
@@ -416,7 +426,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { renderMarkdown } from '../utils/markdown'
 import { chatWithReport, getReport, getAgentLog } from '../api/report'
-import { interviewAgents, getSimulationProfilesRealtime } from '../api/simulation'
+import { interviewAgents, getSimulationProfilesRealtime, getRunStatus } from '../api/simulation'
 import ReportEvidence from './ReportEvidence.vue'
 
 const { t } = useI18n()
@@ -458,6 +468,84 @@ const generatedSections = ref({})
 const collapsedSections = ref(new Set())
 const currentSectionIndex = ref(null)
 const profiles = ref([])
+const liveExecutionId = ref(null)
+const checkingLiveExecution = ref(false)
+const liveInterviewNotice = ref('Checking whether live interviews belong to this report execution.')
+const reportExecutionId = computed(() => reportData.value?.manifest?.execution_id || null)
+const canInterviewLive = computed(() => Boolean(reportExecutionId.value && liveExecutionId.value === reportExecutionId.value))
+let liveScopeGeneration = 0
+let profileRequestId = 0
+let liveStatusTimer = null
+
+const liveScope = () => ({ reportId: props.reportId, simulationId: props.simulationId,
+  executionId: reportExecutionId.value, generation: liveScopeGeneration })
+const isLiveScopeCurrent = (scope) => scope.reportId === props.reportId && scope.simulationId === props.simulationId &&
+  scope.executionId === reportExecutionId.value && scope.generation === liveScopeGeneration
+
+const disableLiveInterviews = (message) => {
+  liveScopeGeneration += 1
+  liveExecutionId.value = null
+  liveInterviewNotice.value = message
+  profiles.value = []
+  selectedAgent.value = null
+  selectedAgentIndex.value = null
+  selectedAgents.value = new Set()
+  surveyQuestion.value = ''
+  surveyResults.value = []
+  showAgentDropdown.value = false
+  chatHistoryCache.value = { report_agent: chatHistoryCache.value.report_agent || [] }
+  if (chatTarget.value === 'agent') {
+    chatHistory.value = chatHistoryCache.value.report_agent
+    chatTarget.value = 'report_agent'
+  }
+  activeTab.value = 'chat'
+}
+
+const verifyLiveExecution = async (scope = liveScope()) => {
+  if (!scope.executionId || !scope.simulationId || reportData.value?.report_id !== scope.reportId ||
+      reportData.value?.simulation_id !== scope.simulationId) return false
+  try {
+    const response = await getRunStatus(scope.simulationId)
+    if (!isLiveScopeCurrent(scope)) return false
+    if (!response.success || !response.data?.execution_id) {
+      disableLiveInterviews('The current execution could not be verified. Live interviews are unavailable; saved report chat remains available.')
+      return false
+    }
+    if (response.data.execution_id !== scope.executionId) {
+      disableLiveInterviews('This report belongs to an earlier execution. Live interviews require the current execution; saved report chat remains available.')
+      return false
+    }
+    liveExecutionId.value = scope.executionId
+    liveInterviewNotice.value = ''
+    return true
+  } catch {
+    if (isLiveScopeCurrent(scope)) disableLiveInterviews('The current execution could not be verified. Live interviews are unavailable; saved report chat remains available.')
+    return false
+  }
+}
+
+const interviewCurrentExecution = async (scope, interviews) => {
+  if (!await verifyLiveExecution(scope)) return null
+  let response
+  try {
+    response = await interviewAgents({ simulation_id: scope.simulationId,
+      expected_execution_id: scope.executionId, interviews })
+  } catch (error) {
+    if (!isLiveScopeCurrent(scope)) return null
+    if (error.response?.data?.error_code === 'execution_changed') {
+      if (isLiveScopeCurrent(scope)) disableLiveInterviews('The simulation execution changed. Live interviews require the current execution; saved report chat remains available.')
+      return null
+    }
+    throw error
+  }
+  if (!isLiveScopeCurrent(scope)) return null
+  if (response.data?.execution_id && response.data.execution_id !== scope.executionId) {
+    disableLiveInterviews('The interview response belongs to another execution and was not displayed. Saved report chat remains available.')
+    return null
+  }
+  if (!await verifyLiveExecution(scope)) return null
+  return response
+}
 
 // Helper Methods
 const isSectionCompleted = (sectionIndex) => {
@@ -503,6 +591,7 @@ const saveChatHistory = () => {
 }
 
 const selectReportAgentChat = () => {
+  if (isSending.value) return
   // 保存当前对话记录
   saveChatHistory()
   
@@ -517,6 +606,7 @@ const selectReportAgentChat = () => {
 }
 
 const selectSurveyTab = () => {
+  if (isSending.value || !canInterviewLive.value) return
   activeTab.value = 'survey'
   selectedAgent.value = null
   selectedAgentIndex.value = null
@@ -524,6 +614,7 @@ const selectSurveyTab = () => {
 }
 
 const toggleAgentDropdown = () => {
+  if (isSending.value || !canInterviewLive.value) return
   showAgentDropdown.value = !showAgentDropdown.value
   if (showAgentDropdown.value) {
     activeTab.value = 'chat'
@@ -532,6 +623,7 @@ const toggleAgentDropdown = () => {
 }
 
 const selectAgent = (agent, idx) => {
+  if (isSending.value || !canInterviewLive.value) return
   // 保存当前对话记录
   saveChatHistory()
   
@@ -561,6 +653,7 @@ const formatTime = (timestamp) => {
 // Chat Methods
 const sendMessage = async () => {
   if (!chatInput.value.trim() || isSending.value) return
+  if (chatTarget.value === 'agent' && !canInterviewLive.value) return
   
   const message = chatInput.value.trim()
   chatInput.value = ''
@@ -628,11 +721,14 @@ const sendToReportAgent = async (message) => {
 }
 
 const sendToAgent = async (message) => {
-  if (!selectedAgent.value || selectedAgentIndex.value === null) {
+  if (!canInterviewLive.value || !selectedAgent.value || selectedAgentIndex.value === null) {
     throw new Error(t('step5.selectAgentFirst'))
   }
   
   addLog(t('log.sendToAgent', { name: selectedAgent.value.username, message: message.substring(0, 50) }))
+  const scope = liveScope()
+  const agentId = selectedAgentIndex.value
+  const agentName = selectedAgent.value.username
   
   // Build prompt with chat history
   let prompt = message
@@ -645,13 +741,11 @@ const sendToAgent = async (message) => {
     prompt = `以下是我们之前的对话：\n${historyContext}\n\n现在我的新问题是：${message}`
   }
   
-  const res = await interviewAgents({
-    simulation_id: props.simulationId,
-    interviews: [{
-      agent_id: selectedAgentIndex.value,
+  const res = await interviewCurrentExecution(scope, [{
+      agent_id: agentId,
       prompt: prompt
-    }]
-  })
+    }])
+  if (!res) return
   
   if (res.success && res.data) {
     // 正确的数据路径: res.data.result.results 是一个对象字典
@@ -661,7 +755,6 @@ const sendToAgent = async (message) => {
     
     // 将对象字典转换为数组，优先获取 reddit 平台的回复
     let responseContent = null
-    const agentId = selectedAgentIndex.value
     
     if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
       // 优先使用 reddit 平台回复，其次 twitter
@@ -682,7 +775,7 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(t('log.agentReplied', { name: selectedAgent.value.username }))
+      addLog(t('log.agentReplied', { name: agentName }))
     } else {
       throw new Error(t('step5.noResponse'))
     }
@@ -701,6 +794,7 @@ const scrollToBottom = () => {
 
 // Survey Methods
 const toggleAgentSelection = (idx) => {
+  if (!canInterviewLive.value) return
   const newSet = new Set(selectedAgents.value)
   if (newSet.has(idx)) {
     newSet.delete(idx)
@@ -711,6 +805,7 @@ const toggleAgentSelection = (idx) => {
 }
 
 const selectAllAgents = () => {
+  if (!canInterviewLive.value) return
   const newSet = new Set()
   profiles.value.forEach((_, idx) => newSet.add(idx))
   selectedAgents.value = newSet
@@ -721,21 +816,21 @@ const clearAgentSelection = () => {
 }
 
 const submitSurvey = async () => {
-  if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
+  if (!canInterviewLive.value || selectedAgents.value.size === 0 || !surveyQuestion.value.trim() || isSurveying.value) return
   
   isSurveying.value = true
   addLog(t('log.sendSurvey', { count: selectedAgents.value.size }))
   
   try {
+    const scope = liveScope()
+    const question = surveyQuestion.value.trim()
+    const selectedProfiles = [...profiles.value]
     const interviews = Array.from(selectedAgents.value).map(idx => ({
       agent_id: idx,
-      prompt: surveyQuestion.value.trim()
+      prompt: question
     }))
-    
-    const res = await interviewAgents({
-      simulation_id: props.simulationId,
-      interviews: interviews
-    })
+    const res = await interviewCurrentExecution(scope, interviews)
+    if (!res) return
     
     if (res.success && res.data) {
       // 正确的数据路径: res.data.result.results 是一个对象字典
@@ -748,7 +843,7 @@ const submitSurvey = async () => {
       
       for (const interview of interviews) {
         const agentIdx = interview.agent_id
-        const agent = profiles.value[agentIdx]
+        const agent = selectedProfiles[agentIdx]
         
         // 优先使用 reddit 平台回复，其次 twitter
         let responseContent = t('step5.noResponse')
@@ -772,7 +867,7 @@ const submitSurvey = async () => {
           agent_id: agentIdx,
           agent_name: agent?.username || `Agent ${agentIdx}`,
           profession: agent?.profession,
-          question: surveyQuestion.value.trim(),
+          question: question,
           answer: responseContent
         })
       }
@@ -792,14 +887,17 @@ const submitSurvey = async () => {
 // Load Report Data
 const loadReportData = async () => {
   if (!props.reportId) return
+  const reportId = props.reportId
   
   try {
     addLog(t('log.loadReportData', { id: props.reportId }))
     
     // Get report info
-    const reportRes = await getReport(props.reportId)
+    const reportRes = await getReport(reportId)
+    if (props.reportId !== reportId) return
     if (reportRes.success && reportRes.data) {
       reportData.value = reportRes.data
+      await loadProfiles()
       if (reportRes.data.outline) {
         reportOutline.value = reportRes.data.outline
         reportRes.data.outline.sections?.forEach((section, index) => {
@@ -816,9 +914,11 @@ const loadReportData = async () => {
 
 const loadAgentLogs = async () => {
   if (!props.reportId) return
+  const reportId = props.reportId
   
   try {
-    const res = await getAgentLog(props.reportId, 0)
+    const res = await getAgentLog(reportId, 0)
+    if (props.reportId !== reportId) return
     if (res.success && res.data) {
       const logs = res.data.logs || []
       
@@ -840,16 +940,33 @@ const loadAgentLogs = async () => {
 }
 
 const loadProfiles = async () => {
-  if (!props.simulationId) return
-  
+  const requestId = ++profileRequestId
+  checkingLiveExecution.value = false
+  disableLiveInterviews('Checking whether live interviews belong to this report execution.')
+  if (!reportExecutionId.value) {
+    liveInterviewNotice.value = 'This report has no verified execution binding. Live interviews require a report from the current execution; saved report chat remains available.'
+    return
+  }
+  if (!props.simulationId || reportData.value?.report_id !== props.reportId || reportData.value?.simulation_id !== props.simulationId) {
+    liveInterviewNotice.value = 'The report execution could not be verified. Live interviews are unavailable; saved report chat remains available.'
+    return
+  }
+  const scope = liveScope()
+  checkingLiveExecution.value = true
   try {
-    const res = await getSimulationProfilesRealtime(props.simulationId)
+    if (!await verifyLiveExecution(scope)) return
+    const res = await getSimulationProfilesRealtime(scope.simulationId)
+    // A rerun between the status and profile reads must not expose its agents.
+    if (requestId !== profileRequestId || !isLiveScopeCurrent(scope) || !await verifyLiveExecution(scope)) return
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
       addLog(t('log.loadedProfiles', { count: profiles.value.length }))
     }
   } catch (err) {
+    if (isLiveScopeCurrent(scope)) disableLiveInterviews('Live agent profiles could not be verified. Saved report chat remains available.')
     addLog(t('log.loadProfilesFailed', { error: err.message }))
+  } finally {
+    if (requestId === profileRequestId) checkingLiveExecution.value = false
   }
 }
 
@@ -864,16 +981,20 @@ const handleClickOutside = (e) => {
 // Lifecycle
 onMounted(() => {
   addLog(t('log.step5Init'))
-  loadReportData()
-  loadProfiles()
+  liveStatusTimer = setInterval(() => {
+    if (canInterviewLive.value) verifyLiveExecution()
+  }, 10000)
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
+  clearInterval(liveStatusTimer)
+  liveScopeGeneration += 1
   document.removeEventListener('click', handleClickOutside)
 })
 
 watch(() => props.reportId, (newId) => {
+  disableLiveInterviews('Checking whether live interviews belong to this report execution.')
   if (newId) {
     reportData.value = null
     reportOutline.value = null
@@ -890,6 +1011,14 @@ watch(() => props.simulationId, (newId) => {
 </script>
 
 <style scoped>
+.live-interview-notice {
+  padding: 12px 20px;
+  background: #fff7e8;
+  color: #624c25;
+  font-size: 12px;
+}
+.live-interview-notice button { margin-left: 8px; }
+.tab-pill:disabled { opacity: 0.5; cursor: not-allowed; }
 .interaction-panel {
   height: 100%;
   display: flex;

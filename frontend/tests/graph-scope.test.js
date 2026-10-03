@@ -210,3 +210,165 @@ it('pins report-agent chat to the selected historical report', async () => {
     report_id: 'report_old', simulation_id: 'simulation_a', message: 'Explain this report'
   })
 })
+
+describe('report-bound live interviews', () => {
+  const profile = { username: 'Bound agent', profession: 'Analyst' }
+  const currentStatus = { simulation_id: 'simulation_a', execution_id: 'execution_old', runner_status: 'completed' }
+  const props = { reportId: 'report_old', simulationId: 'simulation_a' }
+  const replies = {
+    '/api/report/report_old/agent-log': { logs: [] },
+    '/api/simulation/simulation_a/run-status': currentStatus,
+    '/api/simulation/simulation_a/profiles/realtime': { profiles: [profile] },
+    '/api/simulation/interview/batch': { execution_id: 'execution_old', result: { results: { reddit_0: { response: 'Bound live answer' } } } }
+  }
+
+  async function chooseAgent(wrapper) {
+    await wrapper.get('.agent-pill').trigger('click')
+    await wrapper.get('.dropdown-item').trigger('click')
+    await wrapper.get('textarea.chat-input').setValue('Explain your decision')
+  }
+
+  it('hides newer agents and disables interviews for a historical execution', async () => {
+    const { wrapper, requests } = await start(Step5Interaction, {
+      ...replies, '/api/simulation/simulation_a/run-status': { ...currentStatus, execution_id: 'execution_new' }
+    }, { props })
+    expect(wrapper.get('.live-interview-notice').text()).toContain('earlier execution')
+    expect(wrapper.get('.survey-pill').element.disabled).toBe(true)
+    expect(wrapper.find('.agent-pill').exists()).toBe(false)
+    expect(requests.some(request => request.url.endsWith('/profiles/realtime'))).toBe(false)
+    expect(wrapper.get('textarea.chat-input').element.disabled).toBe(false)
+    expect(wrapper.text()).not.toContain(profile.username)
+  })
+
+  it('keeps live chat and survey enabled for the current execution and pins both requests', async () => {
+    const { wrapper, requests } = await start(Step5Interaction, replies, { props })
+    expect(wrapper.find('.live-interview-notice').exists()).toBe(false)
+    await chooseAgent(wrapper)
+    await wrapper.get('button.send-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Bound live answer')
+    await wrapper.get('.survey-pill').trigger('click')
+    await wrapper.get('.agent-checkbox input').setValue(true)
+    await wrapper.get('textarea.survey-input').setValue('Survey question')
+    await wrapper.get('.survey-submit-btn').trigger('click')
+    await flushPromises()
+    const interviews = requests.filter(request => request.url === '/api/simulation/interview/batch').map(request => JSON.parse(request.data))
+    expect(interviews).toEqual([
+      { simulation_id: 'simulation_a', expected_execution_id: 'execution_old', interviews: [{ agent_id: 0, prompt: 'Explain your decision' }] },
+      { simulation_id: 'simulation_a', expected_execution_id: 'execution_old', interviews: [{ agent_id: 0, prompt: 'Survey question' }] }
+    ])
+    expect(wrapper.get('.survey-results').text()).toContain(profile.username)
+  })
+
+  it.each(['legacy', 'unverified'])('disables live actions for a %s execution while keeping saved report chat', async state => {
+    const { wrapper, requests } = await start(Step5Interaction, {
+      ...replies,
+      '/api/report/report_old': state === 'legacy' ? { ...savedReport, manifest: {} } : savedReport,
+      '/api/simulation/simulation_a/run-status': {}
+    }, { props })
+    expect(wrapper.get('.survey-pill').element.disabled).toBe(true)
+    expect(wrapper.get('.live-interview-notice').text()).toContain('saved report chat remains available')
+    expect(wrapper.get('textarea.chat-input').element.disabled).toBe(false)
+    expect(requests.some(request => request.url.endsWith('/profiles/realtime'))).toBe(false)
+  })
+
+  it('rejects profiles when a rerun occurs during the profile request', async () => {
+    let status = currentStatus
+    let finishProfiles
+    const { wrapper } = await start(Step5Interaction, {
+      ...replies,
+      '/api/simulation/simulation_a/run-status': () => status,
+      '/api/simulation/simulation_a/profiles/realtime': () => new Promise(resolve => { finishProfiles = resolve })
+    }, { props })
+    status = { ...currentStatus, execution_id: 'execution_new' }
+    finishProfiles({ profiles: [{ username: 'New execution agent' }] })
+    await flushPromises()
+    expect(wrapper.get('.live-interview-notice').text()).toContain('earlier execution')
+    expect(wrapper.text()).not.toContain('New execution agent')
+    expect(wrapper.find('.agent-pill').exists()).toBe(false)
+  })
+
+  it('checks execution again before sending, including the Enter shortcut', async () => {
+    let status = currentStatus
+    const { wrapper, requests } = await start(Step5Interaction, {
+      ...replies, '/api/simulation/simulation_a/run-status': () => status
+    }, { props })
+    await chooseAgent(wrapper)
+    status = { ...currentStatus, execution_id: 'execution_new' }
+    await wrapper.get('textarea.chat-input').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(requests.some(request => request.url === '/api/simulation/interview/batch')).toBe(false)
+    expect(wrapper.get('.live-interview-notice').text()).toContain('earlier execution')
+    expect(wrapper.find('.agent-profile-card').exists()).toBe(false)
+  })
+
+  it('clears agent state on an observed rerun and discards an in-flight reply', async () => {
+    vi.useFakeTimers()
+    let status = currentStatus
+    let finishInterview
+    const { wrapper } = await start(Step5Interaction, {
+      ...replies,
+      '/api/simulation/simulation_a/run-status': () => status,
+      '/api/simulation/interview/batch': () => new Promise(resolve => { finishInterview = resolve })
+    }, { props })
+    await chooseAgent(wrapper)
+    await wrapper.get('button.send-btn').trigger('click')
+    await flushPromises()
+    status = { ...currentStatus, execution_id: 'execution_new' }
+    await vi.advanceTimersByTimeAsync(10000)
+    finishInterview({ execution_id: 'execution_old', result: { results: { reddit_0: { response: 'Stale live reply' } } } })
+    await flushPromises()
+    expect(wrapper.get('.live-interview-notice').text()).toContain('earlier execution')
+    expect(wrapper.find('.agent-pill').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Stale live reply')
+    expect(wrapper.text()).not.toContain(profile.username)
+  })
+
+  it('rejects an interview result identified as a different execution', async () => {
+    const { wrapper } = await start(Step5Interaction, {
+      ...replies, '/api/simulation/interview/batch': { execution_id: 'execution_other', result: { results: { reddit_0: { response: 'Wrong execution reply' } } } }
+    }, { props })
+    await chooseAgent(wrapper)
+    await wrapper.get('button.send-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('.live-interview-notice').text()).toContain('another execution')
+    expect(wrapper.text()).not.toContain('Wrong execution reply')
+  })
+
+  it('handles the server execution guard by disabling live actions visibly', async () => {
+    const { wrapper } = await start(Step5Interaction, {
+      ...replies, '/api/simulation/interview/batch': () => {
+        const error = new Error('Execution changed')
+        error.response = { status: 409, data: { success: false, error_code: 'execution_changed', error: 'Execution changed' } }
+        throw error
+      }
+    }, { props })
+    await chooseAgent(wrapper)
+    await wrapper.get('button.send-btn').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('.live-interview-notice').text()).toContain('simulation execution changed')
+    expect(wrapper.get('.survey-pill').element.disabled).toBe(true)
+    expect(wrapper.find('.agent-pill').exists()).toBe(false)
+    expect(wrapper.get('textarea.chat-input').element.disabled).toBe(false)
+  })
+
+  it('keeps a pending live answer in its originating conversation', async () => {
+    let finishInterview
+    const { wrapper } = await start(Step5Interaction, {
+      ...replies, '/api/simulation/interview/batch': () => new Promise(resolve => { finishInterview = resolve })
+    }, { props })
+    await chooseAgent(wrapper)
+    await wrapper.get('button.send-btn').trigger('click')
+    await flushPromises()
+    const reportTab = wrapper.get('.action-bar-tabs > .tab-pill')
+    expect(reportTab.element.disabled).toBe(true)
+    await reportTab.trigger('click')
+    expect(wrapper.find('.report-agent-tools-card').exists()).toBe(false)
+    finishInterview(replies['/api/simulation/interview/batch'])
+    await flushPromises()
+    expect(wrapper.text()).toContain('Bound live answer')
+    await reportTab.trigger('click')
+    expect(wrapper.find('.report-agent-tools-card').exists()).toBe(true)
+    expect(wrapper.findAll('.message-text').some(message => message.text().includes('Bound live answer'))).toBe(false)
+  })
+})

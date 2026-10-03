@@ -66,6 +66,12 @@ class SimulationIsolationError(ValueError):
     code = "execution_isolation_unavailable"
 
 
+class SimulationExecutionChanged(SimulationIsolationError):
+    """A command targets an execution that is no longer current."""
+
+    code = "execution_changed"
+
+
 def assert_clean_simulation_source(graph_id: str):
     """Reject unsupported backends and contaminated legacy preparation inputs."""
     if str(Config.GRAPH_BACKEND).strip().lower() != "local":
@@ -85,13 +91,23 @@ def _execution_command(method):
     """Keep an IPC request bound to the execution observed before lock wait."""
     @wraps(method)
     def locked(cls, simulation_id, *args, **kwargs):
+        pinned = "expected_execution_id" in kwargs
+        expected = kwargs.pop("expected_execution_id", None)
+        if pinned:
+            validate_storage_id(expected, "expected_execution_id")
         initial = cls.get_run_state(simulation_id)
         execution_id = initial.execution_id if initial else None
+        if pinned and expected != execution_id:
+            raise SimulationExecutionChanged("The simulation execution changed; refresh and retry against the selected execution.")
         with cls._finalization_lock(simulation_id):
             current = cls.get_run_state(simulation_id)
-            if (current.execution_id if current else None) != execution_id:
-                raise SimulationIsolationError("The simulation execution changed before this command could be sent; refresh and retry.")
-            return method(cls, simulation_id, *args, **kwargs)
+            current_execution_id = current.execution_id if current else None
+            if current_execution_id != execution_id or (pinned and expected != current_execution_id):
+                raise SimulationExecutionChanged("The simulation execution changed before this command could be sent; refresh and retry.")
+            result = method(cls, simulation_id, *args, **kwargs)
+            if isinstance(result, dict) and result.get("success"):
+                result = {**result, "execution_id": execution_id}
+            return result
     return locked
 
 
@@ -286,16 +302,16 @@ class SimulationRunner:
     
     # 图谱记忆更新配置
     _graph_memory_enabled: Dict[str, bool] = {}  # simulation_id -> enabled
-    _finalization_locks: Dict[str, threading.Lock] = {}
+    _finalization_locks: Dict[str, threading.RLock] = {}
     _finalization_locks_guard = threading.Lock()
     _manual_stop_requests: set[str] = set()
 
     @classmethod
-    def _finalization_lock(cls, simulation_id: str) -> threading.Lock:
+    def _finalization_lock(cls, simulation_id: str) -> threading.RLock:
         validate_storage_id(simulation_id, "simulation_id")
         with cls._finalization_locks_guard:
             return cls._finalization_locks.setdefault(
-                simulation_id, threading.Lock()
+                simulation_id, threading.RLock()
             )
 
     @classmethod
@@ -1889,7 +1905,9 @@ class SimulationRunner:
         agent_id: int,
         prompt: str,
         platform: str = None,
-        timeout: float = 60.0
+        timeout: float = 60.0,
+        *,
+        expected_execution_id: str | None = None,
     ) -> Dict[str, Any]:
         """
         采访单个Agent
@@ -1959,7 +1977,9 @@ class SimulationRunner:
         simulation_id: str,
         interviews: List[Dict[str, Any]],
         platform: str = None,
-        timeout: float = 120.0
+        timeout: float = 120.0,
+        *,
+        expected_execution_id: str | None = None,
     ) -> Dict[str, Any]:
         """
         批量采访多个Agent
@@ -2023,7 +2043,9 @@ class SimulationRunner:
         simulation_id: str,
         prompt: str,
         platform: str = None,
-        timeout: float = 180.0
+        timeout: float = 180.0,
+        *,
+        expected_execution_id: str | None = None,
     ) -> Dict[str, Any]:
         """
         采访所有Agent（全局采访）
@@ -2082,7 +2104,9 @@ class SimulationRunner:
     def close_simulation_env(
         cls,
         simulation_id: str,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        *,
+        expected_execution_id: str | None = None,
     ) -> Dict[str, Any]:
         """
         关闭模拟环境（而不是停止模拟进程）

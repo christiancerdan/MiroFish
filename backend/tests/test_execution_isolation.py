@@ -330,3 +330,115 @@ def test_remaining_commands_reject_replacement_before_read_or_send(launch, monke
             SimulationRunner.close_simulation_env('sim-isolated')
         else:
             SimulationRunner.interview_all_agents('sim-isolated', 'must not reach replacement')
+
+
+def _call_pinned_command(command, expected):
+    methods = {
+        'single': lambda: SimulationRunner.interview_agent('sim-isolated', 0, 'hello', expected_execution_id=expected),
+        'batch': lambda: SimulationRunner.interview_agents_batch('sim-isolated', [{'agent_id': 0, 'prompt': 'hello'}], expected_execution_id=expected),
+        'all': lambda: SimulationRunner.interview_all_agents('sim-isolated', 'hello', expected_execution_id=expected),
+        'close': lambda: SimulationRunner.close_simulation_env('sim-isolated', expected_execution_id=expected),
+    }
+    return methods[command]()
+
+
+@pytest.mark.parametrize('command', ['single', 'batch', 'all', 'close'])
+def test_pinned_command_rejects_prior_execution_before_lock_or_ipc(launch, monkeypatch, command):
+    from contextlib import contextmanager
+    state = SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    monkeypatch.setattr(SimulationRunner, '_finalization_lock',
+        classmethod(lambda cls, _: pytest.fail('Known mismatched execution should fail before waiting for the lock')))
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: pytest.fail('Must not send stale command'))
+    with pytest.raises(ValueError) as raised:
+        _call_pinned_command(command, 'exec-historical')
+    assert raised.value.code == 'execution_changed'
+
+
+@pytest.mark.parametrize('value', [None, '', 123, [], '../escape', ' '])
+def test_explicit_invalid_execution_identity_is_rejected_before_state_reads(monkeypatch, value):
+    monkeypatch.setattr(SimulationRunner, 'get_run_state', classmethod(lambda cls, _: pytest.fail('Invalid input must fail before state reads')))
+    with pytest.raises(ValueError, match='expected_execution_id'):
+        _call_pinned_command('single', value)
+
+
+@pytest.mark.parametrize('command', ['single', 'batch', 'all', 'close'])
+def test_pinned_command_revalidates_identity_after_waiting_for_lock(launch, monkeypatch, command):
+    from contextlib import contextmanager
+    state = SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    original = state.execution_id
+    @contextmanager
+    def replacement():
+        state.execution_id = 'exec-new'
+        yield
+    monkeypatch.setattr(SimulationRunner, '_finalization_lock', classmethod(lambda cls, _: replacement()))
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: pytest.fail('Must not send stale command'))
+    with pytest.raises(ValueError) as raised:
+        _call_pinned_command(command, original)
+    assert raised.value.code == 'execution_changed'
+
+
+@pytest.mark.parametrize('endpoint,payload', [
+    ('/interview', {'agent_id': 0, 'prompt': 'hello'}),
+    ('/interview/batch', {'interviews': [{'agent_id': 0, 'prompt': 'hello'}]}),
+    ('/interview/all', {'prompt': 'hello'}),
+    ('/close-env', {}),
+])
+def test_api_rejects_historical_execution_with_409_before_any_ipc(launch, monkeypatch, endpoint, payload):
+    from flask import Flask
+    from app.api import simulation as api
+    SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: pytest.fail('Historical command must not inspect or send IPC'))
+    app = Flask(__name__)
+    app.register_blueprint(api.simulation_bp, url_prefix='/api/simulation')
+    response = app.test_client().post('/api/simulation' + endpoint, json={
+        'simulation_id': 'sim-isolated', 'expected_execution_id': 'exec-historical', **payload,
+    })
+    assert response.status_code == 409, response.get_json()
+    assert response.json['error_code'] == 'execution_changed'
+
+
+@pytest.mark.parametrize('command', ['single', 'batch', 'all', 'close'])
+def test_matching_pinned_command_returns_execution_identity_with_real_lock(launch, monkeypatch, command):
+    state = SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    (launch.folder / 'simulation_config.json').write_text(json.dumps({'agent_configs': [{'agent_id': 0}]}))
+    # Assert reentrancy without blocking so a regression cannot hang the suite.
+    # The all-agents command acquires the same real lock again in batch dispatch.
+    lock = SimulationRunner._finalization_lock('sim-isolated')
+    assert lock.acquire(blocking=False)
+    nested = lock.acquire(blocking=False)
+    if nested:
+        lock.release()
+    lock.release()
+    assert nested, 'The real lock must permit nested all-agents -> batch command dispatch'
+    sent = []
+    def send(**kwargs):
+        sent.append(kwargs)
+        return SimpleNamespace(status=SimpleNamespace(value='completed'), result={}, timestamp='now')
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: SimpleNamespace(
+        check_env_alive=lambda: True, send_interview=send,
+        send_batch_interview=send, send_close_env=send,
+    ))
+    result = _call_pinned_command(command, state.execution_id)
+    assert result['success'] is True
+    assert result['execution_id'] == state.execution_id
+    assert len(sent) == 1
+
+
+@pytest.mark.parametrize('endpoint,payload', [
+    ('/interview', {'agent_id': 0, 'prompt': 'hello'}),
+    ('/interview/batch', {'interviews': [{'agent_id': 0, 'prompt': 'hello'}]}),
+    ('/interview/all', {'prompt': 'hello'}),
+    ('/close-env', {}),
+])
+def test_api_rejects_explicit_null_execution_id_before_ipc(launch, monkeypatch, endpoint, payload):
+    from flask import Flask
+    from app.api import simulation as api
+    SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: pytest.fail('Invalid command must not inspect or send IPC'))
+    app = Flask(__name__)
+    app.register_blueprint(api.simulation_bp, url_prefix='/api/simulation')
+    response = app.test_client().post('/api/simulation' + endpoint, json={
+        'simulation_id': 'sim-isolated', 'expected_execution_id': None, **payload,
+    })
+    assert response.status_code == 400
+    assert 'expected_execution_id' in response.json['error']

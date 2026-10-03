@@ -1,0 +1,486 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_pairs_v1",
+  "retrospective_replay": true,
+  "forecast_accuracy_claim": false,
+  "protocol_sha256": "57408630049be3d753c140c3e1d11084faf4401b8b961a0c4f90dd6c891a6b7c",
+  "inputs_canonical_sha256": "451bd4f61085d052128672c80de9e229e1088e0593ebc194013a67a58f141763",
+  "inputs_file_sha256": "5d48910287e7c14ea3304dba6eaef37ab3eb425929fbcd32290ae7cbb9c9f406",
+  "outcomes_canonical_sha256": "a4224859ba9a163d97df22c3667d5dd19e3deff485461f7c1230c1d0fc255705",
+  "predictions_canonical_sha256": "0df046106a1f1f24f9358bd6a866da520be1ac0e67972cd85eca93155f2aaf64",
+  "counts": {
+    "scheduled_cases": 6,
+    "scored_cases": 6,
+    "excluded_ties": 0,
+    "observed_orderings_with_difference_interval_including_zero": 3,
+    "scheduled_records": 24,
+    "observed_records": 24,
+    "successful_records": 12,
+    "failed_records": 12,
+    "missing_records": 0,
+    "complete_paired_cases": 0
+  },
+  "complete_paired_metrics": {
+    "single_model": {
+      "scored_cases": 0,
+      "brier_score": null,
+      "log_loss": null,
+      "directional_accuracy": null
+    },
+    "mirofish": {
+      "scored_cases": 0,
+      "brier_score": null,
+      "log_loss": null,
+      "directional_accuracy": null
+    }
+  },
+  "method_complete_metrics": {
+    "single_model": {
+      "scored_cases": 6,
+      "brier_score": 0.29678750000000004,
+      "log_loss": 0.7930475931386108,
+      "directional_accuracy": 0.3333333333333333
+    },
+    "mirofish": {
+      "scored_cases": 0,
+      "brier_score": null,
+      "log_loss": null,
+      "directional_accuracy": null
+    }
+  },
+  "failure_adjusted_metrics": {
+    "single_model": {
+      "scored_cases": 6,
+      "brier_score": 0.29678750000000004,
+      "log_loss": 0.7930475931386108,
+      "directional_accuracy": 0.3333333333333333
+    },
+    "mirofish": {
+      "scored_cases": 6,
+      "brier_score": 1.0,
+      "log_loss": 34.538776394910684,
+      "directional_accuracy": 0.0
+    }
+  },
+  "chance": {
+    "probability_a": 0.5,
+    "scored_cases": 6,
+    "brier_score": 0.25,
+    "log_loss": 0.6931471805599453,
+    "directional_accuracy": 0.5
+  },
+  "paired_comparison": {
+    "paired_cases": 0,
+    "positive_improvement_favors": "mirofish",
+    "improvement": {
+      "brier_score": null,
+      "log_loss": null,
+      "directional_accuracy": null
+    },
+    "uncertainty": {
+      "method": "paired_case_bootstrap_percentile",
+      "unit": "case",
+      "level": 0.95,
+      "resamples": 5000,
+      "seed": 20261002,
+      "intervals": null,
+      "reason": "At least two paired cases and nonzero bootstrap resamples are required."
+    }
+  },
+  "failure_adjusted_comparison": {
+    "paired_cases": 6,
+    "positive_improvement_favors": "mirofish",
+    "improvement": {
+      "brier_score": -0.7032124999999999,
+      "log_loss": -33.745728801772074,
+      "directional_accuracy": -0.3333333333333333
+    },
+    "uncertainty": {
+      "method": "paired_case_bootstrap_percentile",
+      "unit": "case",
+      "level": 0.95,
+      "resamples": 5000,
+      "seed": 20261002,
+      "intervals": {
+        "brier_score": {
+          "lower": -0.8253833333333334,
+          "upper": -0.5810416666666667
+        },
+        "log_loss": {
+          "lower": -34.00579945960528,
+          "upper": -33.48565814393886
+        },
+        "directional_accuracy": {
+          "lower": -0.6666666666666666,
+          "upper": 0.0
+        }
+      }
+    }
+  },
+  "usage": {
+    "single_model": {
+      "scheduled_records": 12,
+      "observed_records": 12,
+      "successful_records": 12,
+      "failed_records": 0,
+      "missing_records": 0,
+      "calls": {
+        "total": 12,
+        "known_subtotal": 12,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "cost_usd": {
+        "total": null,
+        "known_subtotal": null,
+        "known_records": 0,
+        "unknown_records": 12
+      },
+      "elapsed_seconds": {
+        "total": 49.375640831989585,
+        "known_subtotal": 49.375640831989585,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "input_tokens": {
+        "total": 6384,
+        "known_subtotal": 6384,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "output_tokens": {
+        "total": 4635,
+        "known_subtotal": 4635,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "total_tokens": {
+        "total": 11019,
+        "known_subtotal": 11019,
+        "known_records": 12,
+        "unknown_records": 0
+      }
+    },
+    "mirofish": {
+      "scheduled_records": 12,
+      "observed_records": 12,
+      "successful_records": 0,
+      "failed_records": 12,
+      "missing_records": 0,
+      "calls": {
+        "total": 62,
+        "known_subtotal": 62,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "cost_usd": {
+        "total": null,
+        "known_subtotal": null,
+        "known_records": 0,
+        "unknown_records": 12
+      },
+      "elapsed_seconds": {
+        "total": 1345.0747765390115,
+        "known_subtotal": 1345.0747765390115,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "input_tokens": {
+        "total": 124501,
+        "known_subtotal": 124501,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "output_tokens": {
+        "total": 152073,
+        "known_subtotal": 152073,
+        "known_records": 12,
+        "unknown_records": 0
+      },
+      "total_tokens": {
+        "total": 276574,
+        "known_subtotal": 276574,
+        "known_records": 12,
+        "unknown_records": 0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "upworthy-001",
+      "observed_winner": "A",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": true,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.47500000000000003,
+          "observed_repeats_mean_probability_a": 0.47500000000000003,
+          "observed_repeats_probability_stddev": 0.07500000000000001,
+          "failure_adjusted_probability_a": 0.47500000000000003
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 0.0
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-002",
+      "observed_winner": "B",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": true,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.675,
+          "observed_repeats_mean_probability_a": 0.675,
+          "observed_repeats_probability_stddev": 0.024999999999999967,
+          "failure_adjusted_probability_a": 0.675
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 1.0
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-003",
+      "observed_winner": "B",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": false,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.525,
+          "observed_repeats_mean_probability_a": 0.525,
+          "observed_repeats_probability_stddev": 0.125,
+          "failure_adjusted_probability_a": 0.525
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 1.0
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-004",
+      "observed_winner": "A",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": true,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.575,
+          "observed_repeats_mean_probability_a": 0.575,
+          "observed_repeats_probability_stddev": 0.024999999999999967,
+          "failure_adjusted_probability_a": 0.575
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 0.0
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-005",
+      "observed_winner": "A",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": false,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.74,
+          "observed_repeats_mean_probability_a": 0.74,
+          "observed_repeats_probability_stddev": 0.040000000000000036,
+          "failure_adjusted_probability_a": 0.74
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 0.0
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-006",
+      "observed_winner": "B",
+      "excluded_tie": false,
+      "difference_interval_includes_zero": false,
+      "methods": {
+        "single_model": {
+          "complete": true,
+          "successful_repeats": 2,
+          "failed_repeats": 0,
+          "missing_repeats": 0,
+          "mean_probability_a": 0.725,
+          "observed_repeats_mean_probability_a": 0.725,
+          "observed_repeats_probability_stddev": 0.025000000000000022,
+          "failure_adjusted_probability_a": 0.725
+        },
+        "mirofish": {
+          "complete": false,
+          "successful_repeats": 0,
+          "failed_repeats": 2,
+          "missing_repeats": 0,
+          "mean_probability_a": null,
+          "observed_repeats_mean_probability_a": null,
+          "observed_repeats_probability_stddev": null,
+          "failure_adjusted_probability_a": 1.0
+        }
+      }
+    }
+  ],
+  "failures": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "error": "RuntimeError"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "error": "RuntimeError"
+    }
+  ],
+  "method": {
+    "aggregation": "equal_weight_cases_using_mean_probability_across_scheduled_repeats",
+    "label": "observed_historical_ctr_ordering",
+    "probability_tie_accuracy_credit": 0.5,
+    "outcome_ties": "exclude_exact_ties_from_all_quality_metrics_but_include_run_counts_and_usage",
+    "log_loss_clip_epsilon": 1e-15,
+    "failure_adjustment": "replace_each_missing_or_failed_repeat_with_probability_entirely_against_observed_label_before_averaging",
+    "hashes": "canonical_json_except_explicit_inputs_file_sha256",
+    "elapsed_seconds": "sum_of_record_wall_times_including_failures; not_parallel_benchmark_makespan"
+  },
+  "limitations": [
+    "This is public historical replay; model memorization and training-data contamination cannot be ruled out.",
+    "Observed CTR ordering is a noisy sample label, not a known population preference or future product outcome.",
+    "Small selected samples and case dependence can make bootstrap intervals unstable; they do not establish general usefulness or calibration.",
+    "Repeated runs are aggregated within cases and never counted as independent observations.",
+    "Complete-paired metrics can be biased by selective failures; always inspect failure counts and the full-cohort failure-adjusted sensitivity metrics.",
+    "Failure-adjusted losses are worst-case imputations for each method, not predicted behavior or a bound on their relative advantage.",
+    "Method-complete metrics may use different case sets and must not be compared directly when failures differ.",
+    "Methods can use different compute budgets; usage and elapsed time must be considered alongside quality.",
+    "Missing images and fixed synthetic personas restrict what this configuration can say about historical readers.",
+    "Hashes establish artifact identity, not prospective preregistration, label authenticity, or absence of hidden prompt leakage."
+  ]
+}

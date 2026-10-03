@@ -26,6 +26,8 @@ The original graph is sealed against ingestion and ontology changes after its fi
 
 Reports bind to a completed execution and store its identity and evidence snapshot. A report queued for an earlier execution cannot silently use a later run. Saved reports remain readable, and report conversations use the selected report's saved content and evidence. Legacy runs without an execution binding must be rerun before generating a new report.
 
+Live-agent interviews require the report's execution to match the current simulation. Historical reports keep their saved-report chat, but do not silently interview newer agents. Interview and environment-close requests can carry `expected_execution_id`; a stale identity returns HTTP 409 before sending a worker command.
+
 Execution graphs and saved report snapshots consume additional storage. They are retained for auditability; automatic retention and a complete project purge workflow are separate work.
 
 ## Extraction, persistence, and replay

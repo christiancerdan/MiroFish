@@ -326,6 +326,9 @@ class Trial:
         self.proof["implementation"] = {"python": sys.version.split()[0],
                                          "backend_python_source_sha256": sha256_text(inventory),
                                          "runner_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+        if ("implementation_source_sha256" in expected
+                and expected["implementation_source_sha256"] != self.proof["implementation"]["backend_python_source_sha256"]):
+            raise ValueError("Implementation source does not match the frozen protocol")
         try:
             self.proof["implementation"]["git_head"] = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=BACKEND, text=True).strip()

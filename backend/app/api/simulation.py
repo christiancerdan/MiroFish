@@ -20,6 +20,7 @@ from ..services.simulation_runner import (
     RunnerStatus,
     SimulationStopPending,
     SimulationIsolationError,
+    SimulationExecutionChanged,
     assert_clean_simulation_source,
 )
 from ..services.zep_graph_memory_updater import ZepGraphMemoryManager
@@ -2441,6 +2442,10 @@ def interview_agent():
     """
     try:
         data = request.get_json() or {}
+        execution_options = (
+            {"expected_execution_id": data["expected_execution_id"]}
+            if "expected_execution_id" in data else {}
+        )
         
         simulation_id = data.get('simulation_id')
         agent_id = data.get('agent_id')
@@ -2473,12 +2478,7 @@ def interview_agent():
                 "error": t('api.invalidInterviewPlatform')
             }), 400
         
-        # 检查环境状态
-        if not SimulationRunner.check_env_alive(simulation_id):
-            return jsonify({
-                "success": False,
-                "error": t('api.envNotRunning')
-            }), 400
+        # The runner checks environment and execution identity together under its lock.
         
         # 优化prompt，添加前缀避免Agent调用工具
         optimized_prompt = optimize_interview_prompt(prompt)
@@ -2488,7 +2488,8 @@ def interview_agent():
             agent_id=agent_id,
             prompt=optimized_prompt,
             platform=platform,
-            timeout=timeout
+            timeout=timeout,
+            **execution_options,
         )
 
         return jsonify({
@@ -2496,6 +2497,9 @@ def interview_agent():
             "data": result
         })
         
+    except SimulationExecutionChanged as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
+
     except ValueError as e:
         return jsonify({
             "success": False,
@@ -2563,6 +2567,10 @@ def interview_agents_batch():
     """
     try:
         data = request.get_json() or {}
+        execution_options = (
+            {"expected_execution_id": data["expected_execution_id"]}
+            if "expected_execution_id" in data else {}
+        )
 
         simulation_id = data.get('simulation_id')
         interviews = data.get('interviews')
@@ -2608,12 +2616,7 @@ def interview_agents_batch():
                     "error": t('api.interviewListInvalidPlatform', index=i+1)
                 }), 400
 
-        # 检查环境状态
-        if not SimulationRunner.check_env_alive(simulation_id):
-            return jsonify({
-                "success": False,
-                "error": t('api.envNotRunning')
-            }), 400
+        # The runner checks environment and execution identity together under its lock.
 
         # 优化每个采访项的prompt，添加前缀避免Agent调用工具
         optimized_interviews = []
@@ -2626,13 +2629,17 @@ def interview_agents_batch():
             simulation_id=simulation_id,
             interviews=optimized_interviews,
             platform=platform,
-            timeout=timeout
+            timeout=timeout,
+            **execution_options,
         )
 
         return jsonify({
             "success": result.get("success", False),
             "data": result
         })
+
+    except SimulationExecutionChanged as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
 
     except ValueError as e:
         return jsonify({
@@ -2690,6 +2697,10 @@ def interview_all_agents():
     """
     try:
         data = request.get_json() or {}
+        execution_options = (
+            {"expected_execution_id": data["expected_execution_id"]}
+            if "expected_execution_id" in data else {}
+        )
 
         simulation_id = data.get('simulation_id')
         prompt = data.get('prompt')
@@ -2715,12 +2726,7 @@ def interview_all_agents():
                 "error": t('api.invalidInterviewPlatform')
             }), 400
 
-        # 检查环境状态
-        if not SimulationRunner.check_env_alive(simulation_id):
-            return jsonify({
-                "success": False,
-                "error": t('api.envNotRunning')
-            }), 400
+        # The runner checks environment and execution identity together under its lock.
 
         # 优化prompt，添加前缀避免Agent调用工具
         optimized_prompt = optimize_interview_prompt(prompt)
@@ -2729,13 +2735,17 @@ def interview_all_agents():
             simulation_id=simulation_id,
             prompt=optimized_prompt,
             platform=platform,
-            timeout=timeout
+            timeout=timeout,
+            **execution_options,
         )
 
         return jsonify({
             "success": result.get("success", False),
             "data": result
         })
+
+    except SimulationExecutionChanged as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
 
     except ValueError as e:
         return jsonify({
@@ -2923,6 +2933,10 @@ def close_simulation_env():
     """
     try:
         data = request.get_json() or {}
+        execution_options = (
+            {"expected_execution_id": data["expected_execution_id"]}
+            if "expected_execution_id" in data else {}
+        )
         
         simulation_id = data.get('simulation_id')
         timeout = data.get('timeout', 30)
@@ -2935,7 +2949,8 @@ def close_simulation_env():
         
         result = SimulationRunner.close_simulation_env(
             simulation_id=simulation_id,
-            timeout=timeout
+            timeout=timeout,
+            **execution_options,
         )
         
         # 更新模拟状态
@@ -2950,6 +2965,9 @@ def close_simulation_env():
             "data": result
         })
         
+    except SimulationExecutionChanged as e:
+        return jsonify({"success": False, "error": str(e), "error_code": e.code}), 409
+
     except ValueError as e:
         return jsonify({
             "success": False,
