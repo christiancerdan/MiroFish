@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_pairs_v1",
+  "inputs_sha256": "451bd4f61085d052128672c80de9e229e1088e0593ebc194013a67a58f141763",
+  "case_ids": [
+    "upworthy-001",
+    "upworthy-003"
+  ],
+  "methods": [
+    "single_model",
+    "mirofish"
+  ],
+  "repeats": 1,
+  "tie_policy": "exclude_exact_ties",
+  "failure_policy": "worst_case_missing_repeat",
+  "bootstrap_samples": 5000,
+  "bootstrap_seed": 20261003,
+  "model": {
+    "provider": "openai_compatible",
+    "model": "gpt-oss:20b-cloud",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "token_limit": 32768,
+    "max_concurrent_trials": 2,
+    "purpose": "development_reliability_only",
+    "frozen_at": "2026-10-03T19:33:23.780590+00:00",
+    "timing_interpretation": "Observed wall time with up to two concurrent trials; not an isolated latency benchmark",
+    "implementation_source_sha256": "0b52e95bb323faa96509a2ecd5cc278f6ed6f23a85fd8d2f6f25b2069aef6186",
+    "git_head_at_freeze": "cf4b2ce06f6bcbab99027f680c91fb2934abe487"
+  },
+  "configuration": {
+    "simulation_rounds": 1,
+    "simulation_platform": "reddit",
+    "assumed_personas": [
+      {
+        "name": "Curious Reader",
+        "description": "A fictional curiosity-led reader who likes surprising, understandable stories."
+      },
+      {
+        "name": "Skeptical Reader",
+        "description": "A fictional evidence-oriented reader who distrusts exaggerated or vague claims."
+      },
+      {
+        "name": "Busy Reader",
+        "description": "A fictional time-poor generalist who values clear relevance and quickly understood benefits."
+      }
+    ],
+    "assessor_temperature": 0.3,
+    "assessor_max_tokens": 4096,
+    "assessor_attempts": 1,
+    "assessor_response_format": "json_object",
+    "report_max_tool_calls": 2,
+    "report_max_reflection_rounds": 1,
+    "max_calls": 35,
+    "wall_timeout_seconds": 900,
+    "participant_selection": "exact_source_persona_names_actual_graph_labels_v2",
+    "assessor_system_sha256": "5aa3a3186c70ec158eec08196c22c4757116753e3c3b04127b7eccc71a706fc8",
+    "simulation_requirement_sha256": "06ad670bc8f40a33a08ef44265abd95f3e73c893b19fef969f48e4a90b0fea9b",
+    "source_prompt_template_sha256": "154198a70f62136d5fcdd98555ee3de5dda1408dc8d327d82f0b2241345582f8",
+    "source_format_version": 1
+  }
+}

@@ -44,6 +44,9 @@ Default social counts are simulation parameters, not observed audience facts.
 Reddit export preserves unknown demographics as null. The maintained OASIS
 runtime renders only supplied demographic values and explicitly leaves the
 others unspecified; it no longer fills them with an age, country, or personality.
+Profile search enrichment retains only the target's exact node identity and
+incident relationships. It preserves identity alongside summaries instead of
+mixing unrelated actors' traits into anonymous notes.
 
 ## Reports
 

@@ -104,3 +104,22 @@ remains necessary before the holdout comparison.
 [Aggregated trial records](../backend/benchmarks/results/2026-10-03-reliability-development-v3/predictions.json)
 and the [read-only integrity audit](../backend/benchmarks/results/2026-10-03-reliability-development-v3/run-audit.json)
 are retained separately from earlier attempts and the holdout.
+
+## Attempt 4
+
+Source `cf4b2ce06f6bcbab99027f680c91fb2934abe487` preserves unspecified
+demographics through export and the patched OASIS prompt. Both old cases
+completed, and the new persistent runner's [independent artifact audit](../backend/benchmarks/results/2026-10-03-reliability-development-v4/run-audit.json)
+passed. All 24 demographic fields across the six serialized profiles remained
+null. Installed OASIS version and all 42 runtime files matched the vendored source.
+Usage was **37 calls, 110,330 tokens, 405.113 summed wall seconds**, unknown cost.
+
+A qualitative profile check found a separate attribution defect before the
+holdout was started: three profiles incorporated traits of other source readers.
+The original graph had three correct, separate summaries and no edges. Broad
+lexical retrieval matched their shared word “Reader,” and the profile helper
+stripped node identity from each summary before combining the notes. The next
+patch retains exact target identity and incident relationships with their
+attribution. This attempt validates demographic handling and execution, but does
+not satisfy the final persona-context reliability gate. All trial records remain
+retained, with no outcome scoring.

@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "protocol_sha256": "bdd74e0fa7d8390644d5b095e1eaba3e4ad7fa8b53dc2dcd760c897e63b812a4",
+  "checks": {
+    "frozen_artifacts": {
+      "status": "pass"
+    },
+    "orchestration_source": {
+      "status": "pass"
+    },
+    "implementation_source": {
+      "status": "pass"
+    },
+    "reporting_plan": {
+      "status": "pass"
+    },
+    "freeze_integrity": {
+      "status": "pass"
+    },
+    "runtime_inventory": {
+      "status": "pass"
+    },
+    "aggregate_predictions": {
+      "status": "pass"
+    }
+  },
+  "counts": {
+    "scheduled": 2,
+    "pass": 2,
+    "fail": 0,
+    "incomplete": 0
+  },
+  "trials": [
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "3d0a03d19a97d823e8ab296c39949c4980f54faca5cf43d705b4644010c09cce"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "e58d6810c65b35f6a3f0fcacd03136e117fc5609f2ccf52cb69cf7d0a23bec07",
+      "status": "pass",
+      "trial_status": "ok"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "checks": {
+        "trial_result": {
+          "status": "pass"
+        },
+        "start_marker": {
+          "status": "pass"
+        },
+        "proof": {
+          "status": "pass"
+        },
+        "source": {
+          "status": "pass"
+        },
+        "model": {
+          "status": "pass"
+        },
+        "implementation": {
+          "status": "pass"
+        },
+        "implementation_scope": {
+          "status": "pass"
+        },
+        "vendored_runtime": {
+          "status": "pass"
+        },
+        "configuration": {
+          "status": "pass"
+        },
+        "prompt_contract": {
+          "status": "pass"
+        },
+        "usage": {
+          "status": "pass"
+        },
+        "usage_ledger": {
+          "status": "pass"
+        },
+        "assessment": {
+          "status": "pass"
+        },
+        "report": {
+          "status": "pass"
+        },
+        "source_graph_identity": {
+          "status": "pass"
+        },
+        "source_graph": {
+          "status": "pass",
+          "source_snapshot_sha256": "a71e6b83b8c86d30852063d14b708ef75020ce7865f02b3ebaffab89b51fcc89"
+        },
+        "source_graph_evidence": {
+          "status": "pass"
+        },
+        "source_graph_document": {
+          "status": "pass"
+        },
+        "execution_count": {
+          "status": "pass"
+        },
+        "execution": {
+          "status": "pass"
+        },
+        "execution_proof": {
+          "status": "pass"
+        },
+        "simulation_evidence_scope": {
+          "status": "pass"
+        },
+        "simulation_evidence_present": {
+          "status": "pass"
+        },
+        "report_content": {
+          "status": "pass"
+        },
+        "report_evidence": {
+          "status": "pass"
+        },
+        "report_input_hashes": {
+          "status": "pass"
+        }
+      },
+      "source_document_sha256": "88a26b02a43f619bb42b8fd1a2af5f6ff5b96646677e4b67bde6e2d394aad1e3",
+      "status": "pass",
+      "trial_status": "ok"
+    }
+  ]
+}

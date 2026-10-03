@@ -481,23 +481,34 @@ class OasisProfileGenerator:
                 edge_result = edge_future.result()
                 node_result = node_future.result()
             
-            # 处理边搜索结果
+            # Search relevance does not establish identity or a relationship.
+            # Admit only facts whose endpoints explicitly include this entity.
             all_facts = set()
             if edge_result and hasattr(edge_result, 'edges') and edge_result.edges:
                 for edge in edge_result.edges:
-                    if hasattr(edge, 'fact') and edge.fact:
+                    endpoints = (getattr(edge, 'source_node_uuid', None),
+                                 getattr(edge, 'target_node_uuid', None))
+                    if entity.uuid and entity.uuid in endpoints and getattr(edge, 'fact', None):
                         all_facts.add(edge.fact)
-            results["facts"] = list(all_facts)
-            
-            # 处理节点搜索结果
+            results["facts"] = sorted(all_facts)
+
+            # Lexical searches often match multiple actors sharing a type/name
+            # token. Never detach their summaries from their identity and feed
+            # them to the target. Explicitly connected named actors are already
+            # supplied through EntityNode.related_nodes by the graph reader.
             all_summaries = set()
             if node_result and hasattr(node_result, 'nodes') and node_result.nodes:
                 for node in node_result.nodes:
-                    if hasattr(node, 'summary') and node.summary:
-                        all_summaries.add(node.summary)
-                    if hasattr(node, 'name') and node.name and node.name != entity_name:
-                        all_summaries.add(f"相关实体: {node.name}")
-            results["node_summaries"] = list(all_summaries)
+                    node_uuid = getattr(node, 'uuid_', None) or getattr(node, 'uuid', None)
+                    if not entity.uuid or node_uuid != entity.uuid:
+                        continue
+                    if getattr(node, 'summary', None):
+                        all_summaries.add(json.dumps({
+                            "entity_uuid": entity.uuid,
+                            "entity_name": entity.name,
+                            "summary": node.summary,
+                        }, ensure_ascii=False))
+            results["node_summaries"] = sorted(all_summaries)
             
             # 构建综合上下文
             context_parts = []

@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_pairs_v1",
+  "cases": [
+    {
+      "case_id": "upworthy-001",
+      "split": "pilot",
+      "headline_a": "Can You Imagine What It's Like To See What She Sees Everyday?",
+      "headline_b": "You Should See What This Woman Sees Every Day. It's Gorgeous And Really Messed Up.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-002",
+      "split": "pilot",
+      "headline_a": "'A Defense Attorney Dressed Up As A Prosecutor,' Is One Way She Puts It. Rigged Is Another.",
+      "headline_b": "She Says It Was Rigged, And Ferguson's McCullough 'Defense Attorney Dressed Up As A Prosecutor'",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-003",
+      "split": "pilot",
+      "headline_a": "Is It OK For This Comic To Humiliate These People? Yes, Because These People Are Horrible.",
+      "headline_b": "This Man Decided To Humiliate A Hate Group. Hilarity Ensues.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-004",
+      "split": "pilot",
+      "headline_a": "Read The Message An Author Wrote To Every Single Person That Wronged Him",
+      "headline_b": "This Message An Author Wrote To Every Single Person That Wronged Him Is Both Genius And Beautiful",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-005",
+      "split": "pilot",
+      "headline_a": "Her mother taught her to leave this place as she found it. So did mine.",
+      "headline_b": "They want to build a hotel in the Grand Canyon, but a lot of people think it's kind of a bad idea.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-006",
+      "split": "pilot",
+      "headline_a": "What Does This 1 Seemingly Innocent Word Have To Do With Workplace Double-Standards? Too Much.",
+      "headline_b": "Some Shampoo Ads Show A Bunch Of Women With Nice Hair. These Ones Have Something More Than That.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-007",
+      "split": "reserve",
+      "headline_a": "Here's A Famous Actress's Thoughts On Motherhood. You Might Wanna Ask Your Kids To Leave The Room.",
+      "headline_b": "A Famous Actress Has A Big Opinion On Motherhood And She Sure Doesn't Hold Back",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-008",
+      "split": "reserve",
+      "headline_a": "A Chart Tells You Everything You Need To Know About Art, Science, And School",
+      "headline_b": "Kids Who Love Art Are Better At Everything",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-009",
+      "split": "reserve",
+      "headline_a": "Lady Justice Has A Blindfold. That Doesn't Mean We Should Keep One On When It Comes To This Reality.",
+      "headline_b": "Whatever Stereotypes You Have About Lawyers, I Hope We Can All Agree On One Thing",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-010",
+      "split": "reserve",
+      "headline_a": "These Kids Are Irish, But Were Told They’re Not Irish Enough",
+      "headline_b": "An Animation That Explains A Real Frustration For Some College Students",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-011",
+      "split": "reserve",
+      "headline_a": "A Whole Country Decided To Legalize Gay Marriage. In Response, They Got What They Deserved.",
+      "headline_b": "When You Legalize Gay Marriage, You Have To Face The Beautiful Consequences Of Your Actions",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-012",
+      "split": "reserve",
+      "headline_a": "A Funny Guy Stands On Stage And Goes Right For An Abortion Joke. I'll Let Him Take It From Here.",
+      "headline_b": "A Funny Guy Stands On Stage And Goes Right For An Abortion Joke. He Makes An Excellent Point.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-013",
+      "split": "reserve",
+      "headline_a": "Studies Show Voting Is Contagious—Seriously! That's Why Sharing This Awesome PSA Makes You A Hero.",
+      "headline_b": "Every Time You Don't Vote In An Election, An Angel Sobs Uncontrollably. Don't Be That Guy. Serious.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-014",
+      "split": "reserve",
+      "headline_a": "His Hands Were Tied So He Used His Feet To Teach Students How To Wear A Condom",
+      "headline_b": "They Tied His Hands So He Used His Feet And Now His Students Know How To Wear A Condom",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-015",
+      "split": "reserve",
+      "headline_a": "They Won A Single Lawsuit But It's Changing The Lives Of Thousands Of Women Forever",
+      "headline_b": "She Grew Up With Privilege — And She Knows How To Use It",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-016",
+      "split": "reserve",
+      "headline_a": "Darwin Said It Was The Strongest Instinct That Humans Have. Guess What It's NOT: Survival",
+      "headline_b": "Science Explains Why Rich People Don't Care About You",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-017",
+      "split": "reserve",
+      "headline_a": "This Is Moving. See Why A Woman Who Could Barely Type Worked Hard For 7 Years To Write A Dictionary.",
+      "headline_b": "What Would You Do If You Were The Last Person Able To Speak Your Peoples' Language?",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-018",
+      "split": "reserve",
+      "headline_a": "If It Were Opposite Day, The News Would Be Like This",
+      "headline_b": "If It Were Opposite Day, The News Would Be So Much Better Than It Is Now",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-019",
+      "split": "reserve",
+      "headline_a": "Meet Some People Who Actually Want You To Go To Prison. You'll Be Shocked At Why. Or Not.",
+      "headline_b": "Meet Some People Who Actually Want You To Go To Prison. You'll Be Shocked At Why. Not Really ...",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-020",
+      "split": "reserve",
+      "headline_a": "Standardizing Science In The Classroom? Of Course Bill Nye Has An Opinion!",
+      "headline_b": "The One Thing About Common Core That Bill Nye Wants You To Be Excited About",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    }
+  ]
+}
