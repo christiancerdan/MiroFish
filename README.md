@@ -60,6 +60,7 @@ Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Redd
 - [Durable jobs and explicit recovery](./docs/durable-jobs.md)
 - [Project usage budgets](./docs/run-budgets.md)
 - [Evidence and forecast evaluation](./docs/forecast-evaluation.md)
+- [Deterministic citations and live reliability check](./docs/deterministic-citations-2026-10-03.md)
 - [Prospective customer-study preparation](./docs/prospective-customer-study.md)
 - [Synthetic live workflow check](./docs/live-workflow.md)
 - [Security changes and verification boundaries](./docs/security-remediation.md)

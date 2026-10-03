@@ -1,0 +1,12 @@
+[
+  {
+    "case_id": "upworthy-001",
+    "method": "mirofish",
+    "repeat": 1
+  },
+  {
+    "case_id": "upworthy-003",
+    "method": "mirofish",
+    "repeat": 1
+  }
+]
