@@ -42,6 +42,7 @@ def _updater(monkeypatch, add, simulation_id="sim-1"):
         "graph-1",
         api_key="test-key",
         simulation_id=simulation_id,
+        execution_id="exec-provenance",
     )
     updater.SEND_INTERVAL = 0
     return updater
@@ -102,6 +103,7 @@ def test_activity_episode_has_provenance_time_and_a_safe_size(monkeypatch):
     assert write["created_at"] == "2026-07-22T12:00:00+08:00"
     assert write["source_description"] == "MiroFish simulation activity batch"
     assert write["metadata"]["simulation_id"] == "sim-provenance"
+    assert write["metadata"]["execution_id"] == "exec-provenance"
     assert write["metadata"]["platform"] == "twitter"
     assert write["metadata"]["activity_count"] == 1
 

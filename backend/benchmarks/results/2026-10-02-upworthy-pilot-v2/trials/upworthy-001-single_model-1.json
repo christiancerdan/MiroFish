@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "57408630049be3d753c140c3e1d11084faf4401b8b961a0c4f90dd6c891a6b7c",
+  "records": [
+    {
+      "case_id": "upworthy-001",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 4.523426582993125,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1040,
+        "input_tokens": 525,
+        "output_tokens": 515,
+        "cost_usd": null
+      },
+      "run_id": "bench_3d980ab1c5c6bd89123c"
+    }
+  ]
+}

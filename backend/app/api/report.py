@@ -29,24 +29,58 @@ logger = get_logger('mirofish.api.report')
 
 # ============== 报告生成接口 ==============
 
+def _execution_binding(run_state, source_graph_id):
+    """Legacy shared graphs cannot establish which observations belong to a run."""
+    binding = {name: getattr(run_state, name, None) for name in
+               ("execution_id", "source_graph_id", "execution_graph_id", "source_snapshot_sha256")}
+    if not all(isinstance(binding[name], str) and binding[name] for name in
+               ("execution_id", "source_graph_id", "execution_graph_id")):
+        raise ValueError("This simulation has no isolated execution snapshot; rerun it before generating a report")
+    if binding["source_graph_id"] != source_graph_id:
+        raise ValueError("The simulation source graph changed; prepare and rerun it before generating a report")
+    if binding["execution_graph_id"] == source_graph_id:
+        raise ValueError("This simulation used a shared graph; rerun it to create an isolated execution snapshot")
+    return binding
+
+
+def _report_matches_execution(report, binding):
+    manifest = getattr(report, "manifest", {}) or {}
+    return (getattr(report, "graph_id", None) == binding["execution_graph_id"]
+            and all(manifest.get(name) == binding[name] for name in
+                    ("execution_id", "source_graph_id", "execution_graph_id")))
+
+
+def _report_matches_current_run(report, simulation_id):
+    run_state = SimulationRunner.get_run_state(simulation_id)
+    try:
+        binding = _execution_binding(run_state, getattr(run_state, "source_graph_id", None))
+    except ValueError:
+        return False
+    return (_report_matches_execution(report, binding)
+            and run_state.runner_status in {RunnerStatus.COMPLETED, RunnerStatus.STOPPED})
+
+
 def run_report_job(task_id, parameters):
     """Generate a queued report only while its original graph and run remain valid."""
     task_manager = TaskManager()
     simulation_id = parameters["simulation_id"]
     graph_id = parameters["graph_id"]
+    source_graph_id = parameters.get("source_graph_id")
     report_id = task_manager.get_task(task_id).metadata["report_id"]
     reader_id = f"{report_id}:{uuid.uuid4().hex}"
-    reader_registered = False
+    registered_graph_ids = []
     set_locale(parameters.get("locale", "en"))
     try:
-        with graph_lifecycle_lock(graph_id):
+        if not source_graph_id or graph_id != parameters.get("execution_graph_id"):
+            raise ValueError("This queued report has no isolated execution binding; rerun the simulation and generate it again")
+        with graph_lifecycle_lock(source_graph_id):
             state = SimulationManager().get_simulation(simulation_id)
             project = ProjectManager.get_project(parameters["project_id"])
             if (
                 state is None or project is None
                 or state.project_id != parameters["project_id"]
-                or project.graph_id != graph_id
-                or (state.graph_id and state.graph_id != graph_id)
+                or project.graph_id != source_graph_id
+                or (state.graph_id and state.graph_id != source_graph_id)
                 or project.status != ProjectStatus.GRAPH_COMPLETED
             ):
                 raise ValueError("The project graph changed before reporting started")
@@ -59,13 +93,17 @@ def run_report_job(task_id, parameters):
                 RunnerStatus.COMPLETED, RunnerStatus.STOPPED,
             }:
                 raise ValueError("A successfully completed or stopped simulation is required before reporting")
+            binding = _execution_binding(run_state, source_graph_id)
             if (
-                getattr(run_state, "started_at", None) != parameters.get("run_started_at")
+                any(binding[name] != parameters.get(name) for name in binding)
+                or getattr(run_state, "started_at", None) != parameters.get("run_started_at")
                 or getattr(run_state, "completed_at", None) != parameters.get("run_completed_at")
             ):
                 raise ValueError("The simulation run changed before reporting started")
+            register_graph_reader(source_graph_id, reader_id)
+            registered_graph_ids.append(source_graph_id)
             register_graph_reader(graph_id, reader_id)
-            reader_registered = True
+            registered_graph_ids.append(graph_id)
         task_manager.update_task(
             task_id, status=TaskStatus.PROCESSING, progress=0,
             message=t('api.initReportAgent'),
@@ -73,7 +111,9 @@ def run_report_job(task_id, parameters):
         agent = ReportAgent(
             graph_id=graph_id,
             simulation_id=simulation_id,
-            simulation_requirement=parameters["simulation_requirement"]
+            simulation_requirement=parameters["simulation_requirement"],
+            execution_id=binding["execution_id"], source_graph_id=source_graph_id,
+            source_snapshot_sha256=binding["source_snapshot_sha256"],
         )
 
         def progress_callback(stage, progress, message):
@@ -110,8 +150,8 @@ def run_report_job(task_id, parameters):
         logger.error(f"报告生成失败: {str(e)}")
         task_manager.fail_task(task_id, e)
     finally:
-        if reader_registered:
-            unregister_graph_reader(graph_id, reader_id)
+        for registered_graph_id in reversed(registered_graph_ids):
+            unregister_graph_reader(registered_graph_id, reader_id)
 
 
 @report_bp.route('/generate', methods=['POST'])
@@ -290,6 +330,14 @@ def generate_report():
                     ),
                 }), 409
 
+            try:
+                binding = _execution_binding(refreshed_run_state, graph_id)
+            except ValueError as error:
+                return jsonify({"success": False, "error": str(error)}), 409
+
+            if refreshed_project.simulation_requirement != simulation_requirement:
+                return jsonify({"success": False, "error": "The simulation requirement changed while reporting was starting"}), 409
+
             # Cached-report reuse is now part of the same atomic barrier, so a
             # concurrent rerun cannot make the returned report stale between
             # the status check and response.
@@ -300,6 +348,7 @@ def generate_report():
                 if (
                     existing_report
                     and existing_report.status == ReportStatus.COMPLETED
+                    and _report_matches_execution(existing_report, binding)
                 ):
                     return jsonify({
                         "success": True,
@@ -319,7 +368,8 @@ def generate_report():
                 parameters={
                     "simulation_id": simulation_id,
                     "project_id": project.project_id,
-                    "graph_id": graph_id,
+                    "graph_id": binding["execution_graph_id"],
+                    **binding,
                     "simulation_requirement": simulation_requirement,
                     "force_regenerate": force_regenerate,
                     "run_started_at": getattr(refreshed_run_state, "started_at", None),
@@ -329,10 +379,11 @@ def generate_report():
                 metadata={
                     "simulation_id": simulation_id,
                     "project_id": project.project_id,
-                    "graph_id": graph_id,
+                    "graph_id": binding["execution_graph_id"],
+                    **binding,
                     "report_id": report_id,
                 },
-                dedupe_key=f"report_generate:{simulation_id}",
+                dedupe_key=f"report_generate:{simulation_id}:{binding['execution_id']}",
                 idempotency_key=request.headers.get("Idempotency-Key"),
             )
             # Dedupe/idempotency may return a previously queued report.
@@ -399,7 +450,8 @@ def get_generate_status():
         # 如果提供了simulation_id，先检查是否已有完成的报告
         if simulation_id and not task_id:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
-            if existing_report and existing_report.status == ReportStatus.COMPLETED:
+            if (existing_report and existing_report.status == ReportStatus.COMPLETED
+                    and _report_matches_current_run(existing_report, simulation_id)):
                 return jsonify({
                     "success": True,
                     "data": {
@@ -501,7 +553,7 @@ def get_report_by_simulation(simulation_id: str):
     try:
         report = ReportManager.get_report_by_simulation(simulation_id)
         
-        if not report:
+        if not report or not _report_matches_current_run(report, simulation_id):
             return jsonify({
                 "success": False,
                 "error": t('api.noReportForSim', id=simulation_id),
@@ -640,13 +692,12 @@ def delete_report(report_id: str):
 @report_bp.route('/chat', methods=['POST'])
 def chat_with_report_agent():
     """
-    与Report Agent对话
-    
-    Report Agent可以在对话中自主调用检索工具来回答问题
+    Discuss a saved report and its immutable evidence snapshot.
     
     请求（JSON）：
         {
             "simulation_id": "sim_xxxx",        // 必填，模拟ID
+            "report_id": "report_xxxx",         // Optional: selected saved report
             "message": "请解释一下舆情走向",    // 必填，用户消息
             "chat_history": [                   // 可选，对话历史
                 {"role": "user", "content": "..."},
@@ -700,23 +751,27 @@ def chat_with_report_agent():
                 "error": t('api.projectNotFound', id=state.project_id)
             }), 404
         
-        graph_id = state.graph_id or project.graph_id
-        if not graph_id:
-            return jsonify({
-                "success": False,
-                "error": t('api.missingGraphId')
-            }), 400
-        
-        simulation_requirement = project.simulation_requirement or ""
-        
-        # 创建Agent并进行对话
+        report_id = data.get("report_id")
+        report = (ReportManager.get_report(report_id) if report_id
+                  else ReportManager.get_report_by_simulation(simulation_id))
+        if report is None or report.simulation_id != simulation_id:
+            return jsonify({"success": False, "error": "No saved report exists for this simulation"}), 404
+        if report.status != ReportStatus.COMPLETED:
+            return jsonify({"success": False, "error": "Complete a report before discussing its saved evidence"}), 409
+
+        # Saved conversations remain tied to the report even after another run
+        # replaces the simulation's profiles, logs and current execution graph.
         agent = ReportAgent(
-            graph_id=graph_id,
+            graph_id=report.graph_id,
             simulation_id=simulation_id,
-            simulation_requirement=simulation_requirement
+            simulation_requirement=report.simulation_requirement,
+            execution_id=report.manifest.get("execution_id"),
+            source_graph_id=report.manifest.get("source_graph_id"),
+            source_snapshot_sha256=report.manifest.get("source_snapshot_sha256"),
+            snapshot_only=True,
         )
         
-        result = agent.chat(message=message, chat_history=chat_history)
+        result = agent.chat_from_report(report, message=message, chat_history=chat_history)
         
         return jsonify({
             "success": True,
@@ -893,6 +948,8 @@ def check_report_status(simulation_id: str):
     """
     try:
         report = ReportManager.get_report_by_simulation(simulation_id)
+        if report and not _report_matches_current_run(report, simulation_id):
+            report = None
         
         has_report = report is not None
         report_status = report.status.value if report else None

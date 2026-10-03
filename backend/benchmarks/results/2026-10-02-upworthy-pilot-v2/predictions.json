@@ -1,0 +1,414 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "57408630049be3d753c140c3e1d11084faf4401b8b961a0c4f90dd6c891a6b7c",
+  "records": [
+    {
+      "case_id": "upworthy-001",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 4.523426582993125,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1040,
+        "input_tokens": 525,
+        "output_tokens": 515,
+        "cost_usd": null
+      },
+      "run_id": "bench_3d980ab1c5c6bd89123c"
+    },
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 68.74351866700454,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 12462,
+        "input_tokens": 4270,
+        "output_tokens": 8192,
+        "cost_usd": null
+      },
+      "run_id": "bench_698322e53ae6ee635e58"
+    },
+    {
+      "case_id": "upworthy-001",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 68.98784745800367,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 12462,
+        "input_tokens": 4270,
+        "output_tokens": 8192,
+        "cost_usd": null
+      },
+      "run_id": "bench_6ea8f486f4de6908bfda"
+    },
+    {
+      "case_id": "upworthy-001",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 7.0521704999991925,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1169,
+        "input_tokens": 525,
+        "output_tokens": 644,
+        "cost_usd": null
+      },
+      "run_id": "bench_d8f83bb84e2e501c8667"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 77.38668641599361,
+      "usage": {
+        "calls": 3,
+        "total_tokens": 15325,
+        "input_tokens": 6090,
+        "output_tokens": 9235,
+        "cost_usd": null
+      },
+      "run_id": "proj_13c301a92157"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 3.796406291992753,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 932,
+        "input_tokens": 540,
+        "output_tokens": 392,
+        "cost_usd": null
+      },
+      "run_id": "bench_bb59b0a4c9f7c1c29a70"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 3.5960828329989454,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 897,
+        "input_tokens": 540,
+        "output_tokens": 357,
+        "cost_usd": null
+      },
+      "run_id": "bench_7b5a50dedab73cd04b7c"
+    },
+    {
+      "case_id": "upworthy-002",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 69.11267445900012,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 12492,
+        "input_tokens": 4300,
+        "output_tokens": 8192,
+        "cost_usd": null
+      },
+      "run_id": "bench_a547d9efdfe6fec320d5"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.4,
+      "error": null,
+      "elapsed_seconds": 6.76915912500408,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 1254,
+        "input_tokens": 529,
+        "output_tokens": 725,
+        "cost_usd": null
+      },
+      "run_id": "bench_5183b696c0bd3c20e345"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 256.23466729099164,
+      "usage": {
+        "calls": 15,
+        "total_tokens": 55416,
+        "input_tokens": 28430,
+        "output_tokens": 26986,
+        "cost_usd": null
+      },
+      "run_id": "proj_281248536a64"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 33.674242416003835,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 8471,
+        "input_tokens": 4016,
+        "output_tokens": 4455,
+        "cost_usd": null
+      },
+      "run_id": "proj_019fa6dc02bd"
+    },
+    {
+      "case_id": "upworthy-003",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.65,
+      "error": null,
+      "elapsed_seconds": 3.746309125010157,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 903,
+        "input_tokens": 529,
+        "output_tokens": 374,
+        "cost_usd": null
+      },
+      "run_id": "bench_042295cbd235c7b7565a"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 70.05419866601005,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 12468,
+        "input_tokens": 4276,
+        "output_tokens": 8192,
+        "cost_usd": null
+      },
+      "run_id": "bench_45977ddf02e33bf98920"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.6,
+      "error": null,
+      "elapsed_seconds": 3.332013624996762,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 813,
+        "input_tokens": 528,
+        "output_tokens": 285,
+        "cost_usd": null
+      },
+      "run_id": "bench_b9f2d0a7fd149343e9a7"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.55,
+      "error": null,
+      "elapsed_seconds": 3.2245423330023186,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 821,
+        "input_tokens": 528,
+        "output_tokens": 293,
+        "cost_usd": null
+      },
+      "run_id": "bench_61e418f0d47985313d9a"
+    },
+    {
+      "case_id": "upworthy-004",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 260.66083958299714,
+      "usage": {
+        "calls": 14,
+        "total_tokens": 59460,
+        "input_tokens": 28417,
+        "output_tokens": 31043,
+        "cost_usd": null
+      },
+      "run_id": "proj_74dbd478c534"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 3.0365075830050046,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 789,
+        "input_tokens": 533,
+        "output_tokens": 256,
+        "cost_usd": null
+      },
+      "run_id": "bench_58215009cbb7636085bf"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 69.4390545829956,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 12478,
+        "input_tokens": 4286,
+        "output_tokens": 8192,
+        "cost_usd": null
+      },
+      "run_id": "bench_b056bd5c361f35e1e1be"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 217.79666424999596,
+      "usage": {
+        "calls": 13,
+        "total_tokens": 48954,
+        "input_tokens": 25836,
+        "output_tokens": 23118,
+        "cost_usd": null
+      },
+      "run_id": "proj_59de682a05e1"
+    },
+    {
+      "case_id": "upworthy-005",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.78,
+      "error": null,
+      "elapsed_seconds": 3.940144666994456,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 822,
+        "input_tokens": 533,
+        "output_tokens": 289,
+        "cost_usd": null
+      },
+      "run_id": "bench_3371314b0186060a90bc"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 80.29838845800259,
+      "usage": {
+        "calls": 3,
+        "total_tokens": 15188,
+        "input_tokens": 6228,
+        "output_tokens": 8960,
+        "cost_usd": null
+      },
+      "run_id": "proj_ec2a0fb66e86"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "single_model",
+      "repeat": 1,
+      "status": "ok",
+      "probability_a": 0.7,
+      "error": null,
+      "elapsed_seconds": 3.410047333003604,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 784,
+        "input_tokens": 537,
+        "output_tokens": 247,
+        "cost_usd": null
+      },
+      "run_id": "bench_9e712d193651f4a6cec6"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "single_model",
+      "repeat": 2,
+      "status": "ok",
+      "probability_a": 0.75,
+      "error": null,
+      "elapsed_seconds": 2.948830832989188,
+      "usage": {
+        "calls": 1,
+        "total_tokens": 795,
+        "input_tokens": 537,
+        "output_tokens": 258,
+        "cost_usd": null
+      },
+      "run_id": "bench_040f3418bac0c8b26e5e"
+    },
+    {
+      "case_id": "upworthy-006",
+      "method": "mirofish",
+      "repeat": 2,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 72.68599429201277,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 11398,
+        "input_tokens": 4082,
+        "output_tokens": 7316,
+        "cost_usd": null
+      },
+      "run_id": "proj_3935bbf1589b"
+    }
+  ]
+}

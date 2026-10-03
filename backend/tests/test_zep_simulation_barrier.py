@@ -7,6 +7,7 @@ from flask import Flask
 from app.api import simulation as simulation_api
 from app.services import simulation_runner as runner_module
 from app.services.simulation_manager import SimulationStatus
+from app.models.project import ProjectStatus
 from app.services.simulation_runner import (
     RunnerStatus,
     SimulationRunState,
@@ -257,6 +258,9 @@ def test_force_restart_does_not_continue_while_old_ingestion_is_pending(monkeypa
         classmethod(lambda _cls, _simulation_id: object()),
     )
 
+    monkeypatch.setattr(simulation_api.ProjectManager, "get_project", lambda _: SimpleNamespace(
+        graph_id="graph-1", status=ProjectStatus.GRAPH_COMPLETED,
+    ))
     app = Flask(__name__)
     with app.test_request_context(
         "/api/simulation/start",
@@ -316,12 +320,16 @@ def test_monitor_start_failure_terminates_the_spawned_process(monkeypatch, tmp_p
         classmethod(lambda _cls, *_args, **_kwargs: None),
     )
 
+    monkeypatch.setattr(runner_module, "get_zep_client", lambda: SimpleNamespace(graph=SimpleNamespace(
+        clone_for_execution=lambda **kwargs: SimpleNamespace(source_snapshot_sha256="fixture-hash"),
+    )))
     try:
         with pytest.raises(RuntimeError, match="monitor failed"):
             SimulationRunner.start_simulation(
                 simulation_id,
                 platform="twitter",
                 enable_graph_memory_update=False,
+                graph_id="source-graph",
             )
         assert terminated == [simulation_id]
         assert simulation_id not in SimulationRunner._processes

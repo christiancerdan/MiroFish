@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "86a71cb46596ab3b1659c13b85ae6174365137b1c553e0a9144ded8341d2cb50",
+  "records": [
+    {
+      "case_id": "upworthy-003",
+      "method": "mirofish",
+      "repeat": 1,
+      "status": "failed",
+      "probability_a": null,
+      "error": "RuntimeError",
+      "elapsed_seconds": 41.69419975001074,
+      "usage": {
+        "calls": 2,
+        "total_tokens": 8247,
+        "input_tokens": 4237,
+        "output_tokens": 4010,
+        "cost_usd": null
+      },
+      "run_id": "proj_6c4bda120980"
+    }
+  ]
+}

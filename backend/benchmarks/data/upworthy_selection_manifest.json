@@ -1,0 +1,862 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_pairs_v1",
+  "selection_seed": "mirofish-upworthy-pilot-v1",
+  "pool_size": 20,
+  "pilot_size": 6,
+  "source": {
+    "url": "https://osf.io/download/3vqmp/",
+    "filename": "upworthy-archive-exploratory-packages-03.12.2020.csv",
+    "sha256": "8368313b060f4015a0c6fb34e6d788163cee29554144aba9390b14922eb9d8ce",
+    "bytes": 14260949,
+    "osf_file_id": "608ff67f5533b40296e21e5a",
+    "osf_version": 1,
+    "osf_date_modified": "2021-05-03T13:11:27.711690",
+    "columns": [
+      "",
+      "created_at",
+      "updated_at",
+      "clickability_test_id",
+      "excerpt",
+      "headline",
+      "lede",
+      "slug",
+      "eyecatcher_id",
+      "impressions",
+      "clicks",
+      "significance",
+      "first_place",
+      "winner",
+      "share_text",
+      "square",
+      "test_week"
+    ],
+    "license": "CC-BY-4.0",
+    "problem_column_present": false
+  },
+  "randomization_correction": {
+    "doi": "10.1038/s41597-024-03600-w",
+    "excluded_created_at_dates_inclusive": [
+      "2013-06-25",
+      "2014-01-10"
+    ],
+    "applied_locally": true,
+    "whole_test_exclusion_if_any_arm_in_window": true,
+    "source_timestamps_timezone": "unknown"
+  },
+  "selection_fields": [
+    "",
+    "clickability_test_id",
+    "created_at",
+    "headline",
+    "eyecatcher_id",
+    "excerpt",
+    "lede",
+    "share_text",
+    "square"
+  ],
+  "matched_fields": [
+    "eyecatcher_id",
+    "excerpt",
+    "lede",
+    "share_text",
+    "square"
+  ],
+  "selection_uses_clicks_or_impressions": false,
+  "selection_uses_editorial_winner_or_significance": false,
+  "selection_counts": {
+    "source_tests": 4873,
+    "source_rows": 22666,
+    "eligible_tests": 1878,
+    "eligible_pairs": 15632,
+    "exclusions": {
+      "date_window_tests": 1050,
+      "no_matched_distinct_headline_pair_tests": 1945
+    }
+  },
+  "selected_cases": [
+    {
+      "case_id": "upworthy-001",
+      "split": "pilot",
+      "source_test_id": "541c9b4c7bc1ef4dbd000057",
+      "source_row_a": "118184",
+      "source_row_b": "118206",
+      "created_at_a": "2014-09-19 21:09:39.983",
+      "created_at_b": "2014-09-19 21:09:28.004",
+      "test_rank_sha256": "0004ebc5db86db19321127749b47843e2935d4c61c0935188d23962b55820e4f",
+      "pair_rank_sha256": "2777e359cfab3d2f9f258665e8d4fe3a3995faf746d4ac219bd7bc4f258e2cf7",
+      "orientation_sha256": "40778c3c8f0bda1bd45aaf8b6cfc63c0de88e4884ce39a7d6ac6db66e71533ee",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "b99d8ab182022c39fa98cedcbf542d70518ca21fff4865d6eda6d9c3a63aa2b3",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "068cedd4b3eff64debe0773eb9de6ad98e406b81b945d6e35fef8849bbdd3382",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-002",
+      "split": "pilot",
+      "source_test_id": "5474b3221631de2882000048",
+      "source_row_a": "132336",
+      "source_row_b": "132335",
+      "created_at_a": "2014-11-25 16:51:23.841",
+      "created_at_b": "2014-11-25 16:49:53.408",
+      "test_rank_sha256": "00050ed2f393953183305a57a818fcb623f6474ca8d4b7917dabb50c9c0d0eb0",
+      "pair_rank_sha256": "32618f6dd907cf50c8a609210c2f820fc5112e79e2aba1768ebd82460d49f17a",
+      "orientation_sha256": "19babae70ac77e3d7634e56ff1395e44ae08730ca8354f798d6b8810f4da42a7",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "a0097f83869aef17adc6c1f53112d9b3973cc89227b31419e5055f9eccaa090f",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "6112338b4a4c10f3841e0ebe256a25d035e93620fef36053f0a6f4da6b0f42d5",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "3873bcd0afbcf5397305ca10c374caa0432bbe90f52ec63be8cf91af4406c33a",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-003",
+      "split": "pilot",
+      "source_test_id": "5151ee591e19e80002001d8e",
+      "source_row_a": "40741",
+      "source_row_b": "39456",
+      "created_at_a": "2013-03-26 18:55:47",
+      "created_at_b": "2013-03-26 18:53:06",
+      "test_rank_sha256": "006ee51350c6ce75779f20d168ec9a5aaadda7394c7b32581c0bd23323b78c4f",
+      "pair_rank_sha256": "b975fd6085560d50db395dcf83051923b3006c417e6a2a80b743520a6c2c664f",
+      "orientation_sha256": "d6e3af396eeea90d07013df6b934dbd02f049f999d1d7d1d4b1da70aa8a7ab79",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "7d0e39ad72761fce56d75fcef472545cb3a3ba0cd7c491bd4f4803e2145bf119",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "2e0e18b2c229ffd1e88b15b417c42e1ec830bf1b69d41c1342f85494a92f2d4b",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "3ee555a3aa01e58fe2f2e217781565fe9c76ee646e94a48f08b80d0999e0fa45",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "a6d9ba6fb3bdcea1cf36b3c83e6ea79be6741eba0b8496f97d54b7fffae6d897",
+          "empty": false
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-004",
+      "split": "pilot",
+      "source_test_id": "53169b75a16f787660000029",
+      "source_row_a": "78046",
+      "source_row_b": "78045",
+      "created_at_a": "2014-03-05 03:39:21.551",
+      "created_at_b": "2014-03-05 03:39:55.05",
+      "test_rank_sha256": "007cd5a26b5c04a87805fc9d2e304000f6f745ff123e7ae30b66678eb4e32cab",
+      "pair_rank_sha256": "0187998ecccb4cdf256d94c0d5938cbd927adb00ebd50ee202991a0284ab17cb",
+      "orientation_sha256": "d2bddbb47ce14fcb9adb44352b8641fcee20cd0adb07e0048e302a2130fcab7b",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "1f664d200bcb3dee51cb11b8063284873253cca921d4a7425b3c3d6468693758",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "8c57d376d820ab396a0b766d70a178ccaa395be12905835f28871ad9122e65a7",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "ac4a733836280b310c3f3ef51d8a7fcb53ca3cbc130e33f03096d68a276adf44",
+          "empty": false
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-005",
+      "split": "pilot",
+      "source_test_id": "54eb5769313865000c530000",
+      "source_row_a": "10633",
+      "source_row_b": "10638",
+      "created_at_a": "2015-02-23 23:24:32.964",
+      "created_at_b": "2015-02-23 23:39:28.886",
+      "test_rank_sha256": "007f51cbe4543d137833dc05d1af9294b53db8cd48334164e003f1e13aaeef07",
+      "pair_rank_sha256": "9f9cff5f245bcc2cee6d776d9d98f5ede7d4f9c3328a23f0facaf943c0f0e263",
+      "orientation_sha256": "592407a2d300e91fb34675ddcbcd6634d51c54ac61e9b3c404f8a67bc7b6a7fa",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "68de44d36beeb13c5dee5d874e494028e5a57472174f955a5eed00d261ba6308",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "98c92ef2f8c3f855a47c1e498e23a54c68c079362917819ed2c85df2c4cfbaaa",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-006",
+      "split": "pilot",
+      "source_test_id": "53b2aed7d98e8a0204000047",
+      "source_row_a": "99152",
+      "source_row_b": "99155",
+      "created_at_a": "2014-07-01 12:53:14.01",
+      "created_at_b": "2014-07-01 12:59:44.675",
+      "test_rank_sha256": "00900e20de4a67a660c6f0cad697378b63f3b3874d9a5fbe1b3471f484e9ef8e",
+      "pair_rank_sha256": "03f8bfebc954510a1dcc75fc7cdb651d40b2106cf9295fd9b2fb0fc8f9223054",
+      "orientation_sha256": "7a1d5dfccdc48859b858953de897e7b8a28fba06c7aa31025e77ef3493d2d24e",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "ec2b396361b653099523338e855521d3e1c263b936dd2893ff1b5d0a7eb40d21",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "2b894c139a86b047049285c0254063cdc7545e18cc052e210be7e96e8be00444",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "e8cc212fb32a838b53494a9480244b7c349484ce61435693280b916c64a86852",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-007",
+      "split": "reserve",
+      "source_test_id": "53bd86dc2c277de0df000024",
+      "source_row_a": "100560",
+      "source_row_b": "100546",
+      "created_at_a": "2014-07-09 18:15:56.414",
+      "created_at_b": "2014-07-09 18:17:09.818",
+      "test_rank_sha256": "00b110ff3b82124df8d20d2733f360a205d1a7beda3eb9b7f22e9d2e5cb5c2f6",
+      "pair_rank_sha256": "0dec145ae0975d5a32f645a66b582f9b8b8813aad9e4f92c929d90196c38ff23",
+      "orientation_sha256": "68a61068add032b271b59b9fb7c8d636ec35a651b9ea234842882ad3eaed76dd",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "cf1e17cda7f6e9b046fecc9f17453c00ecc1a5aeaa93bbc1c93fcb16be7db125",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "718886162cce96956ff4ed9fd123faae92dd29ada34cb44aec31de964896aecd",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-008",
+      "split": "reserve",
+      "source_test_id": "54530d565bc2317d29000033",
+      "source_row_a": "148099",
+      "source_row_b": "129189",
+      "created_at_a": "2014-10-31 04:19:58.513",
+      "created_at_b": "2014-10-31 04:17:26.517",
+      "test_rank_sha256": "00cad52b8b848ed35e3f7669da99567ea2444acc0e9cf9091738811d14d36d21",
+      "pair_rank_sha256": "0e491c36db4623cb3e76d951f7b00d67de8e9dcc2de7d259efdde4b7c632b5b2",
+      "orientation_sha256": "3896dcee320d09a447ecbcc65350c77f3a351dec015f2e1440819a72197a2057",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "acd12a7f72aea17a0b7da022ffd0ad71f34d6be1ec3c59a2832c9f9b979ac55a",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "4e4ab6dde266efb595a8099fb3b1746f036998031cc50f34108963502de4d953",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "5778df66dd2b3ed652b809969198374d3e247a7f2768960ef1928d6048a7a4d8",
+          "empty": false
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-009",
+      "split": "reserve",
+      "source_test_id": "53ff59c16fd2bf8bae00000f",
+      "source_row_a": "25123",
+      "source_row_b": "25126",
+      "created_at_a": "2014-08-29 16:33:47.972",
+      "created_at_b": "2014-08-29 16:50:11.031",
+      "test_rank_sha256": "00deb6d75acfd364799740b5c372164c504951320af82bc7682c2c3498972f61",
+      "pair_rank_sha256": "0475ad6f347cba2b68c1a4c47d52898dd80ea2c91cdc83e3057939ac12c3c5ad",
+      "orientation_sha256": "286ba8efd653598a06c27e573f3bb655d39dc1df8eb32bac20a1134fbf180bc2",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "c2140d70ca8bdd6d1141b377001fa8f021e5f5087c94cb075d72a5376d63acff",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "be5dfa4ec46bc3862b4561e401ab2864b3ba89803578c913253db0e81db55c37",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-010",
+      "split": "reserve",
+      "source_test_id": "549873ed36333500156c0000",
+      "source_row_a": "137632",
+      "source_row_b": "137634",
+      "created_at_a": "2014-12-22 20:10:09.11",
+      "created_at_b": "2014-12-22 20:11:11.083",
+      "test_rank_sha256": "010813eab06d8bbe2a9bca49b3c8f156c56cf059aef972e6d608d899b859c83e",
+      "pair_rank_sha256": "bbfa6d7f2735f116961fa50e451d2b951fdb306945753502d06eafd2a7f7f213",
+      "orientation_sha256": "cf4e0735f66c50f621a027ca07e421c40e73cfdb2ad8d22df47ba0c0127c0210",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "38bb89979082081264738cb5db9585c4fa6212d4ced6172ac056fc9463df3ff1",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "437b558478b7bde76dac542158c24f754c5d98f868767e46f61d1b53af5f7d0b",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "f24927498d4fd73239e9ef10fc1d17f2aa9969c850449d31aec5f2a547e83cc6",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-011",
+      "split": "reserve",
+      "source_test_id": "51707d7711362200020065a4",
+      "source_row_a": "42007",
+      "source_row_b": "42009",
+      "created_at_a": "2013-04-18 23:12:09",
+      "created_at_b": "2013-04-18 23:14:22",
+      "test_rank_sha256": "010b21f19f2da5140ca31f38d9a3362cdbf4931bbbf84fb271e1366e3976ecda",
+      "pair_rank_sha256": "46897c7bea747cc4ca846fe01b02e0e80552838851775eab3e192290826577fb",
+      "orientation_sha256": "b0bd0bf64e575f0664ffdb83331cb6a55775d5b5600af55a23e259179e7b94fe",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "d27236ec27140e513ca43e2e20397f50601becb38d2b7141c236e3142e409209",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "b53d8cabb1cc5f9578cb39b9cb797022f81e6dcce65c5cd26eed7aff6b54b698",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "21b9a2b2c9be2662ae8310c562dd2cef89230eb319d2db575a658161b46130b5",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "870a64fd0c175733405de86d8d0193886dc2dc4acf35797c2bbc780369d7063a",
+          "empty": false
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-012",
+      "split": "reserve",
+      "source_test_id": "53e3f8afee932c58a600002c",
+      "source_row_a": "106565",
+      "source_row_b": "106584",
+      "created_at_a": "2014-08-07 22:23:49.649",
+      "created_at_b": "2014-08-07 22:08:23.454",
+      "test_rank_sha256": "01783e5652047912ff976fe85e081e151bf4432ee1b1cab41632f4ccba73db0e",
+      "pair_rank_sha256": "3e18c4be97a97224c4d4292f2d1a91ae7f5f118649de93bbb1de574afff9f70d",
+      "orientation_sha256": "56fb2cb5a4b61befdbe402875273c0fe54f0ff2279d37bbb203e3a85dc7bf94e",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "af60980a99240e81a6b241f37d843c864ac69489539218bec78fda105ef5ae64",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "15d5ac43f01537ab416bfbbc3abf114149bb155b0d19ddc1cd1b565dc64877e5",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-013",
+      "split": "reserve",
+      "source_test_id": "543422e4d2cea786b8000048",
+      "source_row_a": "27338",
+      "source_row_b": "27336",
+      "created_at_a": "2014-10-07 17:35:43.036",
+      "created_at_b": "2014-10-07 17:32:27.41",
+      "test_rank_sha256": "019193a0f9410f5a3b5808995bc999966a89facf41e7c4e2903ae27b55afb66f",
+      "pair_rank_sha256": "00dc9c47e0c86c68fbd1c360fe1473ac45679a7cca79308535e1e671c7f3d21d",
+      "orientation_sha256": "bbabed804e720a64c03694b9909f3abab907a99ff5e540eed13b455cc91f8e1f",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "83163cb3fee9863f1588cf983ae38a02a355735aaf929d0acb779ee4105858cd",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "f5e5c03f460477718f7e61ee4208790a6902e3652583a2d65d38303287c02978",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-014",
+      "split": "reserve",
+      "source_test_id": "54c8291b3130330013040000",
+      "source_row_a": "7801",
+      "source_row_b": "7802",
+      "created_at_a": "2015-01-28 00:12:23.075",
+      "created_at_b": "2015-01-28 00:15:39.059",
+      "test_rank_sha256": "019fdc3c1866fd9505fca64010a3b6f5f163c241d57661282b5ddccd023f8ab6",
+      "pair_rank_sha256": "0cad64f5537a7b47f8f787953e7082c9a01dd653db92fb5f42b8525431cc6e56",
+      "orientation_sha256": "45de8dd94d65691d387fcd6bee9d73b290347c6cc6b1672ceb6c3222ad392d3c",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "bd027bea3712e672b0f19c6f87a3bce24c8ea911c6eacfa2ae2633b3a8d6ca60",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "a0de1e6831e53a4d0bdcb26dbc418c7c10fd93d1cdd604ceba38a96ad6e75327",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-015",
+      "split": "reserve",
+      "source_test_id": "540fa8fcaff5cd56bb000017",
+      "source_row_a": "51118",
+      "source_row_b": "95718",
+      "created_at_a": "2014-09-10 01:32:14.394",
+      "created_at_b": "2014-09-10 01:43:48.267",
+      "test_rank_sha256": "01dabd9ecb9f8694126bde00dfd1f585c654ce241256e1f6310dd9ba09f843c5",
+      "pair_rank_sha256": "5a64e9a37daed0fc0622d2880e24ec9d8c946190d0df8ae2aa506fed7199b219",
+      "orientation_sha256": "b1d0484e39cddf9c514420c1457288ce297f77495e617abebc8c142666f909b2",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "76ef122e991fa3bd463d3b7dfa016e7248f5b55d07d8077b7cf40f47545a7107",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "469df86ac3783139bd96f980323c42ebb37a0e4308691035c3cd4013f7ca6664",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-016",
+      "split": "reserve",
+      "source_test_id": "54972aeb61663662200e0000",
+      "source_row_a": "137471",
+      "source_row_b": "31750",
+      "created_at_a": "2014-12-21 20:56:58.754",
+      "created_at_b": "2014-12-21 20:50:52.247",
+      "test_rank_sha256": "01e3902219c65c72388bb692d47469e875aeddb358c537d9c034b26dae2e4a15",
+      "pair_rank_sha256": "391b9f0d6058991dcb147b463eea4120badbd0b67a75298dd2b337f4b328710a",
+      "orientation_sha256": "8a82393fdca1c6c6b3069a1a55f7c058c763dce9c47913541da69c6f1a051e08",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "bb733650a24774d1ca8529188b04c49b7f2db8761c362d1afa10e5a14ee1b265",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "420abf40af232614cd147f05b0ea7d6041aff3d4c1b0b2cd2c99eec806c4007b",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-017",
+      "split": "reserve",
+      "source_test_id": "54414821e6a16fa41500005e",
+      "source_row_a": "124380",
+      "source_row_b": "123963",
+      "created_at_a": "2014-10-17 16:53:35.342",
+      "created_at_b": "2014-10-17 16:47:35.437",
+      "test_rank_sha256": "020deda20167d57be83d28509b3a4bd5e1baf225d1ccbfcb40d3c29e73f8119a",
+      "pair_rank_sha256": "0ea9f25f81d2b733161239f78b7c1d43024b3255a71665aa19ade59904e6d40d",
+      "orientation_sha256": "12e0c461d1941275fd70a51c0d72e6d989671205d95e2cd64c5f185fe121ee47",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "6109ab28eb685394968481c5f3e7e85095ac16fbee2836c4c2271c3268871c95",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "f1595fc24939efe40b514e1316f71efb8ca87970d581dc856fabd67d5c0e7e24",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-018",
+      "split": "reserve",
+      "source_test_id": "546c1933f73198e97100008f",
+      "source_row_a": "133276",
+      "source_row_b": "150451",
+      "created_at_a": "2014-11-19 04:15:07.056",
+      "created_at_b": "2014-11-19 04:15:43.842",
+      "test_rank_sha256": "025cf24f86346efd648a6b078c44553e8f2656c6e7e32dcb499928f59af4d393",
+      "pair_rank_sha256": "090abb9bc82646a003bc0abef56ce180052b59804e474ac8af80dc0f23c1908d",
+      "orientation_sha256": "c2eadb1a6d5e3adbc88b85c05790be6750f803d20e34677b34bef3aa0dd37476",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "54ede267b100df28011fef497d52d83f33342986b49d6a624d9866f0acf051d9",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "5a57b5eb8d198e7afa650e3a8ba7b12cc360ea257acfceaff3c55d951c5e041f",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-019",
+      "split": "reserve",
+      "source_test_id": "54871745643338001b160000",
+      "source_row_a": "1034",
+      "source_row_b": "133793",
+      "created_at_a": "2014-12-09 15:37:57.72",
+      "created_at_b": "2014-12-09 15:37:45.864",
+      "test_rank_sha256": "02638444c7acb4be5cd49c3c006a4400c0fdcbdd8393ad0101562d8f19528438",
+      "pair_rank_sha256": "0357f13e049517a199464084935828e63167911287addc1409f161d9f457e50c",
+      "orientation_sha256": "ba93f6c2c082d72f962a90b4ce913c989fa056f6b42b7a09da91f4662efad266",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "bb29941737d036c2c22cafc2150b83dc25ff12ffd28f3c8d88fa5eb677e78b7d",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "5af1d9e2106e20024e797ce42dfc46ea51ebc1c96560a0c5e4e15456c4fa4e11",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    },
+    {
+      "case_id": "upworthy-020",
+      "split": "reserve",
+      "source_test_id": "54089fe6844567ec2d000002",
+      "source_row_a": "113334",
+      "source_row_b": "113329",
+      "created_at_a": "2014-09-04 17:23:20.708",
+      "created_at_b": "2014-09-04 17:31:24.388",
+      "test_rank_sha256": "0269b6dfd39057c1b35eae67ed667ad3e7b759300727b2e97e7cc5884cb0ad86",
+      "pair_rank_sha256": "1eaca4ba4a5aec022151c9848489012f40171628648ae3ac6bbbd00c4096065c",
+      "orientation_sha256": "9a6f37615828e33bde79aa84275450a2fa536902ca1a2b0063bfe28a938b0a7b",
+      "matched_fields": {
+        "eyecatcher_id": {
+          "equal": true,
+          "value_sha256": "bcfa47a7d33f399ee927f02970310a7f0dfced1524416920b39072d2710d0a51",
+          "empty": false
+        },
+        "excerpt": {
+          "equal": true,
+          "value_sha256": "f29fbb5a5a3c96ac5365a964451f2331d35dc47f32ce53bb996c841a8d3b5225",
+          "empty": false
+        },
+        "lede": {
+          "equal": true,
+          "value_sha256": "cc916fb022c53bc59e81af6eee65c33c278299b8db91c5b94afe31a6da364d8e",
+          "empty": false
+        },
+        "share_text": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        },
+        "square": {
+          "equal": true,
+          "value_sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+          "empty": true
+        }
+      }
+    }
+  ],
+  "inputs_file_sha256": "5d48910287e7c14ea3304dba6eaef37ab3eb425929fbcd32290ae7cbb9c9f406",
+  "inputs_canonical_sha256": "451bd4f61085d052128672c80de9e229e1088e0593ebc194013a67a58f141763",
+  "selection_script_sha256": "d96c99af89c09553d4510af00be68f4a91c6be92ba1becc21e28c54e3de1e73b"
+}

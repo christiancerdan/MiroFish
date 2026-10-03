@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -135,7 +136,10 @@ def test_runner_launch_uses_filtered_environment_and_selected_interpreter(tmp_pa
 
     monkeypatch.setattr(runner_module.subprocess, 'Popen', popen)
     monkeypatch.setattr(runner_module.threading, 'Thread', Thread)
-    SimulationRunner.start_simulation('launch-run', platform=platform, max_rounds=1)
+    monkeypatch.setattr(runner_module, 'get_zep_client', lambda: SimpleNamespace(graph=SimpleNamespace(
+        clone_for_execution=lambda **kwargs: SimpleNamespace(source_snapshot_sha256='fixture-hash'),
+    )))
+    SimulationRunner.start_simulation('launch-run', platform=platform, max_rounds=1, graph_id='source-graph')
     assert captured['command'][0:2] == ['/selected/simulation/python', '-I']
     assert Path(captured['command'][2]).name == 'simulation_worker.py'
     if expected_flag:

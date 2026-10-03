@@ -246,6 +246,7 @@ class ZepGraphMemoryUpdater:
         graph_id: str,
         api_key: Optional[str] = None,
         simulation_id: Optional[str] = None,
+        execution_id: Optional[str] = None,
     ):
         """
         初始化更新器
@@ -256,6 +257,7 @@ class ZepGraphMemoryUpdater:
         """
         self.graph_id = graph_id
         self.simulation_id = simulation_id or "unknown"
+        self.execution_id = execution_id or "unknown"
         self.api_key = api_key or Config.ZEP_API_KEY
         
         
@@ -502,6 +504,7 @@ class ZepGraphMemoryUpdater:
                     metadata={
                         "source": "mirofish_simulation",
                         "simulation_id": self.simulation_id,
+                        "execution_id": self.execution_id,
                         "platform": platform,
                         "activity_count": len(payload_activities),
                         "first_round": min(a.round_num for a in payload_activities),
@@ -629,6 +632,7 @@ class ZepGraphMemoryUpdater:
         
         return {
             "graph_id": self.graph_id,
+            "execution_id": self.execution_id,
             "batch_size": self.BATCH_SIZE,
             "total_activities": self._total_activities,  # 添加到队列的活动总数
             "batches_sent": self._total_sent,            # 成功发送的批次数
@@ -653,7 +657,7 @@ class ZepGraphMemoryManager:
     _lock = threading.Lock()
     
     @classmethod
-    def create_updater(cls, simulation_id: str, graph_id: str) -> ZepGraphMemoryUpdater:
+    def create_updater(cls, simulation_id: str, graph_id: str, *, execution_id: str) -> ZepGraphMemoryUpdater:
         """
         为模拟创建图谱记忆更新器
         
@@ -672,6 +676,7 @@ class ZepGraphMemoryManager:
             updater = ZepGraphMemoryUpdater(
                 graph_id,
                 simulation_id=simulation_id,
+                execution_id=execution_id,
             )
             updater.start()
             cls._updaters[simulation_id] = updater

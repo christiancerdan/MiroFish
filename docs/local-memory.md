@@ -16,7 +16,19 @@ When `LOCAL_GRAPH_DB_PATH` is omitted, the application places `memory.sqlite3` u
 
 Local mode does not require a Zep API key. Entity and relationship extraction still uses the configured model provider. If that provider is Ollama Cloud or another hosted service, source text, the ontology, and existing graph entities can leave the machine in model prompts. Choosing local graph storage does not make hosted model inference local. Use the existing provider configuration to select the desired inference endpoint.
 
-For the existing managed backend, set `GRAPH_BACKEND=zep` and provide `ZEP_API_KEY`. Switching the configuration selects a different store; it does not export or migrate existing graphs between stores. Existing projects retain their graph IDs, so select the backend containing a project's graph when reopening it. There is no automatic download of Zep data.
+For the existing managed backend, set `GRAPH_BACKEND=zep` and provide `ZEP_API_KEY`. Existing graph reads and ingestion remain available, but new independent simulations require local memory: the Zep adapter does not yet implement the snapshot contract. Switching the configuration selects a different store; it does not export or migrate existing graphs between stores. Existing projects retain their graph IDs, so select the backend containing a project's graph when reopening it. There is no automatic download of Zep data. This restriction concerns graph storage; Ollama Cloud inference remains supported with local memory.
+
+## Independent executions
+
+Each simulation start receives a unique execution ID and a new graph copied from the project's original documents. Copying a clean graph makes no model calls. The copy preserves evidence text and provenance while remapping graph-owned IDs. Simulation observations are written only to that execution's graph, so repeated runs cannot change the evidence or merged summaries used by the next run.
+
+The original graph is sealed against ingestion and ontology changes after its first snapshot. Rebuild the project graph when the source material changes. A legacy graph containing simulation observations or unverifiable provenance also needs rebuilding from its uploaded documents; removing old episodes cannot reliably undo facts already merged into entity summaries.
+
+Reports bind to a completed execution and store its identity and evidence snapshot. A report queued for an earlier execution cannot silently use a later run. Saved reports remain readable, and report conversations use the selected report's saved content and evidence. Legacy runs without an execution binding must be rerun before generating a new report.
+
+Live-agent interviews require the report's execution to match the current simulation. Historical reports keep their saved-report chat, but do not silently interview newer agents. Interview and environment-close requests can carry `expected_execution_id`; a stale identity returns HTTP 409 before sending a worker command.
+
+Execution graphs and saved report snapshots consume additional storage. They are retained for auditability; automatic retention and a complete project purge workflow are separate work.
 
 ## Extraction, persistence, and replay
 
