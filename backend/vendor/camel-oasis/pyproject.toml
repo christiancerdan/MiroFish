@@ -1,6 +1,6 @@
 [project]
 name = "camel-oasis"
-version = "0.2.5+mirofish.1"
+version = "0.2.5+mirofish.2"
 description = "OASIS 0.2.5 with reviewed MiroFish runtime dependencies"
 requires-python = ">=3.11,<3.13"
 license = { text = "Apache-2.0" }

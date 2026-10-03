@@ -41,6 +41,9 @@ are concise, preserve fictional assumptions, and leave unknown demographics
 unset. Invalid or truncated output cannot silently become a replacement rule
 profile in LLM mode. Explicit rule-based generation remains a separate option.
 Default social counts are simulation parameters, not observed audience facts.
+Reddit export preserves unknown demographics as null. The maintained OASIS
+runtime renders only supplied demographic values and explicitly leaves the
+others unspecified; it no longer fills them with an age, country, or personality.
 
 ## Reports
 

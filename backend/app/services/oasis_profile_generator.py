@@ -192,7 +192,7 @@ class OasisAgentProfile:
         }
         
         # 添加额外人设信息（如果有）
-        if self.age:
+        if self.age is not None:
             profile["age"] = self.age
         if self.gender:
             profile["gender"] = self.gender
@@ -222,7 +222,7 @@ class OasisAgentProfile:
         }
         
         # 添加额外人设信息
-        if self.age:
+        if self.age is not None:
             profile["age"] = self.age
         if self.gender:
             profile["gender"] = self.gender
@@ -1107,14 +1107,14 @@ that the source does not supply. Distinct personas keep their stated differences
         
         logger.info(f"已保存 {len(profiles)} 个Twitter Profile到 {file_path} (OASIS CSV格式)")
     
-    def _normalize_gender(self, gender: Optional[str]) -> str:
+    def _normalize_gender(self, gender: Optional[str]) -> Optional[str]:
         """
-        标准化gender字段为OASIS要求的英文格式
-        
-        OASIS要求: male, female, other
+        Normalize recognized gender labels while preserving supplied identity.
+
+        OASIS uses this field as prompt text; missing information stays unknown.
         """
-        if not gender:
-            return "other"
+        if not gender or not gender.strip():
+            return None
         
         gender_lower = gender.lower().strip()
         
@@ -1130,7 +1130,7 @@ that the source does not supply. Distinct personas keep their stated differences
             "other": "other",
         }
         
-        return gender_map.get(gender_lower, "other")
+        return gender_map.get(gender_lower, gender.strip())
     
     def _save_reddit_json(self, profiles: List[OasisAgentProfile], file_path: str):
         """
@@ -1145,10 +1145,10 @@ that the source does not supply. Distinct personas keep their stated differences
         - name: 显示名称
         - bio: 简介
         - persona: 详细人设
-        - age: 年龄（整数）
-        - gender: "male", "female", 或 "other"
-        - mbti: MBTI类型
-        - country: 国家
+        - age: source age or null
+        - gender: source gender or null
+        - mbti: source MBTI type or null
+        - country: source country or null
         """
         data = []
         for idx, profile in enumerate(profiles):
@@ -1161,11 +1161,12 @@ that the source does not supply. Distinct personas keep their stated differences
                 "persona": profile.persona,
                 "karma": profile.karma if profile.karma else 1000,
                 "created_at": profile.created_at,
-                # OASIS必需字段 - 确保都有默认值
-                "age": profile.age if profile.age else 30,
+                # OASIS indexes these keys, but unknown demographics must
+                # remain null rather than becoming unsupported source facts.
+                "age": profile.age,
                 "gender": self._normalize_gender(profile.gender),
-                "mbti": profile.mbti if profile.mbti else "ISTJ",
-                "country": profile.country if profile.country else "中国",
+                "mbti": profile.mbti,
+                "country": profile.country,
             }
             
             # 可选字段

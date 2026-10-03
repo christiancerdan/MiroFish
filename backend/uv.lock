@@ -162,7 +162,7 @@ wheels = [
 
 [[package]]
 name = "camel-oasis"
-version = "0.2.5+mirofish.1"
+version = "0.2.5+mirofish.2"
 source = { directory = "vendor/camel-oasis" }
 dependencies = [
     { name = "cairocffi" },

@@ -64,3 +64,43 @@ allowed keys, places identity inside profile text, distinguishes nullable
 demographics from the topic array, and separates the target's traits from those
 of related entities. [Compact probe diagnostics](../backend/benchmarks/results/2026-10-03-reliability-diagnostic-v1/profile-probes.json)
 retain fields, finish reasons, and usage without raw response prose.
+
+## Attempt 3
+
+Source commit `e22a30875736f335bbaa68da8cd9206c1addf6de` corrected the profile
+prompt/schema mismatch. Frozen protocol
+`9bcec30a78d512223204a5697492cbd455c3bee31f2a64d7565fd890771e89f7`
+again ran one MiroFish execution each on old cases `upworthy-001` and
+`upworthy-003`, with the same model, per-trial limits, and two concurrent trials.
+**Both completed ontology, graph extraction, profile preparation, simulation,
+memory ingestion, report generation, and final assessment.** No baseline or
+outcome scoring was performed.
+
+A separate read-only audit verified each result against its saved assessment,
+model/configuration proof, and frozen source commit. Both source graphs still
+matched their sealed fingerprints; simulation evidence and completed reports
+were bound to their respective executions. Saved report inputs and evidence
+hashes matched. Each usage record agreed with both its proof and the SQLite
+budget ledger. The audit read temporary copies of the stopped databases and WAL
+files; all original runtime file contents and inventory remained unchanged.
+These checks establish artifact consistency, not factual or predictive accuracy.
+This attempt predates the new immutable batch/start markers; no missing metadata
+was reconstructed. Its historical source hash covers application and runner
+Python files, without attesting the then-installed vendor package.
+
+Usage: **37 calls, 148,243 accounted tokens** (112,891 input and 35,352 output),
+**295.685 summed wall seconds**. Monetary cost remains unknown. With two trials
+running concurrently, summed wall time is not batch duration or isolated latency.
+
+The successful executions exposed another issue at export: all six Reddit
+profiles acquired unsupported defaults of age 30, gender `other`, MBTI `ISTJ`,
+and country `中国`, despite the source providing no such demographics. Strict
+profile generation now works, but the serializer introduced these assumptions
+before OASIS built the agents' prompts. **This attempt therefore does not pass
+the customer-response reliability gate.** Preserving unknown demographic values
+through export and prompt construction, followed by a fresh full-pipeline gate,
+remains necessary before the holdout comparison.
+
+[Aggregated trial records](../backend/benchmarks/results/2026-10-03-reliability-development-v3/predictions.json)
+and the [read-only integrity audit](../backend/benchmarks/results/2026-10-03-reliability-development-v3/run-audit.json)
+are retained separately from earlier attempts and the holdout.

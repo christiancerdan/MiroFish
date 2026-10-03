@@ -193,7 +193,7 @@ def test_frozen_source_mismatch_blocks_model_and_pipeline_before_calls(tmp_path,
     from app.utils import llm_client, llm_provider
 
     monkeypatch.setattr(llm_provider, "settings_from_config", lambda _: SimpleNamespace(
-        provider="openai_compatible", model="test-model", base_url="http://localhost:11434/v1"))
+        provider="openai_compatible", model="test-model", base_url="http://localhost:11434/v1", token_limit=32768))
     args = SimpleNamespace(method=method, timeout=900, max_calls=35, case_id="test", repeat=1)
     trial = runner.Trial(args, runner.build_source_document(case()),
                          {"model": {"implementation_source_sha256": "0" * 64}}, tmp_path, io.StringIO())
@@ -209,3 +209,58 @@ def test_frozen_source_mismatch_blocks_model_and_pipeline_before_calls(tmp_path,
     with pytest.raises(ValueError, match="source.*frozen protocol"):
         trial.run()
     assert attempted == []
+
+
+def test_frozen_token_limit_mismatch_stops_before_runtime_or_calls(tmp_path, monkeypatch):
+    from app.utils import llm_provider
+    monkeypatch.setattr(llm_provider, "settings_from_config", lambda _: SimpleNamespace(
+        provider="openai_compatible", model="test", base_url="http://localhost/v1", token_limit=1024))
+    args = SimpleNamespace(method="single_model", timeout=900, max_calls=35, case_id="test", repeat=1)
+    trial = runner.Trial(args, runner.build_source_document(case()),
+                         {"model": {"token_limit": 32768}}, tmp_path, io.StringIO())
+    with pytest.raises(ValueError, match="Configured model"):
+        trial.model_and_implementation()
+
+
+@pytest.mark.parametrize("mismatch", [None, "version", "inventory", "content"])
+def test_installed_simulation_runtime_must_match_frozen_vendor(tmp_path, monkeypatch, mismatch):
+    vendor = tmp_path / "vendor" / "camel-oasis"
+    (vendor / "oasis").mkdir(parents=True)
+    (vendor / "pyproject.toml").write_text('[project]\nversion = "1.0+patched"\n')
+    (vendor / "oasis" / "user.py").write_text('demographics = None\n')
+    installed = tmp_path / "installed"
+    (installed / "oasis").mkdir(parents=True)
+    (installed / "oasis" / "user.py").write_text(
+        'demographics = 30\n' if mismatch == "content" else 'demographics = None\n')
+    distribution = SimpleNamespace(
+        version="0.9" if mismatch == "version" else "1.0+patched",
+        files=[] if mismatch == "inventory" else [Path("oasis/user.py")],
+        locate_file=lambda path: installed / path)
+    monkeypatch.setattr(runner, "BACKEND", tmp_path)
+    monkeypatch.setattr(runner.importlib.metadata, "distribution", lambda _: distribution)
+    if mismatch:
+        with pytest.raises(ValueError, match="Installed simulation runtime"):
+            runner.verify_vendored_runtime()
+    else:
+        assert runner.verify_vendored_runtime()["files_verified"] == 1
+
+
+def test_source_freeze_covers_vendor_assets_lock_and_locales(tmp_path, monkeypatch):
+    backend = tmp_path / "backend"
+    names = ["app/example.py", "scripts/runner.py", "vendor/camel-oasis/oasis/user.py",
+             "vendor/camel-oasis/oasis/schema.sql", "vendor/camel-oasis/pyproject.toml",
+             "vendor/camel-oasis/UPSTREAM.json", "pyproject.toml", "uv.lock"]
+    for name in names:
+        path = backend / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original")
+    locale = tmp_path / "locales" / "en.json"
+    locale.parent.mkdir()
+    locale.write_text("original")
+    monkeypatch.setattr(runner, "BACKEND", backend)
+    original = runner.implementation_source_sha256()
+    for path in [backend / name for name in names] + [locale]:
+        path.write_text("changed")
+        assert runner.implementation_source_sha256() != original
+        path.write_text("original")
+    assert runner.implementation_source_sha256() == original
