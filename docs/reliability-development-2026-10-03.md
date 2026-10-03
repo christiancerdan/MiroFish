@@ -123,3 +123,22 @@ patch retains exact target identity and incident relationships with their
 attribution. This attempt validates demographic handling and execution, but does
 not satisfy the final persona-context reliability gate. All trial records remain
 retained, with no outcome scoring.
+
+## Attempt 5 — final development gate
+
+Source `3643e12` fixes the retrieved-context attribution defect. Both old cases
+completed and the [artifact audit](../backend/benchmarks/results/2026-10-03-reliability-development-v5/run-audit.json)
+passed. All six profiles retained the three exact source identities per case,
+all 24 unspecified demographic fields remained null, and the previous
+cross-persona trait mixing was not observed in these exports. This is a small
+reliability gate, not proof that all future model outputs will preserve facts.
+
+Usage: **36 calls, 108,364 tokens, 372.564 summed wall seconds**, unknown cost.
+The implementation passed 950 backend tests (two optional skips), and all five
+CI jobs passed, including complete simulation environments on Python 3.11/3.12.
+The fresh twenty-case comparison now uses this same inference source without
+further tuning. No held-out outcomes were opened during development.
+
+Across attempts 1–5, the diagnostic reproduction, and isolated profile probes,
+development consumed **167 calls and 536,944 accounted tokens**. These costs
+include failed attempts and remain separate from holdout usage.
