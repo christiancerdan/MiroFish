@@ -37,6 +37,10 @@ from .zep_tools import (
 logger = get_logger('mirofish.report_agent')
 
 
+class InvalidReportToolCall(ValueError):
+    """A model tool request cannot be dispatched safely."""
+
+
 def _fenced_report_write(operation):
     """Keep short report writes behind the durable job's ownership barrier."""
     @wraps(operation)
@@ -614,7 +618,8 @@ Summary: {report_summary}
 Scenario assumptions: {simulation_requirement}
 Current section: {section_title}
 
-Use the provided tools to inspect evidence. Distinguish source evidence,
+Use the supplied evidence registry directly when it supports the section.
+Call a tool only when more evidence is needed. Distinguish source evidence,
 simulation observations, and assumptions/interpretations in the prose.
 If evidence is missing, say so. Never invent quotations, metrics or sources.
 Do not add Markdown headings: the system adds the section title.
@@ -640,9 +645,9 @@ SECTION_USER_PROMPT_TEMPLATE = """\
 
 【重要提醒】
 1. 仔细阅读上方已完成的章节，避免重复相同的内容！
-2. 开始前必须先调用工具获取模拟数据
-3. 请混合使用不同工具，不要只用一种
-4. 报告内容必须来自检索结果，不要使用自己的知识
+2. 如果提供的证据登记已足够，可直接输出有引用的 Final Answer
+3. 只在证据不足时调用工具；不要求最低工具调用次数
+4. 报告内容必须来自提供的证据或检索结果，不要使用自己的知识
 
 【⚠️ 格式警告 - 必须遵守】
 - ❌ 不要写任何标题（#、##、###、####都不行）
@@ -652,8 +657,8 @@ SECTION_USER_PROMPT_TEMPLATE = """\
 
 请开始：
 1. 首先思考（Thought）这个章节需要什么信息
-2. 然后调用工具（Action）获取模拟数据
-3. 收集足够信息后输出 Final Answer（纯正文，无任何标题）"""
+2. 只有证据不足时才调用工具（Action）获取模拟数据
+3. 信息足够后直接输出 Final Answer（纯正文，无任何标题，引用已提供证据）"""
 
 # ── ReACT 循环内消息模板 ──
 
@@ -668,16 +673,6 @@ Observation（检索结果）:
 - 如果信息充分：以 "Final Answer:" 开头输出章节内容（必须引用上述原文）
 - 如果需要更多信息：调用一个工具继续检索
 ═══════════════════════════════════════════════════════════════"""
-
-REACT_INSUFFICIENT_TOOLS_MSG = (
-    "【注意】你只调用了{tool_calls_count}次工具，至少需要{min_tool_calls}次。"
-    "请再调用工具获取更多模拟数据，然后再输出 Final Answer。{unused_hint}"
-)
-
-REACT_INSUFFICIENT_TOOLS_MSG_ALT = (
-    "当前只调用了 {tool_calls_count} 次工具，至少需要 {min_tool_calls} 次。"
-    "请调用工具获取模拟数据。{unused_hint}"
-)
 
 REACT_TOOL_LIMIT_MSG = (
     "工具调用次数已达上限（{tool_calls_count}/{max_tool_calls}），不能再调用工具。"
@@ -774,6 +769,7 @@ class ReportAgent:
         self.execution_id = execution_id
         self.source_graph_id = source_graph_id
         self.source_snapshot_sha256 = source_snapshot_sha256
+        self.MAX_TOOL_CALLS_PER_SECTION = max(0, int(Config.REPORT_AGENT_MAX_TOOL_CALLS))
         
         self.llm = llm_client or LLMClient()
         self.zep_tools = None if snapshot_only else (zep_tools or ZepToolsService())
@@ -1050,65 +1046,45 @@ class ReportAgent:
     VALID_TOOL_NAMES = {"insight_forge", "panorama_search", "quick_search", "interview_agents"}
 
     def _parse_tool_calls(self, response: str) -> List[Dict[str, Any]]:
-        """
-        从LLM响应中解析工具调用
-
-        支持的格式（按优先级）：
-        1. <tool_call>{"name": "tool_name", "parameters": {...}}</tool_call>
-        2. 裸 JSON（响应整体或单行就是一个工具调用 JSON）
-        """
-        tool_calls = []
-
-        # 格式1: XML风格（标准格式）
-        xml_pattern = r'<tool_call>\s*(\{.*?\})\s*</tool_call>'
-        for match in re.finditer(xml_pattern, response, re.DOTALL):
+        """Normalize XML-wrapped and bare JSON tool requests identically."""
+        def decode(payload):
             try:
-                call_data = json.loads(match.group(1))
-                tool_calls.append(call_data)
-            except json.JSONDecodeError:
-                pass
+                data = json.loads(payload)
+            except json.JSONDecodeError as error:
+                raise InvalidReportToolCall("Tool payload must be valid JSON") from error
+            if not self._is_valid_tool_call(data):
+                raise InvalidReportToolCall("Tool payload requires a supported name and an object of parameters")
+            return data
 
-        if tool_calls:
-            return tool_calls
-
-        # 格式2: 兜底 - LLM 直接输出裸 JSON（没包 <tool_call> 标签）
-        # 只在格式1未匹配时尝试，避免误匹配正文中的 JSON
+        blocks = re.findall(r'<tool_call>\s*(.*?)\s*</tool_call>', response, re.DOTALL)
+        if blocks:
+            return [decode(payload) for payload in blocks]
+        if re.search(r'<tool_call\b', response, flags=re.IGNORECASE):
+            raise InvalidReportToolCall("Tool request is missing its closing tag")
         stripped = response.strip()
         if stripped.startswith('{') and stripped.endswith('}'):
-            try:
-                call_data = json.loads(stripped)
-                if self._is_valid_tool_call(call_data):
-                    tool_calls.append(call_data)
-                    return tool_calls
-            except json.JSONDecodeError:
-                pass
-
-        # 响应可能包含思考文字 + 裸 JSON，尝试提取最后一个 JSON 对象
-        json_pattern = r'(\{"(?:name|tool)"\s*:.*?\})\s*$'
-        match = re.search(json_pattern, stripped, re.DOTALL)
-        if match:
-            try:
-                call_data = json.loads(match.group(1))
-                if self._is_valid_tool_call(call_data):
-                    tool_calls.append(call_data)
-            except json.JSONDecodeError:
-                pass
-
-        return tool_calls
+            return [decode(stripped)]
+        match = re.search(r'(\{"(?:name|tool)"\s*:.*?\})\s*$', stripped, re.DOTALL)
+        return [decode(match.group(1))] if match else []
 
     def _is_valid_tool_call(self, data: dict) -> bool:
-        """校验解析出的 JSON 是否是合法的工具调用"""
-        # 支持 {"name": ..., "parameters": ...} 和 {"tool": ..., "params": ...} 两种键名
-        tool_name = data.get("name") or data.get("tool")
-        if tool_name and tool_name in self.VALID_TOOL_NAMES:
-            # 统一键名为 name / parameters
-            if "tool" in data:
-                data["name"] = data.pop("tool")
-            if "params" in data and "parameters" not in data:
-                data["parameters"] = data.pop("params")
-            return True
-        return False
-    
+        """Validate shape before normalizing the supported tool-name aliases."""
+        if not isinstance(data, dict):
+            return False
+        tool_name = data.get("name", data.get("tool"))
+        if not isinstance(tool_name, str) or tool_name not in self.VALID_TOOL_NAMES:
+            return False
+        if "name" in data and "tool" in data and data["name"] != data["tool"]:
+            return False
+        parameters = data.get("parameters", data.get("params", {}))
+        if not isinstance(parameters, dict):
+            return False
+        if "parameters" in data and "params" in data and data["parameters"] != data["params"]:
+            return False
+        data.clear()
+        data.update(name=tool_name, parameters=parameters)
+        return True
+
     def _get_tools_description(self) -> str:
         """生成工具描述文本"""
         desc_parts = ["可用工具："]
@@ -1326,7 +1302,7 @@ class ReportAgent:
         # ReACT循环
         tool_calls_count = 0
         max_iterations = 5  # 最大迭代轮数
-        min_tool_calls = 3  # 最少工具调用次数
+        format_retries = 0  # One correction before the existing citation-repair path.
         conflict_retries = 0  # 工具调用与Final Answer同时出现的连续冲突次数
         used_tools = set()  # 记录已调用过的工具名
         all_tools = {"insight_forge", "panorama_search", "quick_search", "interview_agents"}
@@ -1357,7 +1333,20 @@ class ReportAgent:
             logger.debug(f"LLM响应: {response[:200]}...")
 
             # 解析一次，复用结果
-            tool_calls = self._parse_tool_calls(response)
+            try:
+                tool_calls = self._parse_tool_calls(response)
+            except InvalidReportToolCall as error:
+                if format_retries >= 1:
+                    return ""
+                format_retries += 1
+                messages.append({"role": "assistant", "content": self._strip_fake_tool_results(response)})
+                messages.append({"role": "user", "content": (
+                    "Invalid tool request: " + str(error) + ". Reply once with a supported tool name "
+                    'and object parameters, for example <tool_call>{"name":"quick_search",'
+                    '"parameters":{"query":"evidence needed"}}</tool_call>, or give Final Answer: '
+                    "with the complete section and exact supplied evidence citations."
+                )})
+                continue
             has_tool_calls = bool(tool_calls)
             has_final_answer = "Final Answer:" in response
 
@@ -1410,21 +1399,8 @@ class ReportAgent:
             # ── 情况1：LLM 输出了 Final Answer ──
             if has_final_answer:
                 cleaned_response = ReportAgent._strip_fake_tool_results(response)
-                # 工具调用次数不足，拒绝并要求继续调工具
-                if tool_calls_count < min_tool_calls:
-                    messages.append({"role": "assistant", "content": cleaned_response})
-                    unused_tools = all_tools - used_tools
-                    unused_hint = f"（这些工具还未使用，推荐用一下他们: {', '.join(unused_tools)}）" if unused_tools else ""
-                    messages.append({
-                        "role": "user",
-                        "content": REACT_INSUFFICIENT_TOOLS_MSG.format(
-                            tool_calls_count=tool_calls_count,
-                            min_tool_calls=min_tool_calls,
-                            unused_hint=unused_hint,
-                        ),
-                    })
-                    continue
-
+                # Citation validity is checked by _validate_or_repair_section
+                # before any section is published; tool usage is not evidence.
                 # 正常结束
                 final_answer = cleaned_response.split("Final Answer:")[-1].strip()
                 logger.info(t('report.sectionGenDone', title=section.title, count=tool_calls_count))
@@ -1451,7 +1427,7 @@ class ReportAgent:
                             max_tool_calls=self.MAX_TOOL_CALLS_PER_SECTION,
                         ),
                     })
-                    continue
+                    break
 
                 # 只执行第一个工具调用
                 call = tool_calls[0]
@@ -1510,23 +1486,8 @@ class ReportAgent:
             cleaned_response = ReportAgent._strip_fake_tool_results(response)
             messages.append({"role": "assistant", "content": cleaned_response})
 
-            if tool_calls_count < min_tool_calls:
-                # 工具调用次数不足，推荐未用过的工具
-                unused_tools = all_tools - used_tools
-                unused_hint = f"（这些工具还未使用，推荐用一下他们: {', '.join(unused_tools)}）" if unused_tools else ""
-
-                messages.append({
-                    "role": "user",
-                    "content": REACT_INSUFFICIENT_TOOLS_MSG_ALT.format(
-                        tool_calls_count=tool_calls_count,
-                        min_tool_calls=min_tool_calls,
-                        unused_hint=unused_hint,
-                    ),
-                })
-                continue
-
-            # 工具调用已足够，LLM 输出了内容但没带 "Final Answer:" 前缀
-            # 直接将这段内容作为最终答案，不再空转
+            # Plain section text follows the same mandatory citation validation
+            # as an explicit Final Answer; no minimum number of tools is needed.
             logger.info(t('report.sectionNoPrefix', title=section.title, count=tool_calls_count))
             final_answer = cleaned_response
 
@@ -1548,6 +1509,9 @@ class ReportAgent:
             temperature=0.5,
             max_tokens=4096
         )
+
+        if isinstance(response, str):
+            response = self._strip_fake_tool_results(response)
 
         # 检查强制收尾时 LLM 返回是否为 None
         if response is None:
@@ -1571,6 +1535,7 @@ class ReportAgent:
     
     def _validate_or_repair_section(self, content, section_title, section_index):
         """One bounded model correction; application code never assigns attribution."""
+        content = self._strip_fake_tool_results(content)
         try:
             self.evidence_registry.validate_and_render(content, require_citation=True, record=False)
         except CitationError as initial_error:
@@ -1615,6 +1580,7 @@ class ReportAgent:
                 repaired = decoded.get("content") if isinstance(decoded, dict) else None
                 if not isinstance(repaired, str) or not repaired.strip():
                     raise CitationError("Citation repair returned no nonempty section text")
+                repaired = self._strip_fake_tool_results(repaired)
                 rendered, _ = self.evidence_registry.validate_and_render(repaired, require_citation=True)
             except Exception as error:
                 attempt["repair_error"] = type(error).__name__

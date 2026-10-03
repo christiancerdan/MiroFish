@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "dataset_id": "upworthy_headline_holdout_20261003_v1",
+  "cases": [
+    {
+      "case_id": "upworthy-holdout-001",
+      "split": "reserve",
+      "headline_a": "Not Your Average Song For A Cause, Schoolgirls Sing Out To Break A Terrible Ritual",
+      "headline_b": "A Song, A Petition, And A Victory: See The Schoolgirls On A Mission To End FGM",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-002",
+      "split": "reserve",
+      "headline_a": "The Most Terrifying Thing Kids Need To Know. Here's How To Tell Them.",
+      "headline_b": "The Most Painfully Awkward But Crucial Thing Kids Must Know: And The Video That Tells Them For You",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-003",
+      "split": "reserve",
+      "headline_a": "A Teen Came Out To His Mom. I Don't Think He Saw Her Response Coming.",
+      "headline_b": "A Teen Came Out To His Mom But She Had A Surprise Of Her Own To Share",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-004",
+      "split": "reserve",
+      "headline_a": "The Video That's Making Me Want To Stop Working Right Now So I Can Go Outside And Play",
+      "headline_b": "There's A Dude And He's Nicknamed 'The Rat Tickler'. He Just Proved Why Playing Is More Fun.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-005",
+      "split": "reserve",
+      "headline_a": "Here's Why *Not* To Tell Kids Not To Take Candy From Strangers Or Talk To Them",
+      "headline_b": "*Don't* Tell Kids Not To Take Candy From Strangers. Or Not To Talk To Them. Here's Why.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-006",
+      "split": "reserve",
+      "headline_a": "Don’t Have A Green Thumb? You Might Want To Work On That After Seeing This Infographic.",
+      "headline_b": "Think America's Food System Is Kinda Broken? Here's How You Can Start Your Own.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-007",
+      "split": "reserve",
+      "headline_a": "Instead Of Saying She Was 'Born A Boy' Try Saying It Her Way Instead. It Just Captures It Better.",
+      "headline_b": "A Transgender Teen Nails It When She Recommends Saying This Instead Of 'She Was Born A Boy'",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-008",
+      "split": "reserve",
+      "headline_a": "What Do We Really Mean When They Talk About Women's Bodies? What These Women Really Say.",
+      "headline_b": "The Raw, Real Thoughts That Create Modern Human's Confusing Relationship With Their Bodies",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-009",
+      "split": "reserve",
+      "headline_a": "All The Most Epic Moments In Your Favorite Movies Ruined By Shrill Science Facts. Because Science.",
+      "headline_b": "All Of The Coolest Moments In Your Favorite Movies Ruined By Shrill Science Facts. You're Welcome.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-010",
+      "split": "reserve",
+      "headline_a": "Holy Crap! Am I The Only One Who Thinks My Lunch Should Be Worth More Than Where It Came From?",
+      "headline_b": "Waaaaaiiiit, Shouldn't My Lunch Be Worth More Than Where It Came From?",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-011",
+      "split": "reserve",
+      "headline_a": "Cute Old Grandma Writes A Book Of Words Nearly No One Has Heard Of (For The Best Possible Reason)",
+      "headline_b": "Centuries Ago, Thousands Of People Spoke This Language. Today, She's The Only One Left.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-012",
+      "split": "reserve",
+      "headline_a": "Every Time You Think They're Going To Talk About Sports, They Say Something Much Weirder",
+      "headline_b": "They Can Barely Bring Themselves To Watch, But I Just Laughed",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-013",
+      "split": "reserve",
+      "headline_a": "This 2 Minute Video Contains The Truth About How Our Country Will Get Ahead. HINT: It Has To Do With Kids.",
+      "headline_b": "This Is What Happens When Students Have The Support They Need. This Joyful Video Will Make You Smile.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-014",
+      "split": "reserve",
+      "headline_a": "How HIV Happened",
+      "headline_b": "HIV Has Killed Almost 36 Million People, But I Bet You've Never Heard The Real Origin Story",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-015",
+      "split": "reserve",
+      "headline_a": "One Chef Eliminated Something That Most Restaurants Can't Help But Make. And It's Thriving.",
+      "headline_b": "How One Restaurant Made An Unrealistic, Far-Fetched And Unthinkable Amount Of Trash Totally Normal",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-016",
+      "split": "reserve",
+      "headline_a": "A Stray Dog Hid Her Babies Behind A Tree, Good Thing The Whole Neighborhood Got Involved",
+      "headline_b": "A Pitbull Hid Her Newborns Behind A Tree, Good Thing The Whole Neighborhood Got Involved",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-017",
+      "split": "reserve",
+      "headline_a": "Smile! It's A Big Page Of Good News.",
+      "headline_b": "We Might Not Be Able To Terraform Other Planets. It's Possible We Won't Have To.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-018",
+      "split": "reserve",
+      "headline_a": "There Are No Words, But It's Easy To Hear Poverty",
+      "headline_b": "Poverty Is Easy To Emotionally Actualize With 1 Minute And No Words",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-019",
+      "split": "reserve",
+      "headline_a": "So, Why Did It Take This Women's Magazine This Long To Feature Such An Amazing Young Woman?",
+      "headline_b": "The First Hijabi In This Fashion Magazine Is Predictably Amazing\n",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    },
+    {
+      "case_id": "upworthy-holdout-020",
+      "split": "reserve",
+      "headline_a": "The Truth Behind Why So Many People Stay In Abusive Relationships",
+      "headline_b": "No One Should Have To Experience This Violence. But People Do, So We Have To Talk About It.",
+      "audience_context": "Historical Upworthy.com readers in 2013–2015, assigned an article preview on the Upworthy website. Predict which of these two headlines received the higher click-through rate (clicks per assignment). Both variants used the same image; the image is unavailable. This is a headline comparison, not a measure of purchases, satisfaction, or broader customer behavior.",
+      "shared_image_unavailable": true
+    }
+  ]
+}

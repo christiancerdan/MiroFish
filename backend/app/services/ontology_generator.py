@@ -3,8 +3,6 @@
 接口1：分析文本内容，生成适合社会模拟的实体和关系类型定义
 """
 
-import json
-import logging
 import re
 from typing import Dict, Any, List, Optional
 from ..utils.llm_client import LLMClient
@@ -12,183 +10,35 @@ from ..utils.locale import get_language_instruction
 from ..utils.file_parser import split_text_into_chunks
 from ..utils.ontology import (
     MAX_ONTOLOGY_TYPES,
-    normalize_ontology_attributes,
-    normalize_ontology_source_targets,
+    MAX_ONTOLOGY_ATTRIBUTES,
+    MAX_ONTOLOGY_SOURCE_TARGETS,
+    RESERVED_ONTOLOGY_ATTRIBUTE_NAMES,
 )
 
-logger = logging.getLogger(__name__)
 
+ONTOLOGY_SYSTEM_PROMPT = """Design a concise ontology for social-media simulation from the supplied source documents.
+Return only one complete JSON object with exactly these keys:
+{"entity_types":[{"name":"Person","description":"An individual participant.","attributes":[],"examples":[]}],"edge_types":[],"analysis_summary":"Brief source-grounded rationale."}
 
-def _to_pascal_case(name: str) -> str:
-    """将任意格式的名称转换为 PascalCase（如 'works_for' -> 'WorksFor', 'person' -> 'Person'）"""
-    # 按非字母数字字符分割
-    parts = re.split(r'[^a-zA-Z0-9]+', name)
-    # 再按 camelCase 边界分割（如 'camelCase' -> ['camel', 'Case']）
-    words = []
-    for part in parts:
-        words.extend(re.sub(r'([a-z])([A-Z])', r'\1_\2', part).split('_'))
-    # 每个词首字母大写，过滤空串
-    result = ''.join(word.capitalize() for word in words if word)
-    return result if result else 'Unknown'
-
-
-def _to_upper_snake_case(name: str) -> str:
-    """Convert free-form or camelCase names to SCREAMING_SNAKE_CASE."""
-
-    separated = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', name.strip())
-    normalized = re.sub(r'[^a-zA-Z0-9]+', '_', separated).strip('_').upper()
-    if not normalized:
-        return "UNKNOWN"
-    if normalized[0].isdigit():
-        normalized = f"REL_{normalized}"
-    return normalized
-
-
-# 本体生成的系统提示词
-ONTOLOGY_SYSTEM_PROMPT = """你是一个专业的知识图谱本体设计专家。你的任务是分析给定的文本内容和模拟需求，设计适合**社交媒体舆论模拟**的实体类型和关系类型。
-
-**重要：你必须输出有效的JSON格式数据，不要输出任何其他内容。**
-
-## 核心任务背景
-
-我们正在构建一个**社交媒体舆论模拟系统**。在这个系统中：
-- 每个实体都是一个可以在社交媒体上发声、互动、传播信息的"账号"或"主体"
-- 实体之间会相互影响、转发、评论、回应
-- 我们需要模拟舆论事件中各方的反应和信息传播路径
-
-因此，**实体必须是现实中真实存在的、可以在社媒上发声和互动的主体**：
-
-**可以是**：
-- 具体的个人（公众人物、当事人、意见领袖、专家学者、普通人）
-- 公司、企业（包括其官方账号）
-- 组织机构（大学、协会、NGO、工会等）
-- 政府部门、监管机构
-- 媒体机构（报纸、电视台、自媒体、网站）
-- 社交媒体平台本身
-- 特定群体代表（如校友会、粉丝团、维权群体等）
-
-**不可以是**：
-- 抽象概念（如"舆论"、"情绪"、"趋势"）
-- 主题/话题（如"学术诚信"、"教育改革"）
-- 观点/态度（如"支持方"、"反对方"）
-
-## 输出格式
-
-请输出JSON格式，包含以下结构：
-
-```json
-{
-    "entity_types": [
-        {
-            "name": "实体类型名称（英文，PascalCase）",
-            "description": "简短描述（英文，不超过100字符）",
-            "attributes": [
-                {
-                    "name": "属性名（英文，snake_case）",
-                    "type": "text",
-                    "description": "属性描述"
-                }
-            ],
-            "examples": ["示例实体1", "示例实体2"]
-        }
-    ],
-    "edge_types": [
-        {
-            "name": "关系类型名称（英文，UPPER_SNAKE_CASE）",
-            "description": "简短描述（英文，不超过100字符）",
-            "source_targets": [
-                {"source": "源实体类型", "target": "目标实体类型"}
-            ],
-            "attributes": []
-        }
-    ],
-    "analysis_summary": "对文本内容的简要分析说明"
-}
-```
-
-## 设计指南（极其重要！）
-
-### 1. 实体类型设计 - 必须严格遵守
-
-**数量要求：必须正好10个实体类型**
-
-**层次结构要求（必须同时包含具体类型和兜底类型）**：
-
-你的10个实体类型必须包含以下层次：
-
-A. **兜底类型（必须包含，放在列表最后2个）**：
-   - `Person`: 任何自然人个体的兜底类型。当一个人不属于其他更具体的人物类型时，归入此类。
-   - `Organization`: 任何组织机构的兜底类型。当一个组织不属于其他更具体的组织类型时，归入此类。
-
-B. **具体类型（8个，根据文本内容设计）**：
-   - 针对文本中出现的主要角色，设计更具体的类型
-   - 例如：如果文本涉及学术事件，可以有 `Student`, `Professor`, `University`
-   - 例如：如果文本涉及商业事件，可以有 `Company`, `CEO`, `Employee`
-
-**为什么需要兜底类型**：
-- 文本中会出现各种人物，如"中小学教师"、"路人甲"、"某位网友"
-- 如果没有专门的类型匹配，他们应该被归入 `Person`
-- 同理，小型组织、临时团体等应该归入 `Organization`
-
-**具体类型的设计原则**：
-- 从文本中识别出高频出现或关键的角色类型
-- 每个具体类型应该有明确的边界，避免重叠
-- description 必须清晰说明这个类型和兜底类型的区别
-
-### 2. 关系类型设计
-
-- 数量：6-10个
-- 关系应该反映社媒互动中的真实联系
-- 确保关系的 source_targets 涵盖你定义的实体类型
-
-### 3. 属性设计
-
-- 每个实体类型1-3个关键属性
-- **注意**：属性名不能使用 `name`、`uuid`、`group_id`、`graph_id`、`created_at`、`summary`（这些是系统保留字）
-- 推荐使用：`full_name`, `title`, `role`, `position`, `location`, `description` 等
-
-## 实体类型参考
-
-**个人类（具体）**：
-- Student: 学生
-- Professor: 教授/学者
-- Journalist: 记者
-- Celebrity: 明星/网红
-- Executive: 高管
-- Official: 政府官员
-- Lawyer: 律师
-- Doctor: 医生
-
-**个人类（兜底）**：
-- Person: 任何自然人（不属于上述具体类型时使用）
-
-**组织类（具体）**：
-- University: 高校
-- Company: 公司企业
-- GovernmentAgency: 政府机构
-- MediaOutlet: 媒体机构
-- Hospital: 医院
-- School: 中小学
-- NGO: 非政府组织
-
-**组织类（兜底）**：
-- Organization: 任何组织机构（不属于上述具体类型时使用）
-
-## 关系类型参考
-
-- WORKS_FOR: 工作于
-- STUDIES_AT: 就读于
-- AFFILIATED_WITH: 隶属于
-- REPRESENTS: 代表
-- REGULATES: 监管
-- REPORTS_ON: 报道
-- COMMENTS_ON: 评论
-- RESPONDS_TO: 回应
-- SUPPORTS: 支持
-- OPPOSES: 反对
-- COLLABORATES_WITH: 合作
-- COMPETES_WITH: 竞争
+Choose the smallest useful taxonomy supported by the source:
+- Define 1–10 actor TYPES, not one type per person. A few people or reader personas usually need only Person; represent different roles as attributes. Use Organization only when organizations occur. More specific types are optional when the source needs distinct actor categories. Never fill a quota or invent participants, organizations, facts, or examples.
+- Actors must be identifiable individuals, organizations, or explicitly supplied fictional personas able to speak or interact. Preserve their assumed/fictional status in descriptions or attributes; never present them as observed real people. Headlines, topics, opinions, abstract concepts and the simulation task are not actors. Do not label actors Entity or Node.
+- Define 0–10 relationship types grounded in actual source relationships. Use an empty edge_types array when none are evidenced; shared presence in a document does not imply a relationship.
+- Each entity has exactly name, description, attributes, examples. Each edge has exactly name, description, attributes, source_targets. An edge's source_targets contains 1–10 distinct {"source":"DeclaredType","target":"DeclaredType"} pairs using declared entity names.
+- Entity names are English PascalCase; edge names are UPPER_SNAKE_CASE. Names and descriptions are at most 100 characters. Names are unique within each list.
+- Prefer 0–2 attributes per type. Each attribute has exactly name, type (always "text"), description. Attribute names are English snake_case, unique within that type, and cannot be name, uuid, group_id, graph_id, name_embedding, created_at, summary. Empty attributes arrays are valid.
+- Use at most two short examples from the source per entity, or [] when none is appropriate. Examples are instances, not extra types.
+- Keep descriptions and analysis_summary brief (summary at most 500 characters). Preserve the output language instruction for prose. Do not add commentary, markdown or extra keys.
 """
+
+ONTOLOGY_VALIDATION_FEEDBACK = (
+    "Return the complete ontology object again, using the smallest source-grounded taxonomy. "
+    "Required keys: entity_types (1–10 objects), edge_types (0–10 objects), analysis_summary "
+    "(nonempty string, at most 500 characters). Entity fields: name, description, attributes, "
+    "examples. Edge fields: name, description, attributes, source_targets. Names must be unique; "
+    "every edge endpoint must reference a declared actor type. Omit unsupported relationships "
+    "instead of inventing them. Empty attributes and examples arrays are allowed."
+)
 
 
 class OntologyGenerator:
@@ -225,28 +75,26 @@ class OntologyGenerator:
         )
         
         lang_instruction = get_language_instruction()
-        system_prompt = f"{ONTOLOGY_SYSTEM_PROMPT}\n\n{lang_instruction}\nIMPORTANT: Entity type names MUST be in English PascalCase (e.g., 'PersonEntity', 'MediaOrganization'). Relationship type names MUST be in English UPPER_SNAKE_CASE (e.g., 'WORKS_FOR'). Attribute names MUST be in English snake_case. Only description fields and analysis_summary should use the specified language above."
+        system_prompt = f"{ONTOLOGY_SYSTEM_PROMPT}\n\n{lang_instruction}\nUse the specified language for descriptions, examples and analysis_summary; keep schema keys and type/attribute names in English."
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message}
         ]
         
         # 调用LLM
-        result = self.llm_client.chat_json(
+        # Parsing and schema failures share a single bounded retry budget. Explicit
+        # caps include hidden reasoning on providers that count it as completion.
+        model_limit = getattr(self.llm_client, "token_limit", 16384)
+        return self.llm_client.chat_json(
             messages=messages,
             temperature=0.3,
-            # Structured ontology responses can exceed 4096 completion tokens,
-            # especially when a compatible provider counts hidden reasoning in
-            # the same budget. Let the provider use its model-specific limit.
-            max_tokens=None,
+            max_tokens=min(8192, model_limit),
+            retry_max_tokens=min(16384, model_limit),
             max_attempts=2,
+            validator=self._validate_and_process,
+            validation_feedback=ONTOLOGY_VALIDATION_FEEDBACK,
         )
-        
-        # 验证和后处理
-        result = self._validate_and_process(result)
-        
-        return result
-    
+
     # 传给 LLM 的文本最大长度（5万字）
     MAX_TEXT_LENGTH_FOR_LLM = 50000
     LONG_TEXT_CHUNK_SIZE = 8000
@@ -281,16 +129,12 @@ class OntologyGenerator:
 """
         
         message += """
-请根据以上内容，设计适合社会舆论模拟的实体类型和关系类型。
-
-**必须遵守的规则**：
-1. 必须正好输出10个实体类型
-2. 最后2个必须是兜底类型：Person（个人兜底）和 Organization（组织兜底）
-3. 前8个是根据文本内容设计的具体类型
-4. 所有实体类型必须是现实中可以发声的主体，不能是抽象概念
-5. 属性名不能使用 name、uuid、group_id、graph_id 等保留字，用 full_name、org_name 等替代
+Design only the actor types and relationships supported by these documents.
+Use the smallest useful ontology: one Person type can cover several individual personas;
+keep edge_types empty if the source states no relationships. Do not invent extra types to
+reach a target count. Return the complete JSON object with concise prose.
 """
-        
+
         return message
 
     def _build_document_context(self, document_texts: List[str]) -> str:
@@ -430,200 +274,110 @@ class OntologyGenerator:
         return f"{text[:head_len].rstrip()}{marker}{text[-tail_len:].lstrip()}"
     
     def _validate_and_process(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """验证和后处理结果"""
-        if not isinstance(result, dict):
-            raise ValueError("Ontology result must be an object")
+        """Validate a complete response without inventing or discarding graph types.
 
-        raw_entities = result.get("entity_types")
-        raw_edges = result.get("edge_types")
-        if not isinstance(raw_entities, list):
-            raw_entities = []
-        if not isinstance(raw_edges, list):
-            raw_edges = []
-        if not isinstance(result.get("analysis_summary"), str):
-            result["analysis_summary"] = ""
+        Errors contain schema paths, never source/model prose, so they are safe
+        to feed into the shared client's bounded regeneration request.
+        """
+        def object_fields(value, fields, path):
+            if not isinstance(value, dict) or set(value) != set(fields):
+                raise ValueError(f"{path} must be an object with exactly: {', '.join(fields)}")
 
-        # Normalize entity entries before touching their fields. LLMs
-        # occasionally emit a bare string, null, or another scalar.
-        entity_name_map: Dict[str, str] = {}
-        processed_entities: List[Dict[str, Any]] = []
-        seen_entity_names = set()
-        for raw_entity in raw_entities:
-            if isinstance(raw_entity, str):
-                entity = {"name": raw_entity}
-            elif isinstance(raw_entity, dict):
-                entity = dict(raw_entity)
-            else:
-                logger.warning("Ignoring non-object ontology entity entry")
-                continue
+        def text(value, path, limit=100):
+            if not isinstance(value, str) or not value.strip() or len(value) > limit:
+                raise ValueError(f"{path} must be nonempty text of at most {limit} characters")
+            return value.strip()
 
-            original_name = entity.get("name")
-            if not isinstance(original_name, str) or not original_name.strip():
-                logger.warning("Ignoring ontology entity without a usable name")
-                continue
-            original_name = original_name.strip()
-            normalized_name = _to_pascal_case(original_name)
-            if normalized_name == "Unknown":
-                continue
-            if normalized_name in seen_entity_names:
-                logger.warning(f"Duplicate entity type '{normalized_name}' removed during validation")
-                entity_name_map[original_name] = normalized_name
-                entity_name_map[original_name.lower()] = normalized_name
-                continue
+        def bounded_list(value, path, minimum, maximum):
+            if not isinstance(value, list) or not minimum <= len(value) <= maximum:
+                raise ValueError(f"{path} must be an array with {minimum}–{maximum} items")
+            return value
 
-            if normalized_name != original_name:
-                logger.warning(
-                    f"Entity type name '{original_name}' auto-converted to '{normalized_name}'"
-                )
-            entity["name"] = normalized_name
-            entity["attributes"] = normalize_ontology_attributes(
-                entity.get("attributes", [])
-            )
-            if not isinstance(entity.get("examples"), list):
-                entity["examples"] = []
-            description = entity.get("description")
-            if not isinstance(description, str) or not description:
-                description = f"A {normalized_name} entity."
-            entity["description"] = (
-                description[:97] + "..." if len(description) > 100 else description
-            )
+        def identifier(value, path, pattern):
+            value = text(value, path)
+            if not re.fullmatch(pattern, value):
+                raise ValueError(f"{path} has invalid identifier casing or characters")
+            return value
 
-            seen_entity_names.add(normalized_name)
-            processed_entities.append(entity)
-            entity_name_map[original_name] = normalized_name
-            entity_name_map[original_name.lower()] = normalized_name
-            entity_name_map[normalized_name] = normalized_name
-            entity_name_map[normalized_name.lower()] = normalized_name
+        def attributes(value, path):
+            definitions = []
+            names = set()
+            for index, attribute in enumerate(bounded_list(value, path, 0, MAX_ONTOLOGY_ATTRIBUTES)):
+                attr_path = f"{path}[{index}]"
+                object_fields(attribute, ("name", "type", "description"), attr_path)
+                name = identifier(attribute["name"], f"{attr_path}.name", r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+                if name in RESERVED_ONTOLOGY_ATTRIBUTE_NAMES or name in names:
+                    raise ValueError(f"{attr_path}.name must be unique and not reserved")
+                if attribute["type"] != "text":
+                    raise ValueError(f"{attr_path}.type must be text")
+                definitions.append({
+                    "name": name,
+                    "type": "text",
+                    "description": text(attribute["description"], f"{attr_path}.description"),
+                })
+                names.add(name)
+            return definitions
 
-        result["entity_types"] = processed_entities
+        object_fields(result, ("entity_types", "edge_types", "analysis_summary"), "ontology")
+        summary = text(result["analysis_summary"], "analysis_summary", 500)
+        raw_entities = bounded_list(result["entity_types"], "entity_types", 1, MAX_ONTOLOGY_TYPES)
+        raw_edges = bounded_list(result["edge_types"], "edge_types", 0, MAX_ONTOLOGY_TYPES)
+        entity_names = set()
+        entities = []
+        for index, entity in enumerate(raw_entities):
+            path = f"entity_types[{index}]"
+            object_fields(entity, ("name", "description", "attributes", "examples"), path)
+            name = identifier(entity["name"], f"{path}.name", r"[A-Z][A-Za-z0-9]*")
+            if name in {"Entity", "Node"} or name.casefold() in entity_names:
+                raise ValueError(f"{path}.name must be a unique actor type, not Entity or Node")
+            entities.append({
+                "name": name,
+                "description": text(entity["description"], f"{path}.description"),
+                "attributes": attributes(entity["attributes"], f"{path}.attributes"),
+                "examples": [
+                    text(example, f"{path}.examples[{example_index}]")
+                    for example_index, example in enumerate(
+                        bounded_list(entity["examples"], f"{path}.examples", 0, 10)
+                    )
+                ],
+            })
+            entity_names.add(name.casefold())
 
-        # 兜底类型定义
-        person_fallback = {
-            "name": "Person",
-            "description": "Any individual person not fitting other specific person types.",
-            "attributes": [
-                {"name": "full_name", "type": "text", "description": "Full name of the person"},
-                {"name": "role", "type": "text", "description": "Role or occupation"}
-            ],
-            "examples": ["ordinary citizen", "anonymous netizen"]
-        }
-        
-        organization_fallback = {
-            "name": "Organization",
-            "description": "Any organization not fitting other specific organization types.",
-            "attributes": [
-                {"name": "org_name", "type": "text", "description": "Name of the organization"},
-                {"name": "org_type", "type": "text", "description": "Type of organization"}
-            ],
-            "examples": ["small business", "community group"]
-        }
-        
-        # 检查是否已有兜底类型
-        entity_names = {e["name"] for e in result["entity_types"]}
-        has_person = "Person" in entity_names
-        has_organization = "Organization" in entity_names
-        
-        # 需要添加的兜底类型
-        fallbacks_to_add = []
-        if not has_person:
-            fallbacks_to_add.append(person_fallback)
-        if not has_organization:
-            fallbacks_to_add.append(organization_fallback)
-        
-        if fallbacks_to_add:
-            current_count = len(result["entity_types"])
-            needed_slots = len(fallbacks_to_add)
-            
-            # 如果添加后会超过 10 个，需要移除一些现有类型
-            if current_count + needed_slots > MAX_ONTOLOGY_TYPES:
-                # 计算需要移除多少个
-                to_remove = current_count + needed_slots - MAX_ONTOLOGY_TYPES
-                # 从末尾移除（保留前面更重要的具体类型）
-                result["entity_types"] = result["entity_types"][:-to_remove]
-            
-            # 添加兜底类型
-            result["entity_types"].extend(fallbacks_to_add)
-        
-        # 最终确保不超过限制（防御性编程）
-        result["entity_types"] = result["entity_types"][:MAX_ONTOLOGY_TYPES]
+        declared_names = {entity["name"] for entity in entities}
+        edge_names = set()
+        edges = []
+        for index, edge in enumerate(raw_edges):
+            path = f"edge_types[{index}]"
+            object_fields(edge, ("name", "description", "attributes", "source_targets"), path)
+            name = identifier(edge["name"], f"{path}.name", r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*")
+            if name in edge_names:
+                raise ValueError(f"{path}.name must be unique")
+            pairs = []
+            seen_pairs = set()
+            for pair_index, pair in enumerate(bounded_list(
+                edge["source_targets"], f"{path}.source_targets", 1, MAX_ONTOLOGY_SOURCE_TARGETS
+            )):
+                pair_path = f"{path}.source_targets[{pair_index}]"
+                object_fields(pair, ("source", "target"), pair_path)
+                source = text(pair["source"], f"{pair_path}.source")
+                target = text(pair["target"], f"{pair_path}.target")
+                # Entity is the legacy wildcard understood by both graph backends.
+                if source not in declared_names | {"Entity"} or target not in declared_names | {"Entity"}:
+                    raise ValueError(f"{pair_path} must reference declared types or the Entity wildcard")
+                if (source, target) in seen_pairs:
+                    raise ValueError(f"{pair_path} must be a unique endpoint pair")
+                seen_pairs.add((source, target))
+                pairs.append({"source": source, "target": target})
+            edges.append({
+                "name": name,
+                "description": text(edge["description"], f"{path}.description"),
+                "attributes": attributes(edge["attributes"], f"{path}.attributes"),
+                "source_targets": pairs,
+            })
+            edge_names.add(name)
 
-        # Resolve edge endpoints only after entity fallback/capping, so an edge
-        # cannot refer to a type that was removed to satisfy Zep's limits.
-        valid_entity_names = {entity["name"] for entity in result["entity_types"]}
-        for name in valid_entity_names:
-            entity_name_map[name] = name
-            entity_name_map[name.lower()] = name
+        return {"entity_types": entities, "edge_types": edges, "analysis_summary": summary}
 
-        def resolve_entity_name(value: str) -> Optional[str]:
-            stripped = value.strip()
-            if stripped == "Entity":
-                return stripped
-            mapped = entity_name_map.get(stripped) or entity_name_map.get(stripped.lower())
-            if mapped in valid_entity_names:
-                return mapped
-            pascal_name = _to_pascal_case(stripped)
-            return pascal_name if pascal_name in valid_entity_names else None
-
-        processed_edges: List[Dict[str, Any]] = []
-        seen_edge_names = set()
-        for raw_edge in raw_edges:
-            if isinstance(raw_edge, str):
-                # A bare edge name has no endpoints and cannot be installed in
-                # Zep safely. Ignore it instead of inventing a relationship.
-                logger.warning(f"Ignoring ontology edge without source_targets: {raw_edge}")
-                continue
-            elif isinstance(raw_edge, dict):
-                edge = dict(raw_edge)
-            else:
-                logger.warning("Ignoring non-object ontology edge entry")
-                continue
-
-            original_name = edge.get("name")
-            if not isinstance(original_name, str) or not original_name.strip():
-                logger.warning("Ignoring ontology edge without a usable name")
-                continue
-            normalized_name = _to_upper_snake_case(original_name)
-            if normalized_name == "UNKNOWN" or normalized_name in seen_edge_names:
-                if normalized_name in seen_edge_names:
-                    logger.warning(f"Duplicate edge type '{normalized_name}' removed during validation")
-                continue
-            if normalized_name != original_name:
-                logger.warning(
-                    f"Edge type name '{original_name}' auto-converted to '{normalized_name}'"
-                )
-            edge["name"] = normalized_name
-
-            normalized_targets = []
-            for source_target in normalize_ontology_source_targets(
-                edge.get("source_targets", []),
-                limit=None,
-            ):
-                source = resolve_entity_name(source_target["source"])
-                target = resolve_entity_name(source_target["target"])
-                if source and target:
-                    normalized_targets.append({"source": source, "target": target})
-            edge["source_targets"] = normalize_ontology_source_targets(
-                normalized_targets
-            )
-            edge["attributes"] = normalize_ontology_attributes(
-                edge.get("attributes", [])
-            )
-            description = edge.get("description")
-            if not isinstance(description, str) or not description:
-                description = f"A {normalized_name} relationship."
-            edge["description"] = (
-                description[:97] + "..." if len(description) > 100 else description
-            )
-
-            seen_edge_names.add(normalized_name)
-            processed_edges.append(edge)
-            if len(processed_edges) == MAX_ONTOLOGY_TYPES:
-                break
-
-        result["edge_types"] = processed_edges
-        
-        return result
-    
     def generate_python_code(self, ontology: Dict[str, Any]) -> str:
         """
         将本体定义转换为Python代码（类似ontology.py）

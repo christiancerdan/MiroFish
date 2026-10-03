@@ -67,3 +67,9 @@ backend/benchmarks/data/*
 !backend/benchmarks/data/upworthy_outcomes.json
 !backend/benchmarks/data/upworthy_selection_manifest.json
 !backend/benchmarks/data/prepare_upworthy.py
+!backend/benchmarks/data/prepare_upworthy_holdout.py
+!backend/benchmarks/data/holdout-2026-10-03/
+backend/benchmarks/data/holdout-2026-10-03/*
+!backend/benchmarks/data/holdout-2026-10-03/upworthy_inputs.json
+!backend/benchmarks/data/holdout-2026-10-03/upworthy_selection_manifest.json
+!backend/benchmarks/data/holdout-2026-10-03/upworthy_outcomes.json
