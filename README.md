@@ -48,6 +48,8 @@ The **Workspace** panel shows memory/model location, project usage limits, and b
 
 Reports include saved source evidence, citation checks, run metadata, and explicit uncertainty. Citation checks establish reference integrity, not whether a claim is true. The [forecast evaluation CLI](./docs/forecast-evaluation.md) supports dated holdouts, proper scores, baselines, and repeated-run variability; the bundled example is synthetic.
 
+The [audited 80-trial historical comparison](./docs/benchmark-holdout-2026-10-03.md) found no established predictive advantage over a single-model baseline. The [prospective customer-study kit](./docs/prospective-customer-study.md) prepares text A/B studies, seals manually imported forecasts before launch, and scores operator-attested aggregate responses afterward. It does not launch experiments or contact customers.
+
 ## Verification and maintenance
 
 Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Reddit action with a saved post and matching SQLite trace were verified with the configured local Ollama cloud alias on **2026-10-02 UTC**, including the modernized simulation runtime. A complete synthetic local-memory workflow also passed: ontology and graph extraction, profiles, four model-driven Reddit actions, drained memory updates, and a three-section report with five verified source references. Fresh-process persistence checks passed. The fixture explicitly fixes a two-agent activity schedule; see [the reproducible check](./docs/live-workflow.md). Direct hosted Ollama authentication and the complete Zep-backed workflow have not been live-verified. Run the capability checks for your own account and model before starting simulations; hosted model usage may incur charges.
@@ -58,6 +60,7 @@ Text, JSON, function tools, asynchronous CAMEL tool calls, and a real OASIS Redd
 - [Durable jobs and explicit recovery](./docs/durable-jobs.md)
 - [Project usage budgets](./docs/run-budgets.md)
 - [Evidence and forecast evaluation](./docs/forecast-evaluation.md)
+- [Prospective customer-study preparation](./docs/prospective-customer-study.md)
 - [Synthetic live workflow check](./docs/live-workflow.md)
 - [Security changes and verification boundaries](./docs/security-remediation.md)
 - [Dependency audit results and maintained OASIS source](./docs/dependency-security.md)

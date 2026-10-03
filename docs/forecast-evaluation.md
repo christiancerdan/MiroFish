@@ -60,7 +60,17 @@ Report evidence kinds are:
 - `assumption`: User-provided scenario assumptions.
 - `unclassified`: Source origin was not established; it is not promoted to a fact.
 
-The model receives allowed IDs and emits `[[source:ID]]`. Unknown/malformed IDs and uncited sections receive at most one structured correction request with stored source excerpts and application-issued IDs; persistent failures stop before section persistence. An empty generation response enters this same bounded repair immediately. The application never assigns a citation to an unsupported claim. Repair attempts and initial errors are recorded in the manifest and logs, and the corrected text passes the original validator. Valid tokens render as Markdown source-register links. The registry retains sources separately from derived text. The API `GET /api/evidence/<report_id>/<citation_id>` returns the stored source only if it belongs to that report and its text hash matches. Links survive later graph changes or deletion; deleting the report removes its snapshot.
+New report sections return a strict JSON envelope:
+
+```json
+{"paragraphs":[{"text":"Source evidence: a statement from the supplied material.","source_ids":["e-APPLICATION_ISSUED_ID"]}]}
+```
+
+The ID above is illustrative; real IDs contain `e-` followed by 24 lowercase hexadecimal characters. Every paragraph must select one to eight distinct IDs from its report's evidence registry. The application validates the entire section before recording references, escapes the plain text, and appends deterministic Markdown source links. Unknown IDs, duplicate JSON keys, extra fields, model-written citation syntax, links, HTML, and tool artifacts are rejected. Sections allow at most 32 paragraphs, 8,000 characters per paragraph, 32,000 text characters total, and 32 distinct evidence IDs.
+
+Invalid or empty sections receive at most one correction request using the same schema and stored evidence excerpts. Persistent failures stop before that section is published or saved. The application never guesses a source assignment. Repair attempts and initial errors are recorded in the manifest and logs; UI section events contain only validated, rendered Markdown. Manifest version 3 records section schema and renderer versions and hashes the output instructions. Existing saved reports and report chat retain their legacy `[[source:ID]]` token validation.
+
+The registry retains sources separately from derived text. The API `GET /api/evidence/<report_id>/<citation_id>` returns the stored source only if it belongs to that report and its text hash matches. Links survive later graph changes or deletion; deleting the report removes its snapshot.
 
 On an explicit retry, prior report files are archived under `attempt_history/<attempt-id>` before the new attempt begins. Current APIs and source URLs refer to the current attempt; archived files remain available for local audit. Assembly reads only the current outline’s section indexes and validates the assembled references before publishing the final Markdown. Durable report writes hold the job ownership barrier, so an expired or replaced worker cannot overwrite the current attempt.
 
