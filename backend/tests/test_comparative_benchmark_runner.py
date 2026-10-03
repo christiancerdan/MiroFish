@@ -127,3 +127,61 @@ def test_output_writer_is_strict_and_atomic(tmp_path):
     with pytest.raises(ValueError):
         runner.save_json(target, {"probability_a": float("nan")})
     assert json.loads(target.read_text()) == {"probability_a": 0.7}
+
+
+def graph():
+    return {'nodes': [
+        {'uuid': 'curious', 'name': 'Curious Reader', 'labels': ['Entity', 'CuriousReader']},
+        {'uuid': 'skeptical', 'name': 'Skeptical Reader', 'labels': ['Entity', 'SkepticalReader']},
+        {'uuid': 'busy', 'name': 'Busy Reader', 'labels': ['Entity', 'BusyReader']},
+    ]}
+
+
+def test_valid_actual_subtypes_are_selected_without_invented_reader_label():
+    assert runner.select_participant_types(graph()) == ['BusyReader', 'CuriousReader', 'SkepticalReader']
+
+
+def test_shared_actual_type_is_supported():
+    value = graph()
+    for node in value['nodes']:
+        node['labels'] = ['Entity', 'Person']
+    assert runner.select_participant_types(value) == ['Person']
+
+
+def test_unrelated_headline_entity_does_not_become_an_agent():
+    value = graph()
+    value['nodes'].append({'uuid': 'headline', 'name': 'A headline', 'labels': ['Entity', 'Headline']})
+    assert runner.select_participant_types(value) == ['BusyReader', 'CuriousReader', 'SkepticalReader']
+
+
+@pytest.mark.parametrize('failure', ['missing', 'duplicate', 'untyped', 'extra_selected', 'invented_person'])
+def test_invalid_or_ambiguous_fixed_participants_fail_closed(failure):
+    value = graph()
+    if failure == 'missing':
+        value['nodes'].pop()
+    elif failure == 'duplicate':
+        value['nodes'].append({**value['nodes'][0], 'uuid': 'duplicate'})
+    elif failure == 'untyped':
+        value['nodes'][0]['labels'] = ['Entity', 'Node']
+    elif failure == 'extra_selected':
+        value['nodes'].append({'uuid': 'fourth', 'name': 'Fourth Reader', 'labels': ['CuriousReader']})
+    elif failure == 'invented_person':
+        value['nodes'][0]['name'] = 'Alice Curious'
+    with pytest.raises(RuntimeError):
+        runner.select_participant_types(value)
+
+
+def test_prepared_names_cannot_silently_replace_source_personas():
+    runner.validate_participant_names([{'entity_name': persona['name']} for persona in runner.PERSONAS])
+    with pytest.raises(RuntimeError):
+        runner.validate_participant_names([{'entity_name': 'Alice'}, {'entity_name': 'Bob'}, {'entity_name': 'Chris'}])
+
+
+def test_actual_fixture_names_match():
+    # Only structural participant data copied from the failed v1 trace; no
+    # headline, prediction, or outcome fixture enters this regression test.
+    value = graph()
+    value['nodes'][0]['uuid'] = 'c1728826-0e5b-5838-8d18-8e36ad546387'
+    value['nodes'][1]['uuid'] = '654b1f22-1a1c-5dbe-8620-e72eb720b91d'
+    value['nodes'][2]['uuid'] = '69d8c8f0-6401-5f96-92cc-a6d83a5ef931'
+    assert len(runner.select_participant_types(value)) == 3

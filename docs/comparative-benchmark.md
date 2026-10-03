@@ -19,14 +19,14 @@ The final assessor uses the same prompt, temperature, output limit, and strict s
 
 `backend/app/services/comparative_benchmark.py` is a standard-library-only module. Its `build_protocol` function validates inputs and freezes the case list, repeat count, aggregation, tie and failure policies, bootstrap seed, model metadata, and runner configuration. Import `backend/scripts/run_comparative_benchmark.py` with `importlib.util` to obtain `benchmark_configuration()`; its prompt hashes and limits must match the protocol exactly.
 
-The committed pilot protocol is in `backend/benchmarks/results/2026-10-02-upworthy-pilot/protocol.json`. Reproducing it requires its specified model and runner configuration. A different model, prompt, source, or resource limit requires a new protocol; do not overwrite an existing result.
+The committed pilot protocol is in `backend/benchmarks/results/2026-10-02-upworthy-pilot-v2/protocol.json`. Reproducing it requires its specified model and runner configuration. A different model, prompt, source, or resource limit requires a new protocol; do not overwrite an existing result.
 
 Each live invocation runs one trial in a fresh Python process and empty data directory:
 
 ```sh
 backend/.venv-simulation/bin/python backend/scripts/run_comparative_benchmark.py \
   --inputs backend/benchmarks/data/upworthy_inputs.json \
-  --protocol backend/benchmarks/results/2026-10-02-upworthy-pilot/protocol.json \
+  --protocol backend/benchmarks/results/2026-10-02-upworthy-pilot-v2/protocol.json \
   --case-id upworthy-001 --method single_model --repeat 1 \
   --output /tmp/my-benchmark/single-001-1.json \
   --runtime-dir /tmp/my-benchmark/runtime-single-001-1
@@ -44,7 +44,7 @@ Combine each trial's `records` into one envelope with the same schema version an
 python -S backend/scripts/score_comparative_benchmark.py \
   backend/benchmarks/data/upworthy_inputs.json \
   backend/benchmarks/data/upworthy_outcomes.json \
-  backend/benchmarks/results/2026-10-02-upworthy-pilot/protocol.json \
+  backend/benchmarks/results/2026-10-02-upworthy-pilot-v2/protocol.json \
   /tmp/my-benchmark/predictions.json \
   --output /tmp/my-benchmark/scores.json
 ```

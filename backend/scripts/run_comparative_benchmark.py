@@ -61,6 +61,7 @@ def benchmark_configuration():
         "assessor_attempts": 1, "assessor_response_format": "json_object",
         "report_max_tool_calls": 2, "report_max_reflection_rounds": 1,
         "max_calls": 35, "wall_timeout_seconds": 900,
+        "participant_selection": "exact_source_persona_names_actual_graph_labels_v2",
         "assessor_system_sha256": sha256_text(ASSESSOR_SYSTEM),
         "simulation_requirement_sha256": sha256_text(REQUIREMENT),
         "source_prompt_template_sha256": sha256_text(build_source_document({
@@ -105,6 +106,37 @@ def _unique_object(pairs):
             raise ValueError("Duplicate JSON keys are invalid")
         result[key] = value
     return result
+
+
+def select_participant_types(graph):
+    """Preserve fixed people while accepting MiroFish's generated type names.
+
+    The production ontology prompt defines multiple entity types. A declared
+    source person may therefore be a CuriousReader, Person, or another label;
+    the benchmark must not require an invented literal Reader label. Names are
+    exact source identities, not fuzzy matches or inferred replacement people.
+    """
+    expected = {persona["name"] for persona in PERSONAS}
+    nodes = graph.get("nodes", [])
+    selected = [node for node in nodes if node.get("name") in expected]
+    if len(selected) != len(expected) or {node.get("name") for node in selected} != expected:
+        raise RuntimeError("Graph does not contain exactly one node per declared source persona")
+    types = set()
+    for node in selected:
+        labels = [label for label in node.get("labels", []) if label not in {"Entity", "Node"}]
+        if not labels or any(not isinstance(label, str) or not label for label in labels):
+            raise RuntimeError("A declared source persona has no usable generated entity type")
+        types.update(labels)
+    admitted = [node for node in nodes if types.intersection(node.get("labels", []))]
+    if len(admitted) != len(expected) or {node.get("name") for node in admitted} != expected:
+        raise RuntimeError("Generated entity types would admit participants outside the declared source personas")
+    return sorted(types)
+
+
+def validate_participant_names(agents):
+    expected = {persona["name"] for persona in PERSONAS}
+    if len(agents) != len(expected) or {agent.get("entity_name") for agent in agents} != expected:
+        raise RuntimeError("Prepared participants do not match the three declared source personas")
 
 
 def parse_prediction(content):
@@ -350,13 +382,19 @@ class Trial:
             raise RuntimeError("Source graph is missing or already contains simulation evidence")
         self.proof["source_graph_evidence_sha256"] = source_hash
         graph = self.request("get", f"/api/graph/data/{self.graph_id}")
+        participant_types = select_participant_types(graph)
+        self.proof["participant_selection"] = {
+            "entity_types": participant_types,
+            "source_persona_names": [persona["name"] for persona in PERSONAS],
+            "policy": "exact_source_persona_names_actual_graph_labels_v2",
+        }
         self.mark("graph_completed", nodes=graph["node_count"], edges=graph["edge_count"])
         created = self.request("post", "/api/simulation/create", json={
             "project_id": self.project_id, "enable_twitter": False, "enable_reddit": True})
         self.simulation_id = created["simulation_id"]
         self.proof["simulation_id"] = self.simulation_id
         queued = self.request("post", "/api/simulation/prepare", json={
-            "simulation_id": self.simulation_id, "parallel_profile_count": 1, "entity_types": ["Reader"]})
+            "simulation_id": self.simulation_id, "parallel_profile_count": 1, "entity_types": participant_types})
         self.wait_job(queued["task_id"], "simulation_prepare")
         config = self.request("get", f"/api/simulation/{self.simulation_id}/config")
         self.configure_scenario(config, expected_simulations)
@@ -425,6 +463,7 @@ class Trial:
         agents = config.get("agent_configs", [])
         if len(agents) != len(PERSONAS):
             raise RuntimeError("Preparation did not produce exactly three assumed readers")
+        validate_participant_names(agents)
         before = json.loads(json.dumps(config))
         schedule = config["time_config"]
         schedule.update(minutes_per_round=3, agents_per_hour_min=3, agents_per_hour_max=3,

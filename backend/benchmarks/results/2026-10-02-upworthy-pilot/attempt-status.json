@@ -1,0 +1,15 @@
+{
+  "status": "aborted_invalid_harness",
+  "recorded_at": "2026-10-03T02:11:00.685193+00:00",
+  "reason": "Hardcoded Reader type excluded valid named source personas with generated types such as CuriousReader. Outcomes were not scored or consulted to change prompts. The supervisor was stopped; its two in-flight children also ended before writing final results. Their ledger reservations are retained and elapsed time is unknown.",
+  "scheduled_trials": 24,
+  "recorded_trials": 18,
+  "not_started_trials": 6,
+  "recorded_calls": 28,
+  "recorded_tokens": 133699,
+  "cost_usd": null,
+  "prompts_changed_for_replacement": false,
+  "replacement_protocol": "../2026-10-02-upworthy-pilot-v2/protocol.json",
+  "performance_comparison_valid": false,
+  "tested_implementation_commit": "4be0937"
+}

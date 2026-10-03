@@ -2017,6 +2017,7 @@ class SimulationRunner:
             }
     
     @classmethod
+    @_execution_command
     def interview_all_agents(
         cls,
         simulation_id: str,
@@ -2077,6 +2078,7 @@ class SimulationRunner:
         )
     
     @classmethod
+    @_execution_command
     def close_simulation_env(
         cls,
         simulation_id: str,

@@ -262,3 +262,71 @@ def test_prepare_worker_rejects_report_reader_before_changing_artifacts(launch, 
     })
     assert failures and 'reading this graph' in failures[0]
     assert SimulationRunner.get_run_state('sim-isolated').execution_id == state.execution_id
+
+
+@pytest.mark.parametrize('command', ['close', 'all'])
+def test_remaining_commands_read_and_send_under_execution_lock(launch, monkeypatch, command):
+    from contextlib import contextmanager
+    from pathlib import Path
+    import builtins
+    SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    config_path = launch.folder / 'simulation_config.json'
+    config_path.write_text(json.dumps({'agent_configs': [{'agent_id': 0}]}))
+    held = {'value': False}
+    checks = []
+    @contextmanager
+    def lock():
+        previous = held['value']
+        held['value'] = True
+        try:
+            yield
+        finally:
+            held['value'] = previous
+    monkeypatch.setattr(SimulationRunner, '_finalization_lock', classmethod(lambda cls, _: lock()))
+    def observed_open(path, *args, **kwargs):
+        if Path(path) == config_path:
+            checks.append(('config', held['value']))
+        return builtins.open(path, *args, **kwargs)
+    monkeypatch.setattr(runner_module, 'open', observed_open, raising=False)
+    def alive():
+        checks.append(('alive', held['value']))
+        return True
+    def send(**kwargs):
+        checks.append(('send', held['value']))
+        return SimpleNamespace(status=SimpleNamespace(value='completed'), result={}, timestamp='now')
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient', lambda _: SimpleNamespace(
+        check_env_alive=alive, send_close_env=send, send_batch_interview=send,
+    ))
+    if command == 'close':
+        result = SimulationRunner.close_simulation_env('sim-isolated')
+        assert checks == [('alive', True), ('send', True)]
+    else:
+        result = SimulationRunner.interview_all_agents('sim-isolated', 'hello')
+        assert checks == [('config', True), ('alive', True), ('send', True)]
+    assert result['success']
+
+
+@pytest.mark.parametrize('command', ['close', 'all'])
+def test_remaining_commands_reject_replacement_before_read_or_send(launch, monkeypatch, command):
+    from contextlib import contextmanager
+    from pathlib import Path
+    import builtins
+    state = SimulationRunner.start_simulation('sim-isolated', graph_id='source-graph')
+    config_path = launch.folder / 'simulation_config.json'
+    @contextmanager
+    def changed_execution():
+        state.execution_id = 'exec-replacement'
+        yield
+    monkeypatch.setattr(SimulationRunner, '_finalization_lock', classmethod(lambda cls, _: changed_execution()))
+    def no_config_read(path, *args, **kwargs):
+        if Path(path) == config_path:
+            pytest.fail('Replaced execution must be rejected before reading its configuration')
+        return builtins.open(path, *args, **kwargs)
+    monkeypatch.setattr(runner_module, 'open', no_config_read, raising=False)
+    monkeypatch.setattr(runner_module, 'SimulationIPCClient',
+                        lambda _: pytest.fail('Replaced execution must be rejected before IPC'))
+    with pytest.raises(ValueError, match='execution changed'):
+        if command == 'close':
+            SimulationRunner.close_simulation_env('sim-isolated')
+        else:
+            SimulationRunner.interview_all_agents('sim-isolated', 'must not reach replacement')
